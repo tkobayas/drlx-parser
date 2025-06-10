@@ -4,7 +4,7 @@ A Maven project that generates Java code from ANTLR4 grammar files for the DRLX 
 
 ## Overview
 
-DRLX (Drools Language eXtension) is a domain-specific language that extends Java 20 syntax with rule-based constructs:
+DRLX (Drools Rule Language eXtension) is a domain-specific language that extends Java 20 syntax with rule-based constructs:
 
 - `unit` declarations for defining rule units
 - `rule` declarations for defining business rules
@@ -16,9 +16,9 @@ DRLX (Drools Language eXtension) is a domain-specific language that extends Java
 ```drlx
 unit MyRuleUnit;
 
-rule R1 {
+rule PersonRule {
     var p : /persons[age > 20],
-    do { System.out.println(p.getName()); }
+    System.out.println(p.getName())
 }
 ```
 
@@ -119,11 +119,11 @@ walker.walk(listener, tree);
 ### Unit Declarations
 ```drlx
 unit MyRuleUnit;
-
-unit ExtendedUnit extends BaseUnit;
 ```
 
 ### Rule Declarations
+Rule names must follow Java class naming conventions (start with uppercase letter):
+
 ```drlx
 rule MyRule {
     var person : /persons[age > 18],
@@ -137,23 +137,77 @@ rule MyRule {
 
 ### OOPath Expressions
 ```drlx
-/collection[constraint]           // Basic OOPath
-/persons[age > 18]               // Age constraint
-/accounts[balance > 1000]        // Balance constraint
-/orders[status == "PENDING"]     // Status constraint
+/collection[constraint]                    // Basic OOPath
+/persons[age > 18]                        // Single constraint
+/accounts[balance > 1000, active]        // Multiple constraints
+/orders[status == "PENDING", priority > 5] // Multiple constraints
+/employees[yearsOfService > 5][basePay, bonusPay] // With Property Reactive
 ```
 
 ### Variable Binding
 ```drlx
-var variableName : /collection[constraint]
+// With variable binding
+var person : /persons[age > 18]
+
+// Without variable binding (anonymous pattern)
+/persons[age > 18]
+```
+
+### Property Reactive
+Property Reactive allows you to specify which object properties should trigger rule re-evaluation when updated. Property Reactive brackets `[properties]` come after constraint brackets:
+
+```drlx
+// Rule re-evaluates when basePay or bonusPay changes
+var e : /employees[yearsOfService > 5][basePay, bonusPay]
+
+// Property Reactive with minimal constraint
+/products[true][price, category]
+
+// Combined with multiple constraints
+/customers[active, premium][name, email, phone]
+```
+
+### Group Conditional Elements
+DRLX supports logical grouping of patterns using conditional elements:
+
+```drlx
+// OR conditional element - matches if any pattern matches
+or ( var a : /persons[hair=="purple"], 
+     var b : /persons[hair=="indigo"], 
+     var c : /persons[hair=="black"] )
+
+// Single element OR (parentheses optional)
+or var single : /persons[hair=="red"]
+
+// NOT conditional element - matches if pattern does NOT match
+not /persons[age < 18]
+
+// NOT with multiple elements
+not ( /minors[age < 13], 
+      /restricted[access=="denied"] )
 ```
 
 ### Action Blocks
+DRLX supports multiple action syntax variations for flexibility:
+
 ```drlx
+// Traditional do block syntax
 do {
-    // Java code here
     System.out.println("Rule fired!");
+    account.activate();
 }
+
+// Block without do keyword
+{
+    System.out.println("Rule fired!");
+    account.activate();
+}
+
+// Single statement with semicolon
+System.out.println("Rule fired!");
+
+// Single expression without semicolon (most concise)
+System.out.println("Rule fired")
 ```
 
 ## Maven Configuration

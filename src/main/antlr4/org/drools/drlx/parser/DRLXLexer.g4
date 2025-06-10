@@ -5,8 +5,10 @@
 lexer grammar DRLXLexer;
 
 // DRLX-specific keywords (must come before Java keywords for precedence)
-UNIT : 'unit';
-RULE : 'rule';
+UNIT     : 'unit';
+RULE     : 'rule';
+OR_COND  : 'or';
+NOT_COND : 'not';
 
 // Java 20 keywords from Java20Lexer
 EXPORTS    : 'exports';

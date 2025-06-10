@@ -19,7 +19,7 @@ drlxCompilationUnit
 
 // Unit declaration (DRLX-specific)
 unitDeclaration
-    : 'unit' identifier ('extends' typeType)? ';'
+    : 'unit' identifier ';'
     ;
 
 // Top-level declarations (rules, classes, etc.)
@@ -34,34 +34,72 @@ topLevelDeclaration
 
 // Rule declaration (DRLX-specific)
 ruleDeclaration
-    : 'rule' identifier '{' 
+    : 'rule' ruleName '{' 
       ruleBody 
       '}'
     ;
 
+// Rule name must follow Java class naming conventions (uppercase first letter)
+// Note: Grammar accepts any identifier, naming convention should be enforced at semantic level
+ruleName
+    : Identifier
+    ;
+
 ruleBody
-    : rulePattern*
+    : ruleElement*
       ruleAction?
     ;
 
-// Rule pattern with variable binding and OOPath
+// Rule elements can be patterns or conditional elements
+ruleElement
+    : rulePattern ','?
+    | conditionalElement ','?
+    ;
+
+// Rule pattern with optional variable binding and OOPath
 rulePattern
-    : 'var' identifier ':' oopathExpression ','?
+    : ('var' identifier ':')? oopathExpression
+    ;
+
+// Group Conditional Elements
+conditionalElement
+    : orElement
+    | notElement
+    ;
+
+// OR conditional element
+orElement
+    : OR_COND '(' ruleElement+ ')'        // Multiple elements in parentheses
+    | OR_COND rulePattern                 // Single element without parentheses
+    ;
+
+// NOT conditional element  
+notElement
+    : NOT_COND '(' ruleElement+ ')'       // Multiple elements in parentheses
+    | NOT_COND rulePattern                // Single element without parentheses
     ;
 
 // OOPath expression
 oopathExpression
-    : '/' identifier oopathConstraint?
+    : '/' identifier oopathConstraint? propertyReactive?
     ;
 
 // OOPath constraint (filter condition)
 oopathConstraint
-    : '[' expression ']'
+    : '[' expression (',' expression)* ']'
     ;
 
-// Rule action
+// Property Reactive (properties for rule engine re-evaluation)
+propertyReactive
+    : '[' identifier (',' identifier)* ']'
+    ;
+
+// Rule action (multiple forms supported)
 ruleAction
-    : 'do' block
+    : 'do' block                          // Traditional: do { statements }
+    | block                               // Without do: { statements }
+    | expressionStatement                 // Single statement with semicolon
+    | expression                          // Single expression without semicolon
     ;
 
 // Essential Java rules needed for DRLX

@@ -15,4 +15,4 @@ ksession.out
 .idea/
 deptree.txt
 *.iml
-
+gen/
