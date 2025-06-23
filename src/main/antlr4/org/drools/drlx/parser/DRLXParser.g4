@@ -8,7 +8,19 @@ options {
     tokenVocab = DRLXLexer;
 }
 
-// Start rule for DRLX expressions
+// Start rule for DRLX - can be either an expression or a compilation unit
 drlxStart
-    : mvelExpression EOF
+    : drlxUnit EOF
+    ;
+
+// DRLX unit - supports both expressions and type declarations
+drlxUnit
+    : mvelExpression
+    | compilationUnit
+    ;
+
+// Redefine compilationUnit to avoid EOF conflict
+compilationUnit
+    : packageDeclaration? (importDeclaration | ';')* (typeDeclaration | ';')*
+    | moduleDeclaration
     ;
