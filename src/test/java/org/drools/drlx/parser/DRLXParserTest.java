@@ -20,12 +20,12 @@ public class DRLXParserTest {
     public void testParseSimpleExpr() {
         String expr = "name == \"Mark\"";
         ParseTree tree = parseExpressionAsAntlrAST(expr);
-        
+
         assertThat(tree).isNotNull();
-        assertThat(tree).isInstanceOf(DRLXParser.DrlxStartContext.class);
-        
-        DRLXParser.DrlxStartContext startContext = (DRLXParser.DrlxStartContext) tree;
-        assertThat(startContext.drlxUnit().getText()).isEqualToIgnoringWhitespace(expr);
+        assertThat(tree).isInstanceOf(DRLXParser.MvelExpressionContext.class);
+
+        DRLXParser.MvelExpressionContext mvelExpressionContext = (DRLXParser.MvelExpressionContext) tree;
+        assertThat(mvelExpressionContext.getText()).isEqualTo("name==\"Mark\"");
     }
 
     @Test
@@ -40,21 +40,21 @@ public class DRLXParserTest {
         assertThat(tree).isNotNull();
         assertThat(tree).isInstanceOf(DRLXParser.CompilationUnitContext.class);
 
-        DRLXParser.CompilationUnitContext compilationUnit = (DRLXParser.CompilationUnitContext) tree;
-        assertThat(compilationUnit.getText()).isEqualToIgnoringWhitespace(expr);
+        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
+        assertThat(compilationUnitContext).isNotNull();
+        assertThat(compilationUnitContext.getText()).isEqualTo("publicclassX{}<EOF>");
     }
 
     private static ParseTree parseExpressionAsAntlrAST(final String expression) {
-        return parseAntlrAST(expression, DRLXParser::drlxStart, "expression");
+        return parseAntlrAST(expression, DRLXParser::mvelExpression);
     }
 
     private static ParseTree parseClassAsAntlrAST(final String classExpression) {
-        return parseAntlrAST(classExpression, DRLXParser::compilationUnit, "class");
+        return parseAntlrAST(classExpression, DRLXParser::compilationUnit);
     }
 
-    private static ParseTree parseAntlrAST(final String input, 
-                                         java.util.function.Function<DRLXParser, ParseTree> parseFunction,
-                                         final String inputType) {
+    private static ParseTree parseAntlrAST(final String input,
+                                           java.util.function.Function<DRLXParser, ParseTree> parseFunction) {
         try {
             // Create ANTLR4 lexer and parser
             CharStream charStream = CharStreams.fromString(input);
@@ -81,7 +81,7 @@ public class DRLXParserTest {
 
             return tree;
         } catch (Exception e) {
-            throw new RuntimeException("Failed to parse " + inputType + ": " + input, e);
+            throw new RuntimeException("Failed to parse : " + input, e);
         }
     }
 }

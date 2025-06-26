@@ -10,17 +10,6 @@ options {
 
 // Start rule for DRLX - can be either an expression or a compilation unit
 drlxStart
-    : drlxUnit EOF
-    ;
-
-// DRLX unit - supports both expressions and type declarations
-drlxUnit
-    : mvelExpression
+    : mvelExpression EOF
     | compilationUnit
-    ;
-
-// Redefine compilationUnit to avoid EOF conflict
-compilationUnit
-    : packageDeclaration? (importDeclaration | ';')* (typeDeclaration | ';')*
-    | moduleDeclaration
     ;
