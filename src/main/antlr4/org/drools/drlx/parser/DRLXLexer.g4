@@ -3,3 +3,6 @@
 lexer grammar DRLXLexer;
 
 import Mvel3Lexer;
+
+// DRLX-specific keywords
+RULE : 'rule';

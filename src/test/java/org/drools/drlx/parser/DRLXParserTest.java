@@ -1,5 +1,6 @@
 package org.drools.drlx.parser;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,12 +46,54 @@ public class DRLXParserTest {
         assertThat(compilationUnitContext.getText()).isEqualTo("publicclassX{}<EOF>");
     }
 
+    @Test
+    public void testParseSimpleRule() {
+        String rule = """
+                rule R1 {
+                   var a : /as,
+                   do { System.out.println(a == 3.2B);}
+                }
+                """;
+
+        ParseTree tree = parseRuleAsAntlrAST(rule);
+
+        assertThat(tree).isNotNull();
+        assertThat(tree).isInstanceOf(DRLXParser.RuleCompilationUnitContext.class);
+
+        DRLXParser.RuleCompilationUnitContext ruleCompilationUnitContext = (DRLXParser.RuleCompilationUnitContext) tree;
+        assertThat(ruleCompilationUnitContext).isNotNull();
+        assertThat(ruleCompilationUnitContext.drlxRule()).hasSize(1);
+
+        DRLXParser.DrlxRuleContext ruleContext = ruleCompilationUnitContext.drlxRule(0);
+        assertThat(ruleContext.identifier().getText()).isEqualTo("R1");
+
+        // Verify rule body structure
+        DRLXParser.RuleBodyContext ruleBody = ruleContext.ruleBody();
+        assertThat(ruleBody.pattern()).hasSize(1);
+        assertThat(ruleBody.consequence()).isNotNull();
+
+        // Verify pattern structure
+        DRLXParser.PatternContext pattern = ruleBody.pattern(0);
+        assertThat(pattern.bindingVariable()).isNotNull();
+        assertThat(pattern.bindingVariable().identifier().getText()).isEqualTo("a");
+        assertThat(pattern.oopathExpression().getText()).isEqualTo("/as");
+
+        // Verify consequence structure
+        DRLXParser.ConsequenceContext consequence = ruleBody.consequence();
+        assertThat(consequence.blockStatement()).isNotNull();
+        assertThat(consequence.blockStatement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
+    }
+
     private static ParseTree parseExpressionAsAntlrAST(final String expression) {
         return parseAntlrAST(expression, DRLXParser::mvelExpression);
     }
 
     private static ParseTree parseClassAsAntlrAST(final String classExpression) {
         return parseAntlrAST(classExpression, DRLXParser::compilationUnit);
+    }
+
+    private static ParseTree parseRuleAsAntlrAST(final String ruleExpression) {
+        return parseAntlrAST(ruleExpression, DRLXParser::ruleCompilationUnit);
     }
 
     private static ParseTree parseAntlrAST(final String input,
