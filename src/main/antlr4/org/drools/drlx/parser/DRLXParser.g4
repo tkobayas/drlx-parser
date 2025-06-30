@@ -8,10 +8,9 @@ options {
     tokenVocab = DRLXLexer;
 }
 
-// Start rule for DRLX - can be either an expression, compilation unit, or rule
+// Start rule for DRLX - can be either compilation unit, or rule
 drlxStart
-    : mvelExpression EOF
-    | compilationUnit
+    : compilationUnit
     | ruleCompilationUnit
     ;
 
