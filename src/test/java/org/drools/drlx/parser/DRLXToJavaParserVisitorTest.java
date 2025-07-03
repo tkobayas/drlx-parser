@@ -30,6 +30,8 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.resolution.types.ResolvedType;
+import com.github.javaparser.symbolsolver.JavaSymbolSolver;
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -100,6 +102,20 @@ public class DRLXToJavaParserVisitorTest {
         // Verify arguments
         assertThat(methodCall.getArguments()).hasSize(1);
         assertThat(methodCall.getArguments().get(0).toString()).isEqualTo("\"Hello\"");
+        
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+        
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+        
+        // Test type resolution
+        Expression scope = methodCall.getScope().get();
+        ResolvedType resolvedType = scope.calculateResolvedType();
+
+        // Verify the resolved type
+        assertThat(resolvedType.describe()).isEqualTo("java.io.PrintStream");
     }
 
     private static ParseTree parseCompilationUnit(final String compilationUnit) {
