@@ -19,8 +19,14 @@
 
 package org.drools.drlx.parser;
 
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.body.Parameter;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -29,6 +35,8 @@ import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
+import com.github.javaparser.ast.type.Type;
+import com.github.javaparser.ast.type.VoidType;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -37,10 +45,130 @@ import com.github.javaparser.ast.stmt.Statement;
 public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
     @Override
+    public Node visitCompilationUnit(DRLXParser.CompilationUnitContext ctx) {
+        CompilationUnit cu = new CompilationUnit();
+
+        // Handle type declarations
+        if (ctx.typeDeclaration() != null) {
+            for (DRLXParser.TypeDeclarationContext typeDecl : ctx.typeDeclaration()) {
+                Node node = visit(typeDecl);
+                if (node instanceof TypeDeclaration) {
+                    cu.addType((TypeDeclaration<?>) node);
+                }
+            }
+        }
+
+        return cu;
+    }
+
+    @Override
+    public Node visitTypeDeclaration(DRLXParser.TypeDeclarationContext ctx) {
+        // Handle class declarations for now
+        if (ctx.classDeclaration() != null) {
+            return visit(ctx.classDeclaration());
+        }
+        // TODO: Handle other type declarations (interface, enum, etc.)
+        throw new UnsupportedOperationException("Type declaration not yet implemented: " + ctx.getText());
+    }
+
+    @Override
+    public Node visitClassDeclaration(DRLXParser.ClassDeclarationContext ctx) {
+        String className = ctx.identifier().getText();
+        ClassOrInterfaceDeclaration classDecl = new ClassOrInterfaceDeclaration();
+        classDecl.setName(className);
+        classDecl.setInterface(false);
+
+        // Handle modifiers
+        if (ctx.getParent() instanceof DRLXParser.TypeDeclarationContext) {
+            DRLXParser.TypeDeclarationContext parent = (DRLXParser.TypeDeclarationContext) ctx.getParent();
+            if (parent.classOrInterfaceModifier() != null) {
+                for (DRLXParser.ClassOrInterfaceModifierContext modifier : parent.classOrInterfaceModifier()) {
+                    if (modifier.PUBLIC() != null) {
+                        classDecl.addModifier(Modifier.Keyword.PUBLIC);
+                    }
+                    // TODO: Handle other modifiers
+                }
+            }
+        }
+
+        // Handle class body
+        if (ctx.classBody() != null) {
+            visitClassBody(ctx.classBody(), classDecl);
+        }
+
+        return classDecl;
+    }
+
+    private void visitClassBody(DRLXParser.ClassBodyContext ctx, ClassOrInterfaceDeclaration classDecl) {
+        if (ctx.classBodyDeclaration() != null) {
+            for (DRLXParser.ClassBodyDeclarationContext bodyDecl : ctx.classBodyDeclaration()) {
+                if (bodyDecl.memberDeclaration() != null) {
+                    DRLXParser.MemberDeclarationContext memberDecl = bodyDecl.memberDeclaration();
+                    if (memberDecl.methodDeclaration() != null) {
+                        Node method = visitMethodDeclaration(memberDecl.methodDeclaration());
+                        if (method instanceof MethodDeclaration) {
+                            classDecl.addMember((MethodDeclaration) method);
+                        }
+                    }
+                    // TODO: Handle other member types (fields, nested classes, etc.)
+                }
+            }
+        }
+    }
+
+    @Override
+    public Node visitMethodDeclaration(DRLXParser.MethodDeclarationContext ctx) {
+        // Get method name
+        String methodName = ctx.identifier().getText();
+
+        // Create method declaration
+        MethodDeclaration methodDecl = new MethodDeclaration();
+        methodDecl.setName(methodName);
+
+        // Handle return type
+        if (ctx.typeTypeOrVoid() != null) {
+            if (ctx.typeTypeOrVoid().VOID() != null) {
+                methodDecl.setType(new VoidType());
+            } else if (ctx.typeTypeOrVoid().typeType() != null) {
+                // TODO: Handle other types
+                throw new UnsupportedOperationException("Non-void return types not yet implemented");
+            }
+        }
+
+        // Handle modifiers (from parent context)
+        if (ctx.getParent() instanceof DRLXParser.MemberDeclarationContext) {
+            DRLXParser.MemberDeclarationContext memberCtx = (DRLXParser.MemberDeclarationContext) ctx.getParent();
+            if (memberCtx.getParent() instanceof DRLXParser.ClassBodyDeclarationContext) {
+                DRLXParser.ClassBodyDeclarationContext bodyDeclCtx = (DRLXParser.ClassBodyDeclarationContext) memberCtx.getParent();
+                if (bodyDeclCtx.modifier() != null) {
+                    for (DRLXParser.ModifierContext modifier : bodyDeclCtx.modifier()) {
+                        if (modifier.classOrInterfaceModifier() != null) {
+                            if (modifier.classOrInterfaceModifier().PUBLIC() != null) {
+                                methodDecl.addModifier(Modifier.Keyword.PUBLIC);
+                            }
+                            // TODO: Handle other modifiers
+                        }
+                    }
+                }
+            }
+        }
+
+        // Handle method body
+        if (ctx.methodBody() != null) {
+            if (ctx.methodBody().block() != null) {
+                BlockStmt body = (BlockStmt) visit(ctx.methodBody().block());
+                methodDecl.setBody(body);
+            }
+        }
+
+        return methodDecl;
+    }
+
+    @Override
     public Node visitBlock(DRLXParser.BlockContext ctx) {
         BlockStmt blockStmt = new BlockStmt();
         NodeList<Statement> statements = new NodeList<>();
-        
+
         if (ctx.blockStatement() != null) {
             for (DRLXParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
                 Node node = visit(blockStatementCtx);
@@ -49,7 +177,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-        
+
         blockStmt.setStatements(statements);
         return blockStmt;
     }
@@ -86,7 +214,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     public Node visitMemberReferenceExpression(DRLXParser.MemberReferenceExpressionContext ctx) {
         // expression.identifier or expression.methodCall()
         Expression expr = (Expression) visit(ctx.expression());
-        
+
         if (ctx.identifier() != null) {
             // Field access: expression.identifier
             return new FieldAccessExpr(expr, ctx.identifier().getText());
@@ -115,9 +243,9 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         } else {
             throw new IllegalArgumentException("Unknown method call type: " + ctx.getText());
         }
-        
+
         MethodCallExpr methodCall = new MethodCallExpr(scope, methodName);
-        
+
         // Handle arguments
         if (ctx.arguments() != null && ctx.arguments().expressionList() != null) {
             NodeList<Expression> arguments = new NodeList<>();
@@ -126,7 +254,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             }
             methodCall.setArguments(arguments);
         }
-        
+
         return methodCall;
     }
 
