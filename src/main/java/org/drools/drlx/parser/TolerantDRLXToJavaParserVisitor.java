@@ -35,6 +35,8 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.VoidType;
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -172,24 +174,9 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
 
         if (ctx.blockStatement() != null) {
             for (DRLXParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
-                try {
-                    Node node = visit(blockStatementCtx);
-                    if (node instanceof Statement) {
-                        statements.add((Statement) node);
-                    }
-                } catch (Exception e) {
-                    // If block statement parsing fails, try to create a partial statement
-                    String stmtText = blockStatementCtx.getText();
-                    if (stmtText.contains(".")) {
-                        // Likely a partial field access - create a placeholder
-                        String[] parts = stmtText.split("\\.");
-                        if (parts.length >= 1) {
-                            Expression baseExpr = new NameExpr(parts[0]);
-                            Expression fieldAccess = new FieldAccessExpr(baseExpr, "__COMPLETION_FIELD__");
-                            statements.add(new ExpressionStmt(fieldAccess));
-                        }
-                    }
-                    // Continue processing other statements even if one fails
+                Node node = visit(blockStatementCtx);
+                if (node instanceof Statement) {
+                    statements.add((Statement) node);
                 }
             }
         }
@@ -201,7 +188,6 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
     @Override
     public Node visitBlockStatement(DRLXParser.BlockStatementContext ctx) {
         if (ctx.statement() != null) {
-
             return visit(ctx.statement());
         } else if (ctx.localVariableDeclaration() != null) {
             // TODO: Handle local variable declarations
@@ -210,7 +196,32 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             // TODO: Handle local type declarations
             throw new UnsupportedOperationException("Local type declarations not yet implemented");
         }
+
+        // handle error nodes
+        if (areChildrenErrorNodes(ctx)) {
+            // quick hack only for `System.` completion
+            Expression scopeExpr = new NameExpr(ctx.children.get(0).getText());
+            Expression markerField = new FieldAccessExpr(scopeExpr, "__COMPLETION_FIELD__");
+            return new ExpressionStmt(markerField);
+        }
+
+        if (ctx.children == null) {
+            // invalid node. Ignore for now
+            return null;
+        }
         throw new IllegalArgumentException("Unknown blockStatement type: " + ctx.getText());
+    }
+
+    private boolean areChildrenErrorNodes(DRLXParser.BlockStatementContext ctx) {
+        if (ctx.children == null || ctx.children.isEmpty()) {
+            return false; // No children to check
+        }
+        for (ParseTree child : ctx.children) {
+            if (child instanceof ErrorNode) {
+                return true; // At least one child is an error node
+            }
+        }
+        return false;
     }
 
     @Override
