@@ -32,10 +32,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TolerantDRLXToJavaParserVisitorTest {
+class TolerantDRLXToJavaParserVisitorTest {
 
     @Test
-    public void testVisitCompilationUnit_partial() {
+    void testVisitCompilationUnit_partial() {
         String compilationUnitString = """
                 public class Foo {
                     public void bar() {

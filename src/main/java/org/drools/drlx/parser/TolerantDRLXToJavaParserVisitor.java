@@ -19,6 +19,9 @@
 
 package org.drools.drlx.parser;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
@@ -35,8 +38,10 @@ import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.VoidType;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -46,6 +51,13 @@ import org.antlr.v4.runtime.tree.ParseTree;
 public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
     private static final String COMPLETION_PLACEHOLDER = "__COMPLETION__";
+
+    // Associate antlr tokenId with a JavaParser node for identifier, so it can be used for code completion.
+    private final Map<Integer, Node> tokenIdJPNodeMap = new HashMap<>();
+
+    public Map<Integer, Node> getTokenIdJPNodeMap() {
+        return tokenIdJPNodeMap;
+    }
 
     @Override
     public Node visitCompilationUnit(DRLXParser.CompilationUnitContext ctx) {
@@ -199,8 +211,9 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
 
         // handle error nodes
         if (areChildrenErrorNodes(ctx)) {
-            // quick hack only for `System.` completion
+            // quick hack only for `System.` completion. Later, we will populate the map for all identifiers
             Expression scopeExpr = new NameExpr(ctx.children.get(0).getText());
+            tokenIdJPNodeMap.put(((TerminalNodeImpl)ctx.children.get(0)).getSymbol().getTokenIndex(), scopeExpr);
             Expression markerField = new FieldAccessExpr(scopeExpr, "__COMPLETION_FIELD__");
             return new ExpressionStmt(markerField);
         }
