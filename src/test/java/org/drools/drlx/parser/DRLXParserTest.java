@@ -92,19 +92,22 @@ public class DRLXParserTest {
 
         // Verify rule body structure
         DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
-        assertThat(ruleBody.pattern()).hasSize(1);
-        assertThat(ruleBody.consequence()).isNotNull();
+        assertThat(ruleBody.ruleItem()).hasSize(2); // 1 pattern + 1 consequence
 
-        // Verify pattern structure
-        DRLXParser.PatternContext pattern = ruleBody.pattern(0);
-        assertThat(pattern.bindingVariable()).isNotNull();
-        assertThat(pattern.bindingVariable().identifier().getText()).isEqualTo("a");
+        // Verify pattern structure (first rule item)
+        DRLXParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
+        assertThat(firstItem.rulePattern()).isNotNull();
+        DRLXParser.RulePatternContext pattern = firstItem.rulePattern();
+        assertThat(pattern.identifier(0).getText()).isEqualTo("var"); // type
+        assertThat(pattern.identifier(1).getText()).isEqualTo("a"); // bind
         assertThat(pattern.oopathExpression().getText()).isEqualTo("/as");
 
-        // Verify consequence structure
-        DRLXParser.ConsequenceContext consequence = ruleBody.consequence();
-        assertThat(consequence.blockStatement()).isNotNull();
-        assertThat(consequence.blockStatement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
+        // Verify consequence structure (second rule item)
+        DRLXParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
+        assertThat(secondItem.ruleConsequence()).isNotNull();
+        DRLXParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
+        assertThat(consequence.statement()).isNotNull();
+        assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
     }
 
     private static ParseTree parseExpressionAsAntlrAST(final String expression) {

@@ -32,27 +32,37 @@ ruleDeclaration
     : RULE identifier '{' ruleBody '}'
     ;
 
-// Rule body contains patterns and consequences
+// Rule body contains rule items (patterns and consequences)
+// Aligns with: RuleBody(NodeList<RuleItem> items)
 ruleBody
-    : pattern* consequence
+    : ruleItem*
     ;
 
-// Pattern: optional binding variable followed by oopathExpression
-pattern
-    : bindingVariable? oopathExpression ','
+// Rule item can be a pattern or consequence
+ruleItem
+    : rulePattern
+    | ruleConsequence
     ;
 
-// Binding variable: var identifier :
-bindingVariable
-    : VAR identifier ':'
+// Pattern: type bind : oopathExpression ,
+// Aligns with: RulePattern(SimpleName type, SimpleName bind, OOPathExpr expr)
+rulePattern
+    : identifier identifier ':' oopathExpression ','
     ;
 
-// OOPath expression - starts with /
+// Consequence: do statement
+// Aligns with: RuleConsequence(Statement statement)
+ruleConsequence
+    : DO statement
+    ;
+
+// OOPath expression - starts with / and can have multiple chunks
+// Aligns with: OOPathExpr(NodeList<OOPathChunk> chunks)
 oopathExpression
-    : '/' identifier  // For now, just /identifier
+    : '/' oopathChunk ('/' oopathChunk)*
     ;
 
-// Consequence: do blockStatement
-consequence
-    : DO blockStatement
+// OOPath chunk - simplified for now, just identifier
+oopathChunk
+    : identifier
     ;
