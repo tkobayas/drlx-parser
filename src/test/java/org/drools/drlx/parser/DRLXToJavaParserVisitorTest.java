@@ -145,7 +145,51 @@ class DRLXToJavaParserVisitorTest {
         assertThat(compilationUnit.getType(0).getName().asString()).isEqualTo("Foo");
         assertThat(compilationUnit.getType(0)).isInstanceOf(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class);
 
+        // Verify rule declaration
+        com.github.javaparser.ast.body.ClassOrInterfaceDeclaration classDecl =
+                (com.github.javaparser.ast.body.ClassOrInterfaceDeclaration) compilationUnit.getType(0);
+        assertThat(classDecl.getMembers()).hasSize(1);
+        assertThat(classDecl.getMember(0)).isInstanceOf(org.mvel3.parser.ast.expr.RuleDeclaration.class);
 
+        org.mvel3.parser.ast.expr.RuleDeclaration ruleDecl = (org.mvel3.parser.ast.expr.RuleDeclaration) classDecl.getMember(0);
+        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
+
+        // Verify rule body
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        assertThat(ruleBody.getItems()).hasSize(2); // 1 pattern + 1 consequence
+
+        // Verify pattern (first item)
+        org.mvel3.parser.ast.expr.RuleItem firstItem = ruleBody.getItems().get(0);
+        assertThat(firstItem).isInstanceOf(org.mvel3.parser.ast.expr.RulePattern.class);
+        
+        org.mvel3.parser.ast.expr.RulePattern pattern = (org.mvel3.parser.ast.expr.RulePattern) firstItem;
+        assertThat(pattern.getType().asString()).isEqualTo("var");
+        assertThat(pattern.getBind().asString()).isEqualTo("a");
+        
+        // Verify OOPath expression
+        org.mvel3.parser.ast.expr.OOPathExpr oopathExpr = pattern.getExpr();
+        assertThat(oopathExpr.getChunks()).hasSize(1);
+        assertThat(oopathExpr.getChunks().get(0)).isInstanceOf(org.mvel3.parser.ast.expr.OOPathChunk.class);
+
+        // Verify consequence (second item)
+        org.mvel3.parser.ast.expr.RuleItem secondItem = ruleBody.getItems().get(1);
+        assertThat(secondItem).isInstanceOf(org.mvel3.parser.ast.expr.RuleConsequence.class);
+        
+        org.mvel3.parser.ast.expr.RuleConsequence consequence = (org.mvel3.parser.ast.expr.RuleConsequence) secondItem;
+        assertThat(consequence.getStatement()).isInstanceOf(com.github.javaparser.ast.stmt.BlockStmt.class);
+        
+        // Verify consequence block content
+        com.github.javaparser.ast.stmt.BlockStmt consequenceBlock = (com.github.javaparser.ast.stmt.BlockStmt) consequence.getStatement();
+        assertThat(consequenceBlock.getStatements()).hasSize(1);
+        assertThat(consequenceBlock.getStatements().get(0)).isInstanceOf(com.github.javaparser.ast.stmt.ExpressionStmt.class);
+        
+        // Verify the System.out.println call
+        com.github.javaparser.ast.stmt.ExpressionStmt exprStmt = (com.github.javaparser.ast.stmt.ExpressionStmt) consequenceBlock.getStatements().get(0);
+        assertThat(exprStmt.getExpression()).isInstanceOf(com.github.javaparser.ast.expr.MethodCallExpr.class);
+        
+        com.github.javaparser.ast.expr.MethodCallExpr methodCall = (com.github.javaparser.ast.expr.MethodCallExpr) exprStmt.getExpression();
+        assertThat(methodCall.getName().asString()).isEqualTo("println");
+        assertThat(methodCall.getArguments()).hasSize(1);
     }
 
     private static ParseTree parseCompilationUnit(final String compilationUnit) {

@@ -42,7 +42,17 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
+import com.github.javaparser.ast.expr.SimpleName;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import org.mvel3.parser.ast.expr.RuleDeclaration;
+import org.mvel3.parser.ast.expr.RuleBody;
+import org.mvel3.parser.ast.expr.RuleItem;
+import org.mvel3.parser.ast.expr.RulePattern;
+import org.mvel3.parser.ast.expr.RuleConsequence;
+import org.mvel3.parser.ast.expr.OOPathExpr;
+import org.mvel3.parser.ast.expr.OOPathChunk;
+import org.mvel3.parser.ast.expr.DrlxExpression;
+import java.util.Collections;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -320,5 +330,77 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         }
 
         throw new IllegalArgumentException("Unknown literal type: " + ctx.getText());
+    }
+
+    @Override
+    public Node visitRuleDeclaration(DRLXParser.RuleDeclarationContext ctx) {
+        // Create rule declaration
+        SimpleName name = new SimpleName(ctx.identifier().getText());
+        RuleBody body = (RuleBody) visit(ctx.ruleBody());
+        NodeList<AnnotationExpr> annotations = new NodeList<>();
+        
+        return new RuleDeclaration(null, annotations, name, body);
+    }
+
+    @Override
+    public Node visitRuleBody(DRLXParser.RuleBodyContext ctx) {
+        NodeList<RuleItem> items = new NodeList<>();
+        
+        if (ctx.ruleItem() != null) {
+            for (DRLXParser.RuleItemContext itemCtx : ctx.ruleItem()) {
+                RuleItem item = (RuleItem) visit(itemCtx);
+                items.add(item);
+            }
+        }
+        
+        return new RuleBody(null, items);
+    }
+
+    @Override
+    public Node visitRuleItem(DRLXParser.RuleItemContext ctx) {
+        if (ctx.rulePattern() != null) {
+            return visit(ctx.rulePattern());
+        } else if (ctx.ruleConsequence() != null) {
+            return visit(ctx.ruleConsequence());
+        }
+        throw new IllegalArgumentException("Unknown rule item type: " + ctx.getText());
+    }
+
+    @Override
+    public Node visitRulePattern(DRLXParser.RulePatternContext ctx) {
+        // Get type and bind identifiers
+        SimpleName type = new SimpleName(ctx.identifier(0).getText());
+        SimpleName bind = new SimpleName(ctx.identifier(1).getText());
+        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
+        
+        return new RulePattern(null, type, bind, expr);
+    }
+
+    @Override
+    public Node visitRuleConsequence(DRLXParser.RuleConsequenceContext ctx) {
+        Statement statement = (Statement) visit(ctx.statement());
+        return new RuleConsequence(null, statement);
+    }
+
+    @Override
+    public Node visitOopathExpression(DRLXParser.OopathExpressionContext ctx) {
+        NodeList<OOPathChunk> chunks = new NodeList<>();
+        
+        if (ctx.oopathChunk() != null) {
+            for (DRLXParser.OopathChunkContext chunkCtx : ctx.oopathChunk()) {
+                OOPathChunk chunk = (OOPathChunk) visit(chunkCtx);
+                chunks.add(chunk);
+            }
+        }
+        
+        return new OOPathExpr(null, chunks);
+    }
+
+    @Override
+    public Node visitOopathChunk(DRLXParser.OopathChunkContext ctx) {
+        SimpleName field = new SimpleName(ctx.identifier().getText());
+        SimpleName inlineCast = null; // No inline cast for simple case
+        
+        return new OOPathChunk(null, field, inlineCast, Collections.emptyList());
     }
 }
