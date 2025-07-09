@@ -27,9 +27,14 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.BooleanLiteralExpr;
+import com.github.javaparser.ast.expr.CharLiteralExpr;
+import com.github.javaparser.ast.expr.DoubleLiteralExpr;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.NullLiteralExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -37,6 +42,7 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.type.VoidType;
+import org.mvel3.parser.ast.expr.RuleDeclaration;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -108,6 +114,11 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                         Node method = visitMethodDeclaration(memberDecl.methodDeclaration());
                         if (method instanceof MethodDeclaration) {
                             classDecl.addMember((MethodDeclaration) method);
+                        }
+                    } else if (memberDecl.ruleDeclaration() != null) {
+                        Node rule = visitRuleDeclaration(memberDecl.ruleDeclaration());
+                        if (rule instanceof RuleDeclaration) {
+                            classDecl.addMember((RuleDeclaration) rule);
                         }
                     }
                     // TODO: Handle other member types (fields, nested classes, etc.)
@@ -281,8 +292,33 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // Remove quotes
             String value = text.substring(1, text.length() - 1);
             return new StringLiteralExpr(value);
+        } else if (ctx.DECIMAL_LITERAL() != null) {
+            return new IntegerLiteralExpr(ctx.DECIMAL_LITERAL().getText());
+        } else if (ctx.FLOAT_LITERAL() != null) {
+            return new DoubleLiteralExpr(ctx.FLOAT_LITERAL().getText());
+        } else if (ctx.BOOL_LITERAL() != null) {
+            return new BooleanLiteralExpr(Boolean.parseBoolean(ctx.BOOL_LITERAL().getText()));
+        } else if (ctx.NULL_LITERAL() != null) {
+            return new NullLiteralExpr();
+        } else if (ctx.CHAR_LITERAL() != null) {
+            String text = ctx.CHAR_LITERAL().getText();
+            char value = text.charAt(1); // Simple case, more complex handling needed for escape sequences
+            return new CharLiteralExpr(value);
         }
-        // TODO: Handle other literal types
-        throw new UnsupportedOperationException("Literal type not yet implemented: " + ctx.getText());
+
+        // Handle MVEL-specific literals
+        if (ctx.BigDecimalLiteral() != null) {
+            String text = ctx.BigDecimalLiteral().getText();
+            // Remove 'B' suffix
+            text = text.substring(0, text.length() - 1);
+            return new DoubleLiteralExpr(text);
+        } else if (ctx.BigIntegerLiteral() != null) {
+            String text = ctx.BigIntegerLiteral().getText();
+            // Remove 'I' suffix
+            text = text.substring(0, text.length() - 1);
+            return new IntegerLiteralExpr(text);
+        }
+
+        throw new IllegalArgumentException("Unknown literal type: " + ctx.getText());
     }
 }

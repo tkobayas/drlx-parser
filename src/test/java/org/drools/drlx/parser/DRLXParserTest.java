@@ -68,9 +68,11 @@ public class DRLXParserTest {
     @Test
     public void testParseSimpleRule() {
         String rule = """
-                rule R1 {
-                   var a : /as,
-                   do { System.out.println(a == 3.2B);}
+                class Foo {
+                    rule R1 {
+                       var a : /as,
+                       do { System.out.println(a == 3.2B);}
+                    }
                 }
                 """;
 
@@ -83,8 +85,10 @@ public class DRLXParserTest {
         assertThat(compilationUnitContext).isNotNull();
         assertThat(compilationUnitContext.typeDeclaration()).hasSize(1);
 
-        DRLXParser.RuleDeclarationContext ruleDeclarationContext = compilationUnitContext.typeDeclaration(0).ruleDeclaration();
-        assertThat(ruleDeclarationContext.identifier().getText()).isEqualTo("R1");
+        DRLXParser.ClassDeclarationContext classDeclarationContext = compilationUnitContext.typeDeclaration(0).classDeclaration();
+        assertThat(classDeclarationContext.identifier().getText()).isEqualTo("Foo");
+
+        DRLXParser.RuleDeclarationContext ruleDeclarationContext = classDeclarationContext.classBody().classBodyDeclaration(0).memberDeclaration().ruleDeclaration();
 
         // Verify rule body structure
         DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();

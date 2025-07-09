@@ -43,10 +43,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class DRLXToJavaParserVisitorTest {
+class DRLXToJavaParserVisitorTest {
 
     @Test
-    public void testVisitCompilationUnit() {
+    void testVisitCompilationUnit_class() {
         String classCompilationUnit = """
                 public class Foo {
                     public void bar() {
@@ -116,6 +116,36 @@ public class DRLXToJavaParserVisitorTest {
 
         // Verify the resolved type
         assertThat(resolvedType.describe()).isEqualTo("java.io.PrintStream");
+    }
+
+    @Test
+    void testVisitCompilationUnit_rule() {
+        String ruleCompilationUnit = """
+                class Foo {
+                    rule R1 {
+                       var a : /as,
+                       do { System.out.println(a == 3.2B);}
+                    }
+                }
+                """;
+
+        // Parse the compilation unit
+        ParseTree tree = parseCompilationUnit(ruleCompilationUnit);
+
+        // Visit and convert to JavaParser AST
+        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
+        Node result = visitor.visit(tree);
+
+        // Verify the result
+        assertThat(result).isInstanceOf(com.github.javaparser.ast.CompilationUnit.class);
+        com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) result;
+
+        // Verify class declaration
+        assertThat(compilationUnit.getTypes()).hasSize(1);
+        assertThat(compilationUnit.getType(0).getName().asString()).isEqualTo("Foo");
+        assertThat(compilationUnit.getType(0)).isInstanceOf(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class);
+
+
     }
 
     private static ParseTree parseCompilationUnit(final String compilationUnit) {

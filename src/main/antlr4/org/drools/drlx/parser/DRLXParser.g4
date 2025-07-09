@@ -13,15 +13,18 @@ drlxStart
     : compilationUnit
     ;
 
-typeDeclaration
-    : classOrInterfaceModifier* (
-        classDeclaration
-        | enumDeclaration
-        | interfaceDeclaration
-        | annotationTypeDeclaration
-        | recordDeclaration
-        | ruleDeclaration
-    )
+memberDeclaration
+    : recordDeclaration //Java17
+    | methodDeclaration
+    | genericMethodDeclaration
+    | fieldDeclaration
+    | constructorDeclaration
+    | genericConstructorDeclaration
+    | interfaceDeclaration
+    | annotationTypeDeclaration
+    | classDeclaration
+    | enumDeclaration
+    | ruleDeclaration
     ;
 
 // Rule declaration
