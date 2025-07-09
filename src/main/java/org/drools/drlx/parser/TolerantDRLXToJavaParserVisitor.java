@@ -357,7 +357,13 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
         RuleBody body = (RuleBody) visit(ctx.ruleBody());
         NodeList<AnnotationExpr> annotations = new NodeList<>();
         
-        return new RuleDeclaration(null, annotations, name, body);
+        RuleDeclaration ruleDecl = new RuleDeclaration(null, annotations, name, body);
+        
+        // Set parent relationships
+        name.setParentNode(ruleDecl);
+        body.setParentNode(ruleDecl);
+        
+        return ruleDecl;
     }
 
     @Override
@@ -373,7 +379,14 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             }
         }
         
-        return new RuleBody(null, items);
+        RuleBody ruleBody = new RuleBody(null, items);
+        
+        // Set parent relationships
+        for (RuleItem item : items) {
+            item.setParentNode(ruleBody);
+        }
+        
+        return ruleBody;
     }
 
     @Override
@@ -395,7 +408,14 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             SimpleName bind = new SimpleName(ctx.identifier(1).getText());
             OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
             
-            return new RulePattern(null, type, bind, expr);
+            RulePattern pattern = new RulePattern(null, type, bind, expr);
+            
+            // Set parent relationships
+            type.setParentNode(pattern);
+            bind.setParentNode(pattern);
+            expr.setParentNode(pattern);
+            
+            return pattern;
         } catch (Exception e) {
             // For tolerant parsing, return null if we can't parse the pattern
             return null;
@@ -406,7 +426,12 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
     public Node visitRuleConsequence(DRLXParser.RuleConsequenceContext ctx) {
         try {
             Statement statement = (Statement) visit(ctx.statement());
-            return new RuleConsequence(null, statement);
+            RuleConsequence consequence = new RuleConsequence(null, statement);
+            
+            // Set parent relationship
+            statement.setParentNode(consequence);
+            
+            return consequence;
         } catch (Exception e) {
             // For tolerant parsing, return null if we can't parse the consequence
             return null;
@@ -426,7 +451,14 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             }
         }
         
-        return new OOPathExpr(null, chunks);
+        OOPathExpr oopathExpr = new OOPathExpr(null, chunks);
+        
+        // Set parent relationships
+        for (OOPathChunk chunk : chunks) {
+            chunk.setParentNode(oopathExpr);
+        }
+        
+        return oopathExpr;
     }
 
     @Override
@@ -435,7 +467,12 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             SimpleName field = new SimpleName(ctx.identifier().getText());
             SimpleName inlineCast = null; // No inline cast for simple case
             
-            return new OOPathChunk(null, field, inlineCast, Collections.emptyList());
+            OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, Collections.emptyList());
+            
+            // Set parent relationship
+            field.setParentNode(chunk);
+            
+            return chunk;
         } catch (Exception e) {
             // For tolerant parsing, return null if we can't parse the chunk
             return null;

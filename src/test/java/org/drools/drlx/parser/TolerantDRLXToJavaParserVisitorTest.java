@@ -179,5 +179,24 @@ class TolerantDRLXToJavaParserVisitorTest {
         assertThat(ruleDecl).isNotNull();
         assertThat(ruleBody).isNotNull();
         assertThat(pattern).isNotNull();
+
+
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+
+        // Test type resolution of System
+        Expression systemExpr = fieldAccess.getScope();
+        ResolvedType systemType = systemExpr.calculateResolvedType();
+        System.out.println("System type: " + systemType.describe());
+
+        // Verify the resolved type
+        assertThat(systemType.describe()).isEqualTo("java.lang.System");
+
+        // Now we can suggest completions for System.* by getting all public static fields
+        // This would be where code completion suggestions would come from
     }
 }
