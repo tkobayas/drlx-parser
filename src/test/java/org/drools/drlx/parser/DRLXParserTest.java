@@ -77,17 +77,17 @@ public class DRLXParserTest {
         ParseTree tree = parseRuleAsAntlrAST(rule);
 
         assertThat(tree).isNotNull();
-        assertThat(tree).isInstanceOf(DRLXParser.RuleCompilationUnitContext.class);
+        assertThat(tree).isInstanceOf(DRLXParser.CompilationUnitContext.class);
 
-        DRLXParser.RuleCompilationUnitContext ruleCompilationUnitContext = (DRLXParser.RuleCompilationUnitContext) tree;
-        assertThat(ruleCompilationUnitContext).isNotNull();
-        assertThat(ruleCompilationUnitContext.drlxRule()).hasSize(1);
+        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
+        assertThat(compilationUnitContext).isNotNull();
+        assertThat(compilationUnitContext.typeDeclaration()).hasSize(1);
 
-        DRLXParser.DrlxRuleContext ruleContext = ruleCompilationUnitContext.drlxRule(0);
-        assertThat(ruleContext.identifier().getText()).isEqualTo("R1");
+        DRLXParser.RuleDeclarationContext ruleDeclarationContext = compilationUnitContext.typeDeclaration(0).ruleDeclaration();
+        assertThat(ruleDeclarationContext.identifier().getText()).isEqualTo("R1");
 
         // Verify rule body structure
-        DRLXParser.RuleBodyContext ruleBody = ruleContext.ruleBody();
+        DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
         assertThat(ruleBody.pattern()).hasSize(1);
         assertThat(ruleBody.consequence()).isNotNull();
 
@@ -112,7 +112,7 @@ public class DRLXParserTest {
     }
 
     private static ParseTree parseRuleAsAntlrAST(final String ruleExpression) {
-        return parseAntlrAST(ruleExpression, DRLXParser::ruleCompilationUnit);
+        return parseAntlrAST(ruleExpression, DRLXParser::compilationUnit);
     }
 
     private static ParseTree parseAntlrAST(final String input,

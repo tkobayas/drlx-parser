@@ -8,19 +8,24 @@ options {
     tokenVocab = DRLXLexer;
 }
 
-// Start rule for DRLX - can be either compilation unit, or rule
+// Start rule for DRLX
 drlxStart
     : compilationUnit
-    | ruleCompilationUnit
     ;
 
-// Rule compilation unit - for top-level rule declarations
-ruleCompilationUnit
-    : drlxRule+ EOF
+typeDeclaration
+    : classOrInterfaceModifier* (
+        classDeclaration
+        | enumDeclaration
+        | interfaceDeclaration
+        | annotationTypeDeclaration
+        | recordDeclaration
+        | ruleDeclaration
+    )
     ;
 
 // Rule declaration
-drlxRule
+ruleDeclaration
     : RULE identifier '{' ruleBody '}'
     ;
 
