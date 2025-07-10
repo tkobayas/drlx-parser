@@ -1,21 +1,11 @@
 package org.drools.drlx.parser;
 
-import com.github.javaparser.ast.CompilationUnit;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 public class TolerantDRLXParser {
-
-    public static CompilationUnit parseCompilationUnit(final String compilationUnit) {
-        // Parse the compilation unit
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnit);
-
-        // Visit and convert to JavaParser AST
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        return (CompilationUnit) visitor.visit(tree);
-    }
 
     public static ParseTree parseCompilationUnitAsAntlrAST(final String compilationUnit) {
         try {

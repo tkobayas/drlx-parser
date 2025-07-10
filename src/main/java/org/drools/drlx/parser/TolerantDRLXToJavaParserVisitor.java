@@ -62,6 +62,7 @@ import java.util.Collections;
 public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
     private static final String COMPLETION_PLACEHOLDER = "__COMPLETION__";
+    public static final String COMPLETION_FIELD = "__COMPLETION_FIELD__";
 
     // Associate antlr tokenId with a JavaParser node for identifier, so it can be used for code completion.
     private final Map<Integer, Node> tokenIdJPNodeMap = new HashMap<>();
@@ -201,15 +202,61 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
         NodeList<Statement> statements = new NodeList<>();
 
         if (ctx.blockStatement() != null) {
+            // Check if we have multiple incomplete statements that should be merged
+            Expression chainedExpression = null;
+            
             for (DRLXParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
                 Node node = visit(blockStatementCtx);
                 if (node instanceof Statement) {
-                    statements.add((Statement) node);
+                    Statement stmt = (Statement) node;
+                    
+                    // Check if this is an incomplete expression statement
+                    if (stmt instanceof ExpressionStmt) {
+                        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+                        Expression expr = exprStmt.getExpression();
+                        
+                        if (expr instanceof FieldAccessExpr) {
+                            FieldAccessExpr fieldAccess = (FieldAccessExpr) expr;
+                            if (COMPLETION_FIELD.equals(fieldAccess.getName().asString())) {
+                                if (chainedExpression == null) {
+                                    // First incomplete expression
+                                    chainedExpression = fieldAccess;
+                                } else {
+                                    // Merge with previous expression
+                                    chainedExpression = mergeFieldAccessExpressions(chainedExpression, fieldAccess);
+                                }
+                                continue; // Don't add this statement yet
+                            }
+                        }
+                    }
+                    
+                    // Add any previous chained expression if we have one
+                    if (chainedExpression != null) {
+                        ExpressionStmt chainedStmt = new ExpressionStmt(chainedExpression);
+                        chainedExpression.setParentNode(chainedStmt);
+                        statements.add(chainedStmt);
+                        chainedExpression = null;
+                    }
+                    
+                    statements.add(stmt);
                 }
+            }
+            
+            // Add any remaining chained expression
+            if (chainedExpression != null) {
+                ExpressionStmt chainedStmt = new ExpressionStmt(chainedExpression);
+                chainedExpression.setParentNode(chainedStmt);
+                statements.add(chainedStmt);
             }
         }
 
         blockStmt.setStatements(statements);
+        
+        // Set parent relationships for all statements
+        for (Statement stmt : statements) {
+            stmt.setParentNode(blockStmt);
+        }
+        
         return blockStmt;
     }
 
@@ -227,11 +274,13 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
 
         // handle error nodes
         if (areChildrenErrorNodes(ctx)) {
-            // quick hack only for `System.` completion. Later, we will populate the map for all identifiers
-            Expression scopeExpr = new NameExpr(ctx.children.get(0).getText());
-            tokenIdJPNodeMap.put(((TerminalNodeImpl)ctx.children.get(0)).getSymbol().getTokenIndex(), scopeExpr);
-            Expression markerField = new FieldAccessExpr(scopeExpr, "__COMPLETION_FIELD__");
-            return new ExpressionStmt(markerField);
+            // Build the complete field access chain for incomplete expressions
+            Expression expr = buildIncompleteExpression(ctx);
+            if (expr != null) {
+                ExpressionStmt stmt = new ExpressionStmt(expr);
+                expr.setParentNode(stmt);
+                return stmt;
+            }
         }
 
         if (ctx.children == null) {
@@ -251,6 +300,91 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node>
             }
         }
         return false;
+    }
+
+    private Expression buildIncompleteExpression(DRLXParser.BlockStatementContext ctx) {
+        if (ctx.children == null || ctx.children.isEmpty()) {
+            return null;
+        }
+
+        // Build the expression by parsing the tokens
+        Expression expr = null;
+        boolean expectingIdentifier = true;
+        
+        for (ParseTree child : ctx.children) {
+            String text = child.getText();
+            
+            if (expectingIdentifier && !text.equals(".")) {
+                // This should be an identifier
+                if (expr == null) {
+                    // First identifier - create NameExpr
+                    expr = new NameExpr(text);
+                    if (child instanceof TerminalNodeImpl) {
+                        tokenIdJPNodeMap.put(((TerminalNodeImpl)child).getSymbol().getTokenIndex(), expr);
+                    }
+                } else {
+                    // Subsequent identifier - create FieldAccessExpr
+                    FieldAccessExpr fieldAccess = new FieldAccessExpr(expr, text);
+                    expr.setParentNode(fieldAccess);
+                    expr = fieldAccess;
+                    if (child instanceof TerminalNodeImpl) {
+                        tokenIdJPNodeMap.put(((TerminalNodeImpl)child).getSymbol().getTokenIndex(), expr);
+                    }
+                }
+                expectingIdentifier = false;
+            } else if (text.equals(".")) {
+                expectingIdentifier = true;
+            }
+        }
+        
+        // If we ended with a dot, add the completion marker
+        if (expectingIdentifier && expr != null) {
+            FieldAccessExpr completionField = new FieldAccessExpr(expr, COMPLETION_FIELD);
+            expr.setParentNode(completionField);
+            expr = completionField;
+        }
+        
+        return expr;
+    }
+
+    private Expression mergeFieldAccessExpressions(Expression chainedExpression, FieldAccessExpr newFieldAccess) {
+        // Extract the scope from the new field access (this should be the field name we want to chain)
+        Expression scope = newFieldAccess.getScope();
+        
+        if (scope instanceof NameExpr) {
+            // Replace the __COMPLETION_FIELD__ with the actual field name from the scope
+            NameExpr fieldName = (NameExpr) scope;
+            
+            // Remove the completion marker from the chained expression and add the real field
+            if (chainedExpression instanceof FieldAccessExpr) {
+                FieldAccessExpr chainedFieldAccess = (FieldAccessExpr) chainedExpression;
+                if (COMPLETION_FIELD.equals(chainedFieldAccess.getName().asString())) {
+                    // Replace the completion marker with the actual field name
+                    FieldAccessExpr newChained = new FieldAccessExpr(chainedFieldAccess.getScope(), fieldName.getName().asString());
+                    chainedFieldAccess.getScope().setParentNode(newChained);
+                    
+                    // Update tokenIdJPNodeMap: find the old orphaned node and replace with the new merged node
+                    updateTokenIdJPNodeMapForMerge(fieldName, newChained);
+                    
+                    // Add the completion marker back at the end
+                    FieldAccessExpr finalExpr = new FieldAccessExpr(newChained, COMPLETION_FIELD);
+                    newChained.setParentNode(finalExpr);
+                    return finalExpr;
+                }
+            }
+        }
+        
+        return chainedExpression; // Fallback - return original if we can't merge
+    }
+    
+    private void updateTokenIdJPNodeMapForMerge(NameExpr orphanedNode, FieldAccessExpr newMergedNode) {
+        // Find the token ID that was pointing to the orphaned node and update it to point to the merged node
+        for (Map.Entry<Integer, Node> entry : tokenIdJPNodeMap.entrySet()) {
+            if (entry.getValue() == orphanedNode) {
+                entry.setValue(newMergedNode);
+                break;
+            }
+        }
     }
 
     @Override
