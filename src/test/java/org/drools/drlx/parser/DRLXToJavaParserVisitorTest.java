@@ -40,6 +40,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
+import org.mvel3.parser.ast.expr.InlineCastExpr;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -190,6 +191,54 @@ class DRLXToJavaParserVisitorTest {
         com.github.javaparser.ast.expr.MethodCallExpr methodCall = (com.github.javaparser.ast.expr.MethodCallExpr) exprStmt.getExpression();
         assertThat(methodCall.getName().asString()).isEqualTo("println");
         assertThat(methodCall.getArguments()).hasSize(1);
+    }
+
+    @Test
+    void testInlineCast() {
+        String classCompilationUnit = """
+                import java.util.List;
+                import java.util.ArrayList;
+                
+                public class Foo {
+                    public void bar(List list) {
+                        list#ArrayList#removeRange(0, 10);
+                    }
+                }
+                """;
+
+        // Parse the compilation unit
+        ParseTree tree = parseCompilationUnit(classCompilationUnit);
+
+        // Visit and convert to JavaParser AST
+        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
+        Node result = visitor.visit(tree);
+
+        com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) result;
+        MethodCallExpr methodCall = compilationUnit.getType(0)
+                .asClassOrInterfaceDeclaration().getMethodsByName("bar").get(0).getBody().get().getStatements().get(0)
+                .asExpressionStmt().getExpression()
+                .asMethodCallExpr();
+
+        assertThat(methodCall.getName().asString()).isEqualTo("removeRange");
+        assertThat(methodCall.getScope()).isPresent();
+
+        assertThat(methodCall.getScope().get()).isInstanceOf(InlineCastExpr.class);
+        InlineCastExpr inlineCastExpr = (InlineCastExpr) methodCall.getScope().get();
+        assertThat(inlineCastExpr.getExpression().asNameExpr().getName().asString()).isEqualTo("list");
+        assertThat(inlineCastExpr.getType().asString()).isEqualTo("ArrayList");
+
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+
+        // Test type resolution
+        ResolvedType resolvedType = inlineCastExpr.calculateResolvedType();
+
+        // Verify the resolved type
+        assertThat(resolvedType.describe()).isEqualTo("java.util.ArrayList");
     }
 
     private static ParseTree parseCompilationUnit(final String compilationUnit) {
