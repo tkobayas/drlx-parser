@@ -1307,7 +1307,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         return methodCall;
     }
 
-    private NodeList<Expression> parseArguments(DRLXParser.ArgumentsContext ctx) {
+    protected NodeList<Expression> parseArguments(DRLXParser.ArgumentsContext ctx) {
         NodeList<Expression> args = new NodeList<>();
         if (ctx.expressionList() != null) {
             // Parse each expression in the argument list

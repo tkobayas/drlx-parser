@@ -205,7 +205,7 @@ class DRLXToJavaParserVisitorTest {
                 
                 public class Foo {
                     public void bar(List list) {
-                        list#ArrayList#removeRange(0, 10);
+                        list#ArrayList#.removeRange(0, 10);
                     }
                 }
                 """;

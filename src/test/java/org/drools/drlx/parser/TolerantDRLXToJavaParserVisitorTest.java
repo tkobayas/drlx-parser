@@ -35,6 +35,7 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
+import org.mvel3.parser.ast.expr.InlineCastExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
 import org.mvel3.parser.ast.expr.RuleConsequence;
 import org.mvel3.parser.ast.expr.RuleDeclaration;
@@ -315,6 +316,116 @@ class TolerantDRLXToJavaParserVisitorTest {
 
         // Verify the resolved type
         assertThat(outType.describe()).isEqualTo("java.io.PrintStream");
+
+        // Now we can suggest completions for System.* by getting all public static fields
+        // This would be where code completion suggestions would come from
+    }
+
+    @Test
+    void incompleteRule_InlineCast() {
+        String compilationUnitString = """
+                import java.util.ArrayList;
+                
+                class Foo {
+                    rule R1 {
+                       var a : /as,
+                       do { list#ArrayList#.
+                """;
+
+        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
+        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+
+        // Verify class declaration
+        assertThat(compilationUnit.getTypes()).hasSize(1);
+        assertThat(compilationUnit.getType(0).getName().asString()).isEqualTo("Foo");
+        assertThat(compilationUnit.getType(0)).isInstanceOf(ClassOrInterfaceDeclaration.class);
+
+        // Verify rule declaration
+        ClassOrInterfaceDeclaration classDecl =
+                (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
+        assertThat(classDecl.getMembers()).hasSize(1);
+        assertThat(classDecl.getMember(0)).isInstanceOf(RuleDeclaration.class);
+
+        RuleDeclaration ruleDecl = (RuleDeclaration) classDecl.getMember(0);
+        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
+
+        // Verify rule body - should be tolerant of incomplete parsing
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        assertThat(ruleBody).isNotNull();
+
+        // The rule body should contain at least the pattern that was successfully parsed
+        // The incomplete consequence might not be parsed fully, but we should get some items
+        assertThat(ruleBody.getItems()).isNotEmpty();
+
+        // Find the pattern item (should be present since it was complete)
+        RulePattern pattern = (RulePattern) ruleBody.getItems().get(0);
+        RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
+
+        // Verify pattern (should be complete)
+        assertThat(pattern).isNotNull();
+        assertThat(pattern.getType().asString()).isEqualTo("var");
+        assertThat(pattern.getBind().asString()).isEqualTo("a");
+
+        // Verify OOPath expression
+        org.mvel3.parser.ast.expr.OOPathExpr oopathExpr = pattern.getExpr();
+        assertThat(oopathExpr).isNotNull();
+        assertThat(oopathExpr.getChunks()).hasSize(1);
+        assertThat(oopathExpr.getChunks().get(0)).isInstanceOf(OOPathChunk.class);
+
+        OOPathChunk chunk = oopathExpr.getChunks().get(0);
+        assertThat(chunk.getField().asString()).isEqualTo("as");
+
+        // Verify consequence - should be present with the incomplete System. reference
+        assertThat(consequence).isNotNull();
+        assertThat(consequence.getStatement()).isNotNull();
+        assertThat(consequence.getStatement()).isInstanceOf(BlockStmt.class);
+
+        BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
+        assertThat(consequenceBlock.getStatements()).hasSize(1);
+
+        Statement stmt = consequenceBlock.getStatements().get(0);
+        assertThat(stmt).isInstanceOf(ExpressionStmt.class);
+
+        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+        Expression expr = exprStmt.getExpression();
+        assertThat(expr).isInstanceOf(FieldAccessExpr.class);
+
+        // Check if we can identify the System reference for code completion
+        FieldAccessExpr fieldAccess = (FieldAccessExpr) expr;
+        assertThat(fieldAccess.getScope()).isInstanceOf(InlineCastExpr.class);
+        assertThat(fieldAccess.getName().asString()).isEqualTo("__COMPLETION_FIELD__");
+
+        InlineCastExpr scopeInlineCastExpr = (InlineCastExpr) fieldAccess.getScope();
+        assertThat(scopeInlineCastExpr.getExpression().asNameExpr().getName().asString()).isEqualTo("list");
+        assertThat(scopeInlineCastExpr.getType().asString()).isEqualTo("ArrayList");
+
+        // TODO: Which token ID should we expect for InlineCastExpr?
+//        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+//        System.out.println(tokenIdJPNodeMap);
+//        Node node = tokenIdJPNodeMap.get(28);
+//        assertThat(node).isEqualTo(scopeInlineCastExpr); // expect "System.out" FieldAccessExpr
+
+        // Test tolerant parsing - even with incomplete input, we should get a valid AST structure
+        // This is crucial for code completion scenarios where the user is still typing
+        assertThat(ruleDecl).isNotNull();
+        assertThat(ruleBody).isNotNull();
+        assertThat(pattern).isNotNull();
+
+
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+
+        // Test type resolution of System
+        ResolvedType outType = scopeInlineCastExpr.calculateResolvedType();
+        System.out.println("out type: " + outType.describe());
+
+        // Verify the resolved type
+        assertThat(outType.describe()).isEqualTo("java.util.ArrayList");
 
         // Now we can suggest completions for System.* by getting all public static fields
         // This would be where code completion suggestions would come from

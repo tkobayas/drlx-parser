@@ -7,6 +7,7 @@ import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
@@ -34,6 +35,9 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
         NodeList<Statement> statements = new NodeList<>();
 
         if (ctx.blockStatement() != null) {
+
+            //===== Tolerant mode handling =====
+
             // Check if we have multiple incomplete statements that should be merged
             // For example, `System.out.` provides 4 blockStatementCtx :
             // 1. no children -> ignore
@@ -114,6 +118,8 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
             throw new UnsupportedOperationException("Local type declarations not yet implemented");
         }
 
+        //===== Tolerant mode handling =====
+
         // handle error nodes
         if (areChildrenErrorNodes(ctx)) {
             // Build the complete field access chain for incomplete expressions
@@ -131,6 +137,67 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
         }
         throw new IllegalArgumentException("Unknown blockStatement type: " + ctx.getText());
     }
+
+    @Override
+    public Node visitMemberReferenceExpression(DRLXParser.MemberReferenceExpressionContext ctx) {
+        // Handle member reference like "java.math.MathContext.DECIMAL128"
+        Expression scope = (Expression) visit(ctx.expression());
+
+        if (ctx.identifier() != null) {
+            // Simple field access: expression.identifier
+            String fieldName = ctx.identifier().getText();
+            FieldAccessExpr fieldAccess = new FieldAccessExpr(scope, fieldName);
+            fieldAccess.setTokenRange(createTokenRange(ctx));
+            return fieldAccess;
+        } else if (ctx.methodCall() != null) {
+            // Method call: expression.methodCall()
+            String methodName = ctx.methodCall().identifier().getText();
+            NodeList<Expression> args = parseArguments(ctx.methodCall().arguments());
+
+            MethodCallExpr methodCall = new MethodCallExpr(scope, methodName);
+            methodCall.setArguments(args);
+            methodCall.setTokenRange(createTokenRange(ctx));
+            return methodCall;
+        } else if (ctx.THIS() != null) {
+            // expression.this
+            FieldAccessExpr fieldAccess = new FieldAccessExpr(scope, "this");
+            fieldAccess.setTokenRange(createTokenRange(ctx));
+            return fieldAccess;
+        } else if (ctx.SUPER() != null && ctx.superSuffix() != null) {
+            // expression.super.something
+            // TODO: Implement super handling
+            throw new UnsupportedOperationException("Super references not yet implemented");
+        } else if (ctx.NEW() != null && ctx.innerCreator() != null) {
+            // expression.new InnerClass()
+            // TODO: Implement inner class creation
+            throw new UnsupportedOperationException("Inner class creation not yet implemented");
+        }
+
+        //===== Tolerant mode handling =====
+
+        // Check if this is an incomplete member access (e.g., list#ArrayList#.)
+        // In tolerant mode, we want to add a COMPLETION_FIELD marker for code completion
+        if (hasTrailingDot(ctx)) {
+            FieldAccessExpr completionField = new FieldAccessExpr(scope, COMPLETION_FIELD);
+            scope.setParentNode(completionField);
+            completionField.setTokenRange(createTokenRange(ctx));
+            // TODO: put tokenIdJPNodeMap entry for the COMPLETION_FIELD node??
+            return completionField;
+        }
+
+        throw new IllegalArgumentException("Unsupported member reference: " + ctx.getText());
+    }
+
+    private boolean hasTrailingDot(DRLXParser.MemberReferenceExpressionContext ctx) {
+        // Check if the last child is a DOT token (incomplete member access)
+        if (ctx.children == null || ctx.children.isEmpty()) {
+            return false;
+        }
+
+        ParseTree lastChild = ctx.children.get(ctx.children.size() - 1);
+        return ".".equals(lastChild.getText());
+    }
+
 
     private boolean areChildrenErrorNodes(DRLXParser.BlockStatementContext ctx) {
         if (ctx.children == null || ctx.children.isEmpty()) {
