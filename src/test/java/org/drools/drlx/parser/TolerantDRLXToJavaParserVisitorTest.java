@@ -400,11 +400,10 @@ class TolerantDRLXToJavaParserVisitorTest {
         assertThat(scopeInlineCastExpr.getExpression().asNameExpr().getName().asString()).isEqualTo("list");
         assertThat(scopeInlineCastExpr.getType().asString()).isEqualTo("ArrayList");
 
-        // TODO: Which token ID should we expect for InlineCastExpr?
-//        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
-//        System.out.println(tokenIdJPNodeMap);
-//        Node node = tokenIdJPNodeMap.get(28);
-//        assertThat(node).isEqualTo(scopeInlineCastExpr); // expect "System.out" FieldAccessExpr
+        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        System.out.println(tokenIdJPNodeMap);
+        Node node = tokenIdJPNodeMap.get(38); // token ID for '#' right before the incomplete '.'
+        assertThat(node).isEqualTo(scopeInlineCastExpr); // expect "System.out" FieldAccessExpr
 
         // Test tolerant parsing - even with incomplete input, we should get a valid AST structure
         // This is crucial for code completion scenarios where the user is still typing

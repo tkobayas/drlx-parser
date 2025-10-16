@@ -181,7 +181,11 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
             FieldAccessExpr completionField = new FieldAccessExpr(scope, COMPLETION_FIELD);
             scope.setParentNode(completionField);
             completionField.setTokenRange(createTokenRange(ctx));
-            // TODO: put tokenIdJPNodeMap entry for the COMPLETION_FIELD node??
+            ParseTree dot = ctx.children.get(ctx.children.size() - 1);
+            if (dot instanceof TerminalNodeImpl dotTerminalNodeImpl) {
+                // store the scope for the token ID (= right before the dot)
+                tokenIdJPNodeMap.put(dotTerminalNodeImpl.getSymbol().getTokenIndex() - 1, scope);
+            }
             return completionField;
         }
 
