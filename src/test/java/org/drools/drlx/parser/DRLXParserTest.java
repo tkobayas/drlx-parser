@@ -34,6 +34,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Parse DRLX expressions and rules using the DRLXParser and verify the resulting antlr AST structure.
+ */
 public class DRLXParserTest {
 
     @Test

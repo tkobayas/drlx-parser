@@ -44,6 +44,10 @@ import org.mvel3.parser.ast.expr.InlineCastExpr;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * Parse DRLX expressions and rules using the DRLXParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
+ * Verify the resulting JavaParser AST structure.
+ */
 class DRLXToJavaParserVisitorTest {
 
     @Test

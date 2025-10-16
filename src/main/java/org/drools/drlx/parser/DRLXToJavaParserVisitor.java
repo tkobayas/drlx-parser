@@ -392,21 +392,18 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         return chunk;
     }
 
-    //-------------------------------------------------------
-    //-------------------------------------------------------
-    //-------------------------------------------------------
-    //-------------------------------------------------------
-    //-------------------------------------------------------
-    //--- Pasted from Mvel3ToJavaParserVisitor in mvel3 -----
-
-
-    //----------------------------------
+    //-------------------------------------------------------------
+    //-------------------------------------------------------------
+    //-------------------------------------------------------------
+    //-------------------------------------------------------------
+    //-------------------------------------------------------------
+    //--- Below copied from Mvel3ToJavaParserVisitor in mvel3 -----
 
     /**
      * Create a JavaParser TokenRange from ANTLR ParserRuleContext.
      * This provides proper source location information instead of using TokenRange.INVALID.
      */
-    private TokenRange createTokenRange(ParserRuleContext ctx) {
+    protected TokenRange createTokenRange(ParserRuleContext ctx) {
         if (ctx == null) {
             return TokenRange.INVALID;
         }
