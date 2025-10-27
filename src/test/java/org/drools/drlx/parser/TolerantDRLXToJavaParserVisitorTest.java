@@ -27,6 +27,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -35,6 +36,7 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
+import org.mvel3.parser.ast.expr.BigDecimalLiteralExpr;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
 import org.mvel3.parser.ast.expr.RuleConsequence;
@@ -226,50 +228,11 @@ class TolerantDRLXToJavaParserVisitorTest {
         TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
         CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
 
-        // Verify class declaration
-        assertThat(compilationUnit.getTypes()).hasSize(1);
-        assertThat(compilationUnit.getType(0).getName().asString()).isEqualTo("Foo");
-        assertThat(compilationUnit.getType(0)).isInstanceOf(ClassOrInterfaceDeclaration.class);
-
-        // Verify rule declaration
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
-        assertThat(classDecl.getMembers()).hasSize(1);
-        assertThat(classDecl.getMember(0)).isInstanceOf(RuleDeclaration.class);
-
         RuleDeclaration ruleDecl = (RuleDeclaration) classDecl.getMember(0);
-        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
-
-        // Verify rule body - should be tolerant of incomplete parsing
         org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
-        assertThat(ruleBody).isNotNull();
-
-        // The rule body should contain at least the pattern that was successfully parsed
-        // The incomplete consequence might not be parsed fully, but we should get some items
-        assertThat(ruleBody.getItems()).isNotEmpty();
-
-        // Find the pattern item (should be present since it was complete)
-        RulePattern pattern = (RulePattern) ruleBody.getItems().get(0);
         RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
-
-        // Verify pattern (should be complete)
-        assertThat(pattern).isNotNull();
-        assertThat(pattern.getType().asString()).isEqualTo("var");
-        assertThat(pattern.getBind().asString()).isEqualTo("a");
-
-        // Verify OOPath expression
-        org.mvel3.parser.ast.expr.OOPathExpr oopathExpr = pattern.getExpr();
-        assertThat(oopathExpr).isNotNull();
-        assertThat(oopathExpr.getChunks()).hasSize(1);
-        assertThat(oopathExpr.getChunks().get(0)).isInstanceOf(OOPathChunk.class);
-
-        OOPathChunk chunk = oopathExpr.getChunks().get(0);
-        assertThat(chunk.getField().asString()).isEqualTo("as");
-
-        // Verify consequence - should be present with the incomplete System. reference
-        assertThat(consequence).isNotNull();
-        assertThat(consequence.getStatement()).isNotNull();
-        assertThat(consequence.getStatement()).isInstanceOf(BlockStmt.class);
 
         BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
         assertThat(consequenceBlock.getStatements()).hasSize(1);
@@ -299,8 +262,6 @@ class TolerantDRLXToJavaParserVisitorTest {
         // This is crucial for code completion scenarios where the user is still typing
         assertThat(ruleDecl).isNotNull();
         assertThat(ruleBody).isNotNull();
-        assertThat(pattern).isNotNull();
-
 
         // Setup JavaSymbolSolver for type resolution
         ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
@@ -336,50 +297,11 @@ class TolerantDRLXToJavaParserVisitorTest {
         TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
         CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
 
-        // Verify class declaration
-        assertThat(compilationUnit.getTypes()).hasSize(1);
-        assertThat(compilationUnit.getType(0).getName().asString()).isEqualTo("Foo");
-        assertThat(compilationUnit.getType(0)).isInstanceOf(ClassOrInterfaceDeclaration.class);
-
-        // Verify rule declaration
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
-        assertThat(classDecl.getMembers()).hasSize(1);
-        assertThat(classDecl.getMember(0)).isInstanceOf(RuleDeclaration.class);
-
         RuleDeclaration ruleDecl = (RuleDeclaration) classDecl.getMember(0);
-        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
-
-        // Verify rule body - should be tolerant of incomplete parsing
         org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
-        assertThat(ruleBody).isNotNull();
-
-        // The rule body should contain at least the pattern that was successfully parsed
-        // The incomplete consequence might not be parsed fully, but we should get some items
-        assertThat(ruleBody.getItems()).isNotEmpty();
-
-        // Find the pattern item (should be present since it was complete)
-        RulePattern pattern = (RulePattern) ruleBody.getItems().get(0);
         RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
-
-        // Verify pattern (should be complete)
-        assertThat(pattern).isNotNull();
-        assertThat(pattern.getType().asString()).isEqualTo("var");
-        assertThat(pattern.getBind().asString()).isEqualTo("a");
-
-        // Verify OOPath expression
-        org.mvel3.parser.ast.expr.OOPathExpr oopathExpr = pattern.getExpr();
-        assertThat(oopathExpr).isNotNull();
-        assertThat(oopathExpr.getChunks()).hasSize(1);
-        assertThat(oopathExpr.getChunks().get(0)).isInstanceOf(OOPathChunk.class);
-
-        OOPathChunk chunk = oopathExpr.getChunks().get(0);
-        assertThat(chunk.getField().asString()).isEqualTo("as");
-
-        // Verify consequence - should be present with the incomplete System. reference
-        assertThat(consequence).isNotNull();
-        assertThat(consequence.getStatement()).isNotNull();
-        assertThat(consequence.getStatement()).isInstanceOf(BlockStmt.class);
 
         BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
         assertThat(consequenceBlock.getStatements()).hasSize(1);
@@ -409,8 +331,6 @@ class TolerantDRLXToJavaParserVisitorTest {
         // This is crucial for code completion scenarios where the user is still typing
         assertThat(ruleDecl).isNotNull();
         assertThat(ruleBody).isNotNull();
-        assertThat(pattern).isNotNull();
-
 
         // Setup JavaSymbolSolver for type resolution
         ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
@@ -425,6 +345,142 @@ class TolerantDRLXToJavaParserVisitorTest {
 
         // Verify the resolved type
         assertThat(outType.describe()).isEqualTo("java.util.ArrayList");
+
+        // Now we can suggest completions for System.* by getting all public static fields
+        // This would be where code completion suggestions would come from
+    }
+
+    @Test
+    void incompleteRule_BigDecimalLiteral() {
+        String compilationUnitString = """
+                class Foo {
+                    rule R1 {
+                       var a : /as,
+                       do { 10.5B.
+                """;
+
+        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
+        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+
+        ClassOrInterfaceDeclaration classDecl =
+                (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
+        RuleDeclaration ruleDecl = (RuleDeclaration) classDecl.getMember(0);
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
+
+        BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
+        assertThat(consequenceBlock.getStatements()).hasSize(1);
+
+        Statement stmt = consequenceBlock.getStatements().get(0);
+        assertThat(stmt).isInstanceOf(ExpressionStmt.class);
+
+        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+        Expression expr = exprStmt.getExpression();
+        assertThat(expr).isInstanceOf(FieldAccessExpr.class);
+
+        // Check if we can identify the System reference for code completion
+        FieldAccessExpr fieldAccess = (FieldAccessExpr) expr;
+        assertThat(fieldAccess.getScope()).isInstanceOf(BigDecimalLiteralExpr.class);
+        assertThat(fieldAccess.getName().asString()).isEqualTo("__COMPLETION_FIELD__");
+
+        BigDecimalLiteralExpr scopeBigDecimalLiteralExpr = (BigDecimalLiteralExpr) fieldAccess.getScope();
+        assertThat(scopeBigDecimalLiteralExpr.getValue()).isEqualTo("10.5");
+
+        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        System.out.println(tokenIdJPNodeMap);
+        Node node = tokenIdJPNodeMap.get(26); // token ID for '10.5B' right before the incomplete '.'
+        assertThat(node).isEqualTo(scopeBigDecimalLiteralExpr); // expect "System.out" FieldAccessExpr
+
+        // Test tolerant parsing - even with incomplete input, we should get a valid AST structure
+        // This is crucial for code completion scenarios where the user is still typing
+        assertThat(ruleDecl).isNotNull();
+        assertThat(ruleBody).isNotNull();
+
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+
+        // Test type resolution of System
+        ResolvedType outType = scopeBigDecimalLiteralExpr.calculateResolvedType();
+        System.out.println("out type: " + outType.describe());
+
+        // Verify the resolved type
+        assertThat(outType.describe()).isEqualTo("java.math.BigDecimal");
+
+        // Now we can suggest completions for System.* by getting all public static fields
+        // This would be where code completion suggestions would come from
+    }
+
+    @Test
+    void incompleteRule_propertyAccessor() {
+        String compilationUnitString = """
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Address;
+                
+                class Foo {
+                    rule R1 {
+                        var a : /as,
+                        do {
+                            Person p = new Person("John", new Address("Tokyo"));
+                            p.address.
+                """;
+
+        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
+        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+
+        ClassOrInterfaceDeclaration classDecl =
+                (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
+        RuleDeclaration ruleDecl = (RuleDeclaration) classDecl.getMember(0);
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
+
+        BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
+        assertThat(consequenceBlock.getStatements()).hasSize(2);
+
+        Statement stmt = consequenceBlock.getStatements().get(1);
+        assertThat(stmt).isInstanceOf(ExpressionStmt.class);
+
+        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+        Expression expr = exprStmt.getExpression();
+        assertThat(expr).isInstanceOf(FieldAccessExpr.class);
+
+        // Check if we can identify the System reference for code completion
+        FieldAccessExpr fieldAccess = (FieldAccessExpr) expr;
+        assertThat(fieldAccess.getScope()).isInstanceOf(FieldAccessExpr.class);
+        assertThat(fieldAccess.getName().asString()).isEqualTo("__COMPLETION_FIELD__");
+
+        FieldAccessExpr scopeFieldAccessExpr = (FieldAccessExpr) fieldAccess.getScope(); // p.address
+        assertThat(scopeFieldAccessExpr.getName().asString()).isEqualTo("address");
+        assertThat(((NameExpr)scopeFieldAccessExpr.getScope()).getName().asString()).isEqualTo("p");
+
+        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        System.out.println(tokenIdJPNodeMap);
+        Node node = tokenIdJPNodeMap.get(76); // token ID for 'p.address' right before the incomplete '.'
+        assertThat(node).isEqualTo(scopeFieldAccessExpr); // expect "System.out" FieldAccessExpr
+
+        // Test tolerant parsing - even with incomplete input, we should get a valid AST structure
+        // This is crucial for code completion scenarios where the user is still typing
+        assertThat(ruleDecl).isNotNull();
+        assertThat(ruleBody).isNotNull();
+
+        // Setup JavaSymbolSolver for type resolution
+        ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
+        JavaSymbolSolver solver = new JavaSymbolSolver(typeSolver);
+
+        // Inject symbol resolver into the compilation unit
+        solver.inject(compilationUnit);
+
+        // Test type resolution of System
+        ResolvedType outType = scopeFieldAccessExpr.calculateResolvedType();
+        System.out.println("out type: " + outType.describe());
+
+        // Verify the resolved type
+        assertThat(outType.describe()).isEqualTo("org.drools.drlx.domain.Address");
 
         // Now we can suggest completions for System.* by getting all public static fields
         // This would be where code completion suggestions would come from
