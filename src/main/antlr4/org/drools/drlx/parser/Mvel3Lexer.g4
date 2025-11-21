@@ -16,6 +16,7 @@ WITH      : 'with';
 
 // MVEL-specific operators
 HASH      : '#';
+EXCL_DOT  : '!.';
 
 // MVEL-specific literals (defined to avoid conflicts with imported tokens)
 // BigDecimal literals with 'B' suffix
@@ -29,3 +30,19 @@ BigIntegerLiteral
     : ('0' | [1-9] (Digits? | '_'+ Digits)) [iI]
     ;
 
+// Temporal literals
+MILLISECOND_LITERAL
+    : Digits 'ms'
+    ;
+
+SECOND_LITERAL
+    : Digits 's'
+    ;
+
+MINUTE_LITERAL
+    : Digits 'm'
+    ;
+
+HOUR_LITERAL
+    : Digits 'h'
+    ;

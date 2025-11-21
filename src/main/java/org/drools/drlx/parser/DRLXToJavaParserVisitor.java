@@ -102,6 +102,17 @@ import org.mvel3.parser.ast.expr.WithStatement;
 import java.util.List;
 
 import static org.mvel3.parser.util.AstUtils.getBinaryExprOperator;
+import java.util.concurrent.TimeUnit;
+import org.mvel3.parser.ast.expr.DrlNameExpr;
+import org.mvel3.parser.ast.expr.ListCreationLiteralExpression;
+import org.mvel3.parser.ast.expr.ListCreationLiteralExpressionElement;
+import org.mvel3.parser.ast.expr.MapCreationLiteralExpression;
+import org.mvel3.parser.ast.expr.MapCreationLiteralExpressionKeyValuePair;
+import org.mvel3.parser.ast.expr.NullSafeFieldAccessExpr;
+import org.mvel3.parser.ast.expr.NullSafeMethodCallExpr;
+import org.mvel3.parser.ast.expr.TemporalChunkExpr;
+import org.mvel3.parser.ast.expr.TemporalLiteralChunkExpr;
+import org.mvel3.parser.ast.expr.TemporalLiteralExpr;
 
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
@@ -398,7 +409,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     //-------------------------------------------------------------
     //-------------------------------------------------------------
     //--- Below copied from Mvel3ToJavaParserVisitor in mvel3 -----
-
+    
     /**
      * Create a JavaParser TokenRange from ANTLR ParserRuleContext.
      * This provides proper source location information instead of using TokenRange.INVALID.
@@ -407,31 +418,31 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         if (ctx == null) {
             return TokenRange.INVALID;
         }
-
+        
         Token startToken = ctx.getStart();
         Token stopToken = ctx.getStop();
-
+        
         if (startToken == null || stopToken == null) {
             return TokenRange.INVALID;
         }
-
+        
         // Create JavaParser positions
         Position startPos = new Position(startToken.getLine(), startToken.getCharPositionInLine() + 1);
         Position stopPos = new Position(stopToken.getLine(), stopToken.getCharPositionInLine() + stopToken.getText().length());
-
+        
         // Create JavaParser Range
         Range range = new Range(startPos, stopPos);
-
+        
         // Create JavaParser JavaTokens (simplified - we use token type 0 and the actual text)
         JavaToken startJavaToken = new JavaToken(0, startToken.getText());
         startJavaToken.setRange(range);
-
+        
         JavaToken stopJavaToken = new JavaToken(0, stopToken.getText());
         stopJavaToken.setRange(range);
-
+        
         return new TokenRange(startJavaToken, stopJavaToken);
     }
-
+    
     /**
      * Create a TokenRange from a single ANTLR token (for terminal nodes).
      */
@@ -439,14 +450,14 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         if (token == null) {
             return TokenRange.INVALID;
         }
-
+        
         Position startPos = new Position(token.getLine(), token.getCharPositionInLine() + 1);
         Position stopPos = new Position(token.getLine(), token.getCharPositionInLine() + token.getText().length());
         Range range = new Range(startPos, stopPos);
-
+        
         JavaToken javaToken = new JavaToken(0, token.getText());
         javaToken.setRange(range);
-
+        
         return new TokenRange(javaToken, javaToken);
     }
 
@@ -472,12 +483,12 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         if (assignOp != null) {
             return new AssignExpr(createTokenRange(ctx), left, right, assignOp);
         }
-
+        
         // Handle other binary operators
         BinaryExpr.Operator operator = getBinaryExprOperator(operatorText);
         return new BinaryExpr(createTokenRange(ctx), left, right, operator);
     }
-
+    
     /**
      * Map operator text to AssignExpr.Operator, return null if not an assignment operator
      */
@@ -503,7 +514,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     public Node visitMemberReferenceExpression(DRLXParser.MemberReferenceExpressionContext ctx) {
         // Handle member reference like "java.math.MathContext.DECIMAL128"
         Expression scope = (Expression) visit(ctx.expression());
-
+        
         if (ctx.identifier() != null) {
             // Simple field access: expression.identifier
             String fieldName = ctx.identifier().getText();
@@ -514,7 +525,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // Method call: expression.methodCall()
             String methodName = ctx.methodCall().identifier().getText();
             NodeList<Expression> args = parseArguments(ctx.methodCall().arguments());
-
+            
             MethodCallExpr methodCall = new MethodCallExpr(scope, methodName);
             methodCall.setArguments(args);
             methodCall.setTokenRange(createTokenRange(ctx));
@@ -533,7 +544,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // TODO: Implement inner class creation
             throw new UnsupportedOperationException("Inner class creation not yet implemented");
         }
-
+        
         throw new IllegalArgumentException("Unsupported member reference: " + ctx.getText());
     }
 
@@ -547,7 +558,9 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         if (ctx.literal() != null) {
             return visit(ctx.literal());
         } else if (ctx.identifier() != null) {
-            NameExpr nameExpr = new NameExpr(ctx.identifier().getText());
+            // Always use DrlNameExpr for identifiers to match JavaCC behavior
+            // backReferencesCount defaults to 0 for normal identifiers
+            DrlNameExpr nameExpr = new DrlNameExpr(ctx.identifier().getText());
             nameExpr.setTokenRange(createTokenRange(ctx));
             return nameExpr;
         } else if (ctx.LPAREN() != null && ctx.expression() != null && ctx.RPAREN() != null) {
@@ -560,7 +573,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             thisExpr.setTokenRange(createTokenRange(ctx));
             return thisExpr;
         }
-
+        
         // Handle other primary cases that might be needed
         return visitChildren(ctx);
     }
@@ -597,6 +610,112 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         }
 
         return inlineCastExpr;
+    }
+
+    @Override
+    public Node visitListCreationLiteralExpression(DRLXParser.ListCreationLiteralExpressionContext ctx) {
+        // Visit the listCreationLiteral rule
+        return visit(ctx.listCreationLiteral());
+    }
+
+    @Override
+    public Node visitListCreationLiteral(DRLXParser.ListCreationLiteralContext ctx) {
+        NodeList<Expression> elements = new NodeList<>();
+
+        // Process each list element
+        if (ctx.listElement() != null) {
+            for (DRLXParser.ListElementContext elementCtx : ctx.listElement()) {
+                Expression expr = (Expression) visit(elementCtx.expression());
+                // Wrap in ListCreationLiteralExpressionElement as per mvel.jj
+                ListCreationLiteralExpressionElement element =
+                    new ListCreationLiteralExpressionElement(expr);
+                element.setTokenRange(createTokenRange(elementCtx));
+                elements.add(element);
+            }
+        }
+
+        ListCreationLiteralExpression listExpr = new ListCreationLiteralExpression(elements);
+        listExpr.setTokenRange(createTokenRange(ctx));
+        return listExpr;
+    }
+
+    @Override
+    public Node visitMapCreationLiteralExpression(DRLXParser.MapCreationLiteralExpressionContext ctx) {
+        // Visit the mapCreationLiteral rule
+        return visit(ctx.mapCreationLiteral());
+    }
+
+    @Override
+    public Node visitMapCreationLiteral(DRLXParser.MapCreationLiteralContext ctx) {
+        NodeList<Expression> entries = new NodeList<>();
+
+        // Check for empty map syntax [:]
+        if (ctx.COLON() != null && ctx.mapEntry().isEmpty()) {
+            // Empty map
+            MapCreationLiteralExpression mapExpr = new MapCreationLiteralExpression(entries);
+            mapExpr.setTokenRange(createTokenRange(ctx));
+            return mapExpr;
+        }
+
+        // Process each map entry
+        if (ctx.mapEntry() != null) {
+            for (DRLXParser.MapEntryContext entryCtx : ctx.mapEntry()) {
+                Expression key = (Expression) visit(entryCtx.expression(0));
+                Expression value = (Expression) visit(entryCtx.expression(1));
+
+                // Wrap in MapCreationLiteralExpressionKeyValuePair as per mvel.jj
+                MapCreationLiteralExpressionKeyValuePair pair =
+                    new MapCreationLiteralExpressionKeyValuePair(key, value);
+                pair.setTokenRange(createTokenRange(entryCtx));
+                entries.add(pair);
+            }
+        }
+
+        MapCreationLiteralExpression mapExpr = new MapCreationLiteralExpression(entries);
+        mapExpr.setTokenRange(createTokenRange(ctx));
+        return mapExpr;
+    }
+
+    @Override
+    public Node visitNullSafeExpression(DRLXParser.NullSafeExpressionContext ctx) {
+        // Extract the scope (left side of !.)
+        Expression scope = (Expression) visit(ctx.expression());
+
+        // Extract the identifier name
+        String name = ctx.identifier().getText();
+
+        // Check if there are arguments (method call) or not (field access)
+        if (ctx.arguments() != null) {
+            // Method call: $p!.getName()
+            NodeList<Expression> arguments = new NodeList<>();
+            if (ctx.arguments().expressionList() != null) {
+                for (DRLXParser.ExpressionContext argCtx : ctx.arguments().expressionList().expression()) {
+                    arguments.add((Expression) visit(argCtx));
+                }
+            }
+
+            // Extract type arguments if present
+            NodeList<Type> typeArguments = new NodeList<>();
+            if (ctx.typeArguments() != null) {
+                for (DRLXParser.TypeArgumentContext typeArgCtx : ctx.typeArguments().typeArgument()) {
+                    typeArguments.add((Type) visit(typeArgCtx));
+                }
+            }
+
+            NullSafeMethodCallExpr methodCall = new NullSafeMethodCallExpr(
+                scope,
+                typeArguments.isEmpty() ? null : typeArguments,
+                name,
+                arguments
+            );
+            methodCall.setTokenRange(createTokenRange(ctx));
+            return methodCall;
+        } else {
+            // Field access: $p!.name
+            NullSafeFieldAccessExpr fieldAccess = new NullSafeFieldAccessExpr(scope, name);
+            fieldAccess.setTokenRange(createTokenRange(ctx));
+            return fieldAccess;
+        }
     }
 
     @Override
@@ -686,7 +805,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             textBlockLiteral.setTokenRange(createTokenRange(ctx));
             return textBlockLiteral;
         }
-
+        
         // Handle MVEL-specific literals - create proper AST nodes like mvel.jj does
         if (ctx.BigDecimalLiteral() != null) {
             String text = ctx.BigDecimalLiteral().getText();
@@ -696,17 +815,51 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             String text = ctx.BigIntegerLiteral().getText();
             // Create BigIntegerLiteralExpr node (transformation happens in MVELToJavaRewriter)
             return new BigIntegerLiteralExpr(createTokenRange(ctx), text);
+        } else if (ctx.temporalLiteral() != null) {
+            return buildTemporalLiteral(ctx.temporalLiteral());
+        }
+        
+        throw new IllegalArgumentException("Unknown literal type: " + ctx.getText());
+    }
+
+    private TemporalLiteralExpr buildTemporalLiteral(DRLXParser.TemporalLiteralContext ctx) {
+        NodeList<TemporalChunkExpr> chunks = new NodeList<>();
+        for (DRLXParser.TemporalLiteralChunkContext chunkCtx : ctx.temporalLiteralChunk()) {
+            chunks.add(buildTemporalLiteralChunk(chunkCtx));
+        }
+        TemporalLiteralExpr temporalLiteralExpr = new TemporalLiteralExpr(createTokenRange(ctx), chunks);
+        return temporalLiteralExpr;
+    }
+
+    private TemporalLiteralChunkExpr buildTemporalLiteralChunk(DRLXParser.TemporalLiteralChunkContext ctx) {
+        Token token;
+        TimeUnit timeUnit;
+
+        if (ctx.MILLISECOND_LITERAL() != null) {
+            token = ctx.MILLISECOND_LITERAL().getSymbol();
+            timeUnit = TimeUnit.MILLISECONDS;
+        } else if (ctx.SECOND_LITERAL() != null) {
+            token = ctx.SECOND_LITERAL().getSymbol();
+            timeUnit = TimeUnit.SECONDS;
+        } else if (ctx.MINUTE_LITERAL() != null) {
+            token = ctx.MINUTE_LITERAL().getSymbol();
+            timeUnit = TimeUnit.MINUTES;
+        } else if (ctx.HOUR_LITERAL() != null) {
+            token = ctx.HOUR_LITERAL().getSymbol();
+            timeUnit = TimeUnit.HOURS;
+        } else {
+            throw new IllegalArgumentException("Unsupported temporal literal chunk: " + ctx.getText());
         }
 
-        throw new IllegalArgumentException("Unknown literal type: " + ctx.getText());
+        return new TemporalLiteralChunkExpr(createTokenRange(ctx), token.getText(), timeUnit);
     }
 
     @Override
     public Node visitClassOrInterfaceType(DRLXParser.ClassOrInterfaceTypeContext ctx) {
         // Grammar: (identifier typeArguments? '.')* typeIdentifier typeArguments?
-
+        
         ClassOrInterfaceType type = null;
-
+        
         // Handle the optional qualified prefix (identifier typeArguments? '.')*
         // For now, we skip typeArguments in the prefix (rare case)
         if (ctx.identifier() != null && !ctx.identifier().isEmpty()) {
@@ -718,27 +871,27 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 // TODO: Handle typeArguments for intermediate identifiers if needed (rare case)
             }
         }
-
+        
         // Handle the required typeIdentifier at the end
         if (ctx.typeIdentifier() != null) {
             String typeName = ctx.typeIdentifier().getText();
             ClassOrInterfaceType newType = new ClassOrInterfaceType(type, typeName);
             newType.setTokenRange(createTokenRange(ctx));
             type = newType;
-
+            
             // Handle final typeArguments if present (the common case for generics like List<Foo>)
             if (ctx.typeArguments() != null && !ctx.typeArguments().isEmpty()) {
                 // Get the LAST typeArguments (which should be for the typeIdentifier)
                 DRLXParser.TypeArgumentsContext lastTypeArgs = ctx.typeArguments(ctx.typeArguments().size() - 1);
                 NodeList<com.github.javaparser.ast.type.Type> typeArgs = new NodeList<>();
-
+                
                 for (DRLXParser.TypeArgumentContext typeArgCtx : lastTypeArgs.typeArgument()) {
                     com.github.javaparser.ast.type.Type typeArg = (com.github.javaparser.ast.type.Type) visit(typeArgCtx);
                     if (typeArg != null) {
                         typeArgs.add(typeArg);
                     }
                 }
-
+                
                 if (!typeArgs.isEmpty()) {
                     newType.setTypeArguments(typeArgs);
                 }
@@ -746,26 +899,26 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         } else {
             throw new IllegalArgumentException("Missing typeIdentifier in ClassOrInterfaceType: " + ctx.getText());
         }
-
+        
         return type;
     }
 
     @Override
     public Node visitTypeType(DRLXParser.TypeTypeContext ctx) {
         Type baseType = null;
-
+        
         // Handle different type possibilities
         if (ctx.classOrInterfaceType() != null) {
             baseType = (Type) visit(ctx.classOrInterfaceType());
         } else if (ctx.primitiveType() != null) {
             baseType = (Type) visit(ctx.primitiveType());
         }
-
+        
         if (baseType == null) {
             // Fall back to default behavior
             return visitChildren(ctx);
         }
-
+        
         // Handle array dimensions: (annotation* '[' ']')*
         // Count the number of '[' ']' pairs to determine array dimensions
         int arrayDimensions = 0;
@@ -776,17 +929,17 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-
+        
         // Wrap base type in ArrayType for each dimension
         Type resultType = baseType;
         for (int i = 0; i < arrayDimensions; i++) {
             resultType = new ArrayType(resultType);
         }
-
+        
         if (resultType instanceof ArrayType) {
             resultType.setTokenRange(createTokenRange(ctx));
         }
-
+        
         return resultType;
     }
 
@@ -795,7 +948,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         // Map ANTLR primitive types to JavaParser PrimitiveType
         String typeName = ctx.getText();
         PrimitiveType.Primitive primitive;
-
+        
         switch (typeName) {
             case "boolean":
                 primitive = PrimitiveType.Primitive.BOOLEAN;
@@ -824,7 +977,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             default:
                 throw new IllegalArgumentException("Unknown primitive type: " + typeName);
         }
-
+        
         PrimitiveType primitiveType = new PrimitiveType(primitive);
         primitiveType.setTokenRange(createTokenRange(ctx));
         return primitiveType;
@@ -835,7 +988,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         // Handle array/list access: expression[index]
         Expression array = (Expression) visit(ctx.expression(0)); // The array/list expression
         Expression index = (Expression) visit(ctx.expression(1)); // The index expression
-
+        
         // Create ArrayAccessExpr like mvel.jj does
         // The transformation to .get() method calls is handled by MVELToJavaRewriter
         ArrayAccessExpr arrayAccess = new ArrayAccessExpr(array, index);
@@ -848,7 +1001,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         BlockStmt blockStmt = new BlockStmt();
         blockStmt.setTokenRange(createTokenRange(ctx));
         NodeList<Statement> statements = new NodeList<>();
-
+        
         if (ctx.blockStatement() != null) {
             for (DRLXParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
                 Node node = visit(blockStatementCtx);
@@ -857,7 +1010,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-
+        
         blockStmt.setStatements(statements);
         return blockStmt;
     }
@@ -897,16 +1050,16 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // Handle if statement: IF parExpression statement (ELSE statement)?
             Expression condition = (Expression) visit(ctx.parExpression().expression());
             Statement thenStmt = (Statement) visit(ctx.statement(0));
-
+            
             IfStmt ifStmt = new IfStmt(condition, thenStmt, null);
             ifStmt.setTokenRange(createTokenRange(ctx));
-
+            
             // Handle else clause if present
             if (ctx.ELSE() != null && ctx.statement().size() > 1) {
                 Statement elseStmt = (Statement) visit(ctx.statement(1));
                 ifStmt.setElseStmt(elseStmt);
             }
-
+            
             return ifStmt;
         } else if (ctx.DO() != null) {
             // Handle do-while statement: DO statement WHILE parExpression ';'
@@ -920,7 +1073,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // Handle while statement: WHILE parExpression statement
             Expression condition = (Expression) visit(ctx.parExpression().expression());
             Statement body = (Statement) visit(ctx.statement(0));
-
+            
             WhileStmt whileStmt = new WhileStmt(condition, body);
             whileStmt.setTokenRange(createTokenRange(ctx));
             return whileStmt;
@@ -952,13 +1105,13 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         } else if (ctx.SWITCH() != null) {
             // Handle switch statement: SWITCH parExpression '{' switchBlockStatementGroup* switchLabel* '}'
             Expression selector = (Expression) visit(ctx.parExpression().expression());
-
+            
             SwitchStmt switchStmt = new SwitchStmt();
             switchStmt.setSelector(selector);
             switchStmt.setTokenRange(createTokenRange(ctx));
-
+            
             NodeList<SwitchEntry> entries = new NodeList<>();
-
+            
             // Process switchBlockStatementGroups
             if (ctx.switchBlockStatementGroup() != null) {
                 for (DRLXParser.SwitchBlockStatementGroupContext groupCtx : ctx.switchBlockStatementGroup()) {
@@ -968,7 +1121,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                     }
                 }
             }
-
+            
             // Process standalone switchLabels (if any)
             if (ctx.switchLabel() != null) {
                 for (DRLXParser.SwitchLabelContext labelCtx : ctx.switchLabel()) {
@@ -978,7 +1131,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                     }
                 }
             }
-
+            
             switchStmt.setEntries(entries);
             return switchStmt;
         } else if (ctx.RETURN() != null) {
@@ -998,7 +1151,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         // For now, fall back to default behavior
         return visitChildren(ctx);
     }
-
+    
     @Override
     public Node visitFormalParameter(DRLXParser.FormalParameterContext ctx) {
         ModifiersAnnotations modifiersAnnotations = parseVariableModifiers(ctx.variableModifier());
@@ -1007,11 +1160,11 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         SimpleName name = createSimpleName(ctx.variableDeclaratorId().identifier());
 
         Parameter parameter = new Parameter(modifiersAnnotations.modifiers,
-                                            modifiersAnnotations.annotations,
-                                            adjustedType,
-                                            false,
-                                            new NodeList<>(),
-                                            name);
+                modifiersAnnotations.annotations,
+                adjustedType,
+                false,
+                new NodeList<>(),
+                name);
         parameter.setTokenRange(createTokenRange(ctx));
         return parameter;
     }
@@ -1033,11 +1186,11 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         SimpleName name = createSimpleName(ctx.variableDeclaratorId().identifier());
 
         Parameter parameter = new Parameter(modifiersAnnotations.modifiers,
-                                            modifiersAnnotations.annotations,
-                                            adjustedType,
-                                            isVarArgs,
-                                            varArgsAnnotations,
-                                            name);
+                modifiersAnnotations.annotations,
+                adjustedType,
+                isVarArgs,
+                varArgsAnnotations,
+                name);
         parameter.setTokenRange(createTokenRange(ctx));
         return parameter;
     }
@@ -1051,14 +1204,14 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
         // Create a NodeList for the statements  
         NodeList<Statement> statements = new NodeList<>();
-
+        
         // Process each statement in the modify block
         // Keep assignments as simple names - MVELToJavaRewriter will add the target prefix
         for (DRLXParser.StatementContext stmtCtx : ctx.statement()) {
             Statement stmt = (Statement) visit(stmtCtx);
             statements.add(stmt);
         }
-
+        
         // Create and return a ModifyStatement with proper TokenRange
         return new ModifyStatement(createTokenRange(ctx), target, statements);
     }
@@ -1081,49 +1234,49 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     @Override
     public Node visitLocalVariableDeclaration(DRLXParser.LocalVariableDeclarationContext ctx) {
         // Handle both: var x = expression; and Type name = expression;
-
+        
         if (ctx.VAR() != null) {
             // Handle: var x = expression;
             Type varType = new VarType();
             varType.setTokenRange(createTokenRange(ctx));
             String varName = ctx.identifier().getText();
-
+            
             VariableDeclarator varDeclarator = new VariableDeclarator(varType, varName);
             varDeclarator.setTokenRange(createTokenRange(ctx));
-
+            
             // Handle initializer for var declaration
             if (ctx.expression() != null) {
                 Expression initializer = (Expression) visit(ctx.expression());
                 varDeclarator.setInitializer(initializer);
             }
-
+            
             VariableDeclarationExpr varDecl = new VariableDeclarationExpr(varDeclarator);
             varDecl.setTokenRange(createTokenRange(ctx));
             return varDecl;
         } else if (ctx.typeType() != null && ctx.variableDeclarators() != null) {
             // Handle: Type name = expression;
             Type varType = (Type) visit(ctx.typeType());
-
+            
             // Create NodeList for multiple declarators (though we usually have just one)
             NodeList<VariableDeclarator> declarators = new NodeList<>();
-
+            
             for (DRLXParser.VariableDeclaratorContext declaratorCtx : ctx.variableDeclarators().variableDeclarator()) {
                 // Get variable name
                 String varName = declaratorCtx.variableDeclaratorId().identifier().getText();
-
+                
                 // Create variable declarator
                 VariableDeclarator varDeclarator = new VariableDeclarator(varType, varName);
                 varDeclarator.setTokenRange(createTokenRange(declaratorCtx));
-
+                
                 // Handle initializer if present
                 if (declaratorCtx.variableInitializer() != null) {
                     Expression initializer = (Expression) visit(declaratorCtx.variableInitializer());
                     varDeclarator.setInitializer(initializer);
                 }
-
+                
                 declarators.add(varDeclarator);
             }
-
+            
             // Create the variable declaration expression with all declarators
             VariableDeclarationExpr varDecl = new VariableDeclarationExpr(declarators);
             varDecl.setTokenRange(createTokenRange(ctx));
@@ -1146,7 +1299,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     @Override
     public Node visitArrayInitializer(DRLXParser.ArrayInitializerContext ctx) {
         NodeList<Expression> values = new NodeList<>();
-
+        
         if (ctx.variableInitializer() != null && !ctx.variableInitializer().isEmpty()) {
             for (DRLXParser.VariableInitializerContext initCtx : ctx.variableInitializer()) {
                 Expression expr = (Expression) visit(initCtx);
@@ -1155,7 +1308,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-
+        
         ArrayInitializerExpr arrayInit = new ArrayInitializerExpr(values);
         arrayInit.setTokenRange(createTokenRange(ctx));
         return arrayInit;
@@ -1169,7 +1322,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     @Override
     public Node visitCreator(DRLXParser.CreatorContext ctx) {
         Node createdName = visit(ctx.createdName());
-
+        
         if (ctx.arrayCreatorRest() != null) {
             // Handle array creation: new Type[] {...} or new Type[size]
             return visitArrayCreatorRest(ctx.arrayCreatorRest(), createdName);
@@ -1180,7 +1333,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             // Get constructor arguments
             NodeList<Expression> arguments = new NodeList<>();
             if (ctx.classCreatorRest().arguments() != null &&
-                    ctx.classCreatorRest().arguments().expressionList() != null) {
+                ctx.classCreatorRest().arguments().expressionList() != null) {
                 for (DRLXParser.ExpressionContext exprCtx : ctx.classCreatorRest().arguments().expressionList().expression()) {
                     Expression arg = (Expression) visit(exprCtx);
                     arguments.add(arg);
@@ -1192,17 +1345,17 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             objectCreation.setTokenRange(createTokenRange(ctx));
             return objectCreation;
         }
-
+        
         return createdName;
     }
 
     private Node visitArrayCreatorRest(DRLXParser.ArrayCreatorRestContext ctx, Node createdName) {
         Type elementType = (Type) createdName;
-
+        
         if (ctx.arrayInitializer() != null) {
             // Handle: new Type[] { ... }
             ArrayInitializerExpr initializer = (ArrayInitializerExpr) visit(ctx.arrayInitializer());
-
+            
             // Count the array dimensions from '[' ']' pairs
             int dimensions = 0;
             if (ctx.children != null) {
@@ -1212,15 +1365,15 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                     }
                 }
             }
-
+            
             // Create ArrayCreationLevel objects for each dimension (empty for array initializer)
             NodeList<ArrayCreationLevel> levels = new NodeList<>();
             for (int i = 0; i < dimensions; i++) {
                 ArrayCreationLevel level = new ArrayCreationLevel();
-                level.setTokenRange(createTokenRange(ctx));
+                level.setTokenRange(createTokenRange(ctx)); 
                 levels.add(level);
             }
-
+            
             // Create ArrayCreationExpr
             ArrayCreationExpr arrayCreation = new ArrayCreationExpr(elementType, levels, initializer);
             arrayCreation.setTokenRange(createTokenRange(ctx));
@@ -1228,7 +1381,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         } else {
             // Handle: new Type[size] or new Type[size1][size2]
             NodeList<ArrayCreationLevel> levels = new NodeList<>();
-
+            
             if (ctx.expression() != null) {
                 for (DRLXParser.ExpressionContext exprCtx : ctx.expression()) {
                     Expression dimExpr = (Expression) visit(exprCtx);
@@ -1237,7 +1390,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                     levels.add(level);
                 }
             }
-
+            
             // Create ArrayCreationExpr with dimensions
             ArrayCreationExpr arrayCreation = new ArrayCreationExpr(elementType, levels, null);
             arrayCreation.setTokenRange(createTokenRange(ctx));
@@ -1298,7 +1451,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     public Node visitMethodCall(DRLXParser.MethodCallContext ctx) {
         String methodName = ctx.identifier().getText();
         NodeList<Expression> args = parseArguments(ctx.arguments());
-
+        
         // For method calls in member reference, we need the scope from the parent context
         // This will be handled by visitMemberReferenceExpression
         MethodCallExpr methodCall = new MethodCallExpr(null, methodName);
@@ -1347,7 +1500,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         // Handle post-increment and post-decrement: expression++ or expression--
         Expression operand = (Expression) visit(ctx.expression());
         String operator = ctx.postfix.getText();
-
+        
         UnaryExpr.Operator unaryOp;
         if ("++".equals(operator)) {
             unaryOp = UnaryExpr.Operator.POSTFIX_INCREMENT;
@@ -1356,7 +1509,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         } else {
             throw new IllegalArgumentException("Unknown post-increment/decrement operator: " + operator);
         }
-
+        
         UnaryExpr unaryExpr = new UnaryExpr(operand, unaryOp);
         unaryExpr.setTokenRange(createTokenRange(ctx));
         return unaryExpr;
@@ -1370,19 +1523,19 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     private void visitForControlAndPopulate(DRLXParser.ForControlContext forControlCtx, ForStmt forStmt) {
         // FOR control can be: forInit? ';' expression? ';' forUpdate?
         // Or enhanced for: variableDeclarator ':' expression
-
+        
         // Check if it's an enhanced for (for-each) loop
         if (forControlCtx.enhancedForControl() != null) {
             // Enhanced for: for (Type var : iterable)
             // TODO: Implement enhanced for loop parsing if needed
             return;
         }
-
+        
         // Regular for loop: for (init; condition; update)
         NodeList<Expression> initialization = new NodeList<>();
         Expression compare = null;
         NodeList<Expression> update = new NodeList<>();
-
+        
         // Parse forInit
         if (forControlCtx.forInit() != null) {
             // forInit can be localVariableDeclaration or expressionList
@@ -1402,12 +1555,12 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-
+        
         // Parse condition
         if (forControlCtx.expression() != null) {
             compare = (Expression) visit(forControlCtx.expression());
         }
-
+        
         // Parse forUpdate
         if (forControlCtx.forUpdate != null) {
             for (DRLXParser.ExpressionContext exprCtx : forControlCtx.forUpdate.expression()) {
@@ -1417,7 +1570,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 }
             }
         }
-
+        
         // Set the for loop components - only set non-empty lists
         if (!initialization.isEmpty()) {
             forStmt.setInitialization(initialization);
@@ -1478,7 +1631,7 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         // Process the first switch label
         DRLXParser.SwitchLabelContext firstLabel = groupCtx.switchLabel(0);
         SwitchEntry entry = processSwitchLabel(firstLabel);
-
+        
         if (entry != null) {
             // Process statements in this switch block
             NodeList<Statement> statements = new NodeList<>();
@@ -1492,18 +1645,18 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             }
             entry.setStatements(statements);
         }
-
+        
         return entry;
     }
 
     private SwitchEntry processSwitchLabel(DRLXParser.SwitchLabelContext labelCtx) {
         // switchLabel: CASE (constantExpression | enumConstantName | typeType varName=IDENTIFIER) ':'
         //            | DEFAULT ':'
-
+        
         if (labelCtx.CASE() != null) {
             // Case label
             NodeList<Expression> labels = new NodeList<>();
-
+            
             if (labelCtx.constantExpression != null) {
                 // case constantExpression:
                 Expression caseExpr = (Expression) visitConstantExpr(labelCtx.constantExpression);
@@ -1516,18 +1669,18 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 labels.add(new NameExpr(enumName));
             }
             // TODO: Handle typeType varName case if needed
-
+            
             SwitchEntry entry = new SwitchEntry(labels, SwitchEntry.Type.STATEMENT_GROUP, new NodeList<>());
             entry.setTokenRange(createTokenRange(labelCtx));
             return entry;
-
+            
         } else if (labelCtx.DEFAULT() != null) {
             // Default label
             SwitchEntry entry = new SwitchEntry(new NodeList<>(), SwitchEntry.Type.STATEMENT_GROUP, new NodeList<>());
             entry.setTokenRange(createTokenRange(labelCtx));
             return entry;
         }
-
+        
         return null;
     }
 
@@ -1642,11 +1795,11 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
         SimpleName name = createSimpleName(ctx.identifier());
 
         Parameter parameter = new Parameter(modifiersAnnotations.modifiers,
-                                            modifiersAnnotations.annotations,
-                                            varType,
-                                            false,
-                                            new NodeList<>(),
-                                            name);
+                modifiersAnnotations.annotations,
+                varType,
+                false,
+                new NodeList<>(),
+                name);
         parameter.setTokenRange(createTokenRange(ctx));
         return parameter;
     }
@@ -1756,5 +1909,4 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
             this.annotations = annotations;
         }
     }
-
 }
