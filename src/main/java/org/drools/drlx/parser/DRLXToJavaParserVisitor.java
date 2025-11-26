@@ -98,6 +98,7 @@ import org.mvel3.parser.ast.expr.RuleConsequence;
 import org.mvel3.parser.ast.expr.OOPathExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
 import org.mvel3.parser.ast.expr.WithStatement;
+import org.mvel3.parser.ast.expr.DrlxExpression;
 
 import java.util.List;
 
@@ -343,9 +344,12 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
     @Override
     public Node visitRulePattern(DRLXParser.RulePatternContext ctx) {
-        // Get type and bind identifiers
-        SimpleName type = new SimpleName(ctx.identifier(0).getText());
-        SimpleName bind = new SimpleName(ctx.identifier(1).getText());
+        // Get type and bind identifiers (fall back to placeholders when incomplete)
+        String typeText = ctx.identifier().size() > 0 ? ctx.identifier(0).getText() : "var";
+        String bindText = ctx.identifier().size() > 1 ? ctx.identifier(1).getText() : "_";
+
+        SimpleName type = new SimpleName(typeText);
+        SimpleName bind = new SimpleName(bindText);
         OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
         
         RulePattern pattern = new RulePattern(null, type, bind, expr);
@@ -392,15 +396,50 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
 
     @Override
     public Node visitOopathChunk(DRLXParser.OopathChunkContext ctx) {
-        SimpleName field = new SimpleName(ctx.identifier().getText());
-        SimpleName inlineCast = null; // No inline cast for simple case
-        
-        OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, new NodeList<>());
-        
-        // Set parent relationship
+        SimpleName field = new SimpleName(ctx.identifier(0).getText());
+        SimpleName inlineCast = ctx.identifier().size() > 1 ? new SimpleName(ctx.identifier(1).getText()) : null;
+
+        NodeList<DrlxExpression> conditions = new NodeList<>();
+        if (ctx.drlxExpression() != null) {
+            for (DRLXParser.DrlxExpressionContext drlxCtx : ctx.drlxExpression()) {
+                DrlxExpression condition = (DrlxExpression) visit(drlxCtx);
+                conditions.add(condition);
+            }
+        }
+
+        OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, conditions);
+
         field.setParentNode(chunk);
-        
+        if (inlineCast != null) {
+            inlineCast.setParentNode(chunk);
+        }
+        for (DrlxExpression condition : conditions) {
+            condition.setParentNode(chunk);
+        }
+
         return chunk;
+    }
+
+    @Override
+    public Node visitDrlxExpression(DRLXParser.DrlxExpressionContext ctx) {
+        SimpleName bind = ctx.identifier() != null ? new SimpleName(ctx.identifier().getText()) : null;
+        if (bind != null) {
+            bind.setTokenRange(createTokenRange(ctx.identifier()));
+        }
+
+        Expression expr = (Expression) visit(ctx.expression());
+        if (!expr.getTokenRange().isPresent()) {
+            expr.setTokenRange(createTokenRange(ctx.expression()));
+        }
+
+        DrlxExpression drlxExpression = new DrlxExpression(bind, expr);
+        drlxExpression.setTokenRange(createTokenRange(ctx));
+        if (bind != null) {
+            bind.setParentNode(drlxExpression);
+        }
+        expr.setParentNode(drlxExpression);
+
+        return drlxExpression;
     }
 
     //-------------------------------------------------------------

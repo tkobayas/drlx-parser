@@ -11,6 +11,12 @@ options {
 // Start rule for DRLX
 drlxStart
     : compilationUnit
+    | drlxCompilationUnit
+    ;
+
+// Override compilationUnit to accept DRLX-specific constructs (unit/rule)
+compilationUnit
+    : packageDeclaration? importDeclaration* unitDeclaration? (typeDeclaration | ruleDeclaration)* EOF
     ;
 
 memberDeclaration
@@ -25,6 +31,14 @@ memberDeclaration
     | classDeclaration
     | enumDeclaration
     | ruleDeclaration
+    ;
+
+drlxCompilationUnit
+    : packageDeclaration? importDeclaration* unitDeclaration ruleDeclaration*
+    ;
+
+unitDeclaration
+    : UNIT identifier ';'
     ;
 
 // Rule declaration
@@ -47,7 +61,7 @@ ruleItem
 // Pattern: type bind : oopathExpression ,
 // Aligns with: RulePattern(SimpleName type, SimpleName bind, OOPathExpr expr)
 rulePattern
-    : identifier identifier ':' oopathExpression ','
+    : identifier identifier (':' | '=') oopathExpression ','
     ;
 
 // Consequence: do statement
@@ -64,5 +78,12 @@ oopathExpression
 
 // OOPath chunk - simplified for now, just identifier
 oopathChunk
-    : identifier
+    : identifier (HASH identifier)? ('[' drlxExpression (',' drlxExpression)* ']')?
+    ;
+
+// DRLX expression used inside oopathChunk conditions
+// Allows optional binding (name: expression) or a plain expression
+drlxExpression
+    : identifier ':' expression
+    | expression
     ;

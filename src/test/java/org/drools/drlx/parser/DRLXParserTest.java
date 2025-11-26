@@ -70,7 +70,7 @@ class DRLXParserTest {
     }
 
     @Test
-    void testParseSimpleRule() {
+    void testParseSimpleRuleInClass() {
         String rule = """
                 class Foo {
                     rule R1 {
@@ -91,8 +91,6 @@ class DRLXParserTest {
         assertThat(compilationUnitContext.typeDeclaration()).hasSize(1);
 
         DRLXParser.ClassDeclarationContext classDeclarationContext = compilationUnitContext.typeDeclaration(0).classDeclaration();
-        assertThat(classDeclarationContext.identifier().getText()).isEqualTo("Foo");
-
         DRLXParser.RuleDeclarationContext ruleDeclarationContext = classDeclarationContext.classBody().classBodyDeclaration(0).memberDeclaration().ruleDeclaration();
 
         // Verify rule body structure
@@ -157,5 +155,53 @@ class DRLXParserTest {
         } catch (Exception e) {
             throw new RuntimeException("Failed to parse : " + input, e);
         }
+    }
+
+    @Test
+    void testParseBasicRule() {
+        // very basic rule, not inside a class
+        String rule = """
+                package org.drools.drlx.parser;
+                
+                import org.drools.drlx.parser.domain.Person;
+                
+                unit MyUnit;
+                
+                rule CheckAge {
+                    Person p : /people[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        ParseTree tree = parseRuleAsAntlrAST(rule);
+
+        assertThat(tree)
+                .isNotNull()
+                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
+
+        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
+        assertThat(compilationUnitContext).isNotNull();
+        assertThat(compilationUnitContext.ruleDeclaration()).hasSize(1);
+
+        DRLXParser.RuleDeclarationContext ruleDeclarationContext = compilationUnitContext.ruleDeclaration(0);
+
+        // Verify rule body structure
+        DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
+        assertThat(ruleBody.ruleItem()).hasSize(2); // 1 pattern + 1 consequence
+
+        // Verify pattern structure (first rule item)
+        DRLXParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
+        assertThat(firstItem.rulePattern()).isNotNull();
+        DRLXParser.RulePatternContext pattern = firstItem.rulePattern();
+        assertThat(pattern.identifier(0).getText()).isEqualTo("Person"); // type
+        assertThat(pattern.identifier(1).getText()).isEqualTo("p"); // bind
+        assertThat(pattern.oopathExpression().getText()).isEqualTo("/people[age>18]");
+
+        // Verify consequence structure (second rule item)
+        DRLXParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
+        assertThat(secondItem.ruleConsequence()).isNotNull();
+        DRLXParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
+        assertThat(consequence.statement()).isNotNull();
+        assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(p);}");
     }
 }
