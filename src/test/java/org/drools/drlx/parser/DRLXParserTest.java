@@ -19,7 +19,6 @@
 
 package org.drools.drlx.parser;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,22 +36,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Parse DRLX expressions and rules using the DRLXParser and verify the resulting antlr AST structure.
  */
-public class DRLXParserTest {
+class DRLXParserTest {
 
     @Test
-    public void testParseSimpleExpr() {
+    void testParseSimpleExpr() {
         String expr = "name == \"Mark\"";
         ParseTree tree = parseExpressionAsAntlrAST(expr);
 
-        assertThat(tree).isNotNull();
-        assertThat(tree).isInstanceOf(DRLXParser.MvelExpressionContext.class);
+        assertThat(tree)
+                .isNotNull()
+                .isInstanceOf(DRLXParser.MvelExpressionContext.class);
 
         DRLXParser.MvelExpressionContext mvelExpressionContext = (DRLXParser.MvelExpressionContext) tree;
         assertThat(mvelExpressionContext.getText()).isEqualTo("name==\"Mark\"");
     }
 
     @Test
-    public void testParseSimpleClass() {
+    void testParseSimpleClass() {
         String expr = """
                 public class X {
                 }
@@ -60,8 +60,9 @@ public class DRLXParserTest {
 
         ParseTree tree = parseClassAsAntlrAST(expr);
 
-        assertThat(tree).isNotNull();
-        assertThat(tree).isInstanceOf(DRLXParser.CompilationUnitContext.class);
+        assertThat(tree)
+                .isNotNull()
+                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
 
         DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
         assertThat(compilationUnitContext).isNotNull();
@@ -69,7 +70,7 @@ public class DRLXParserTest {
     }
 
     @Test
-    public void testParseSimpleRule() {
+    void testParseSimpleRule() {
         String rule = """
                 class Foo {
                     rule R1 {
@@ -81,8 +82,9 @@ public class DRLXParserTest {
 
         ParseTree tree = parseRuleAsAntlrAST(rule);
 
-        assertThat(tree).isNotNull();
-        assertThat(tree).isInstanceOf(DRLXParser.CompilationUnitContext.class);
+        assertThat(tree)
+                .isNotNull()
+                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
 
         DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
         assertThat(compilationUnitContext).isNotNull();

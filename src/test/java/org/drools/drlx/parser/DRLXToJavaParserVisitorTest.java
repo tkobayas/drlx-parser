@@ -106,7 +106,7 @@ class DRLXToJavaParserVisitorTest {
 
         // Verify arguments
         assertThat(methodCall.getArguments()).hasSize(1);
-        assertThat(methodCall.getArguments().get(0).toString()).isEqualTo("\"Hello\"");
+        assertThat(methodCall.getArguments().get(0)).hasToString("\"Hello\"");
         
         // Setup JavaSymbolSolver for type resolution
         ReflectionTypeSolver typeSolver = new ReflectionTypeSolver(false);
