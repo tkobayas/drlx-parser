@@ -14,11 +14,6 @@ drlxStart
     | drlxCompilationUnit
     ;
 
-// Override compilationUnit to accept DRLX-specific constructs (unit/rule)
-compilationUnit
-    : packageDeclaration? importDeclaration* unitDeclaration? (typeDeclaration | ruleDeclaration)* EOF
-    ;
-
 memberDeclaration
     : recordDeclaration //Java17
     | methodDeclaration
@@ -76,7 +71,7 @@ oopathExpression
     : '/' oopathChunk ('/' oopathChunk)*
     ;
 
-// OOPath chunk - simplified for now, just identifier
+// OOPath chunk
 oopathChunk
     : identifier (HASH identifier)? ('[' drlxExpression (',' drlxExpression)* ']')?
     ;

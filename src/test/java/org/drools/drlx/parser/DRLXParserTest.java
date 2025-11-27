@@ -80,7 +80,7 @@ class DRLXParserTest {
                 }
                 """;
 
-        ParseTree tree = parseRuleAsAntlrAST(rule);
+        ParseTree tree = parseClassAsAntlrAST(rule);
 
         assertThat(tree)
                 .isNotNull()
@@ -121,8 +121,8 @@ class DRLXParserTest {
         return parseAntlrAST(classExpression, DRLXParser::compilationUnit);
     }
 
-    private static ParseTree parseRuleAsAntlrAST(final String ruleExpression) {
-        return parseAntlrAST(ruleExpression, DRLXParser::compilationUnit);
+    private static ParseTree parseDrlxAsAntlrAST(final String drlxExpression) {
+        return parseAntlrAST(drlxExpression, DRLXParser::drlxCompilationUnit);
     }
 
     private static ParseTree parseAntlrAST(final String input,
@@ -173,17 +173,17 @@ class DRLXParserTest {
                 }
                 """;
 
-        ParseTree tree = parseRuleAsAntlrAST(rule);
+        ParseTree tree = parseDrlxAsAntlrAST(rule);
 
         assertThat(tree)
                 .isNotNull()
-                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
+                .isInstanceOf(DRLXParser.DrlxCompilationUnitContext.class);
 
-        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
-        assertThat(compilationUnitContext).isNotNull();
-        assertThat(compilationUnitContext.ruleDeclaration()).hasSize(1);
+        DRLXParser.DrlxCompilationUnitContext drlxCompilationUnitContext = (DRLXParser.DrlxCompilationUnitContext) tree;
+        assertThat(drlxCompilationUnitContext).isNotNull();
+        assertThat(drlxCompilationUnitContext.ruleDeclaration()).hasSize(1);
 
-        DRLXParser.RuleDeclarationContext ruleDeclarationContext = compilationUnitContext.ruleDeclaration(0);
+        DRLXParser.RuleDeclarationContext ruleDeclarationContext = drlxCompilationUnitContext.ruleDeclaration(0);
 
         // Verify rule body structure
         DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
