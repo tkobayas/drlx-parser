@@ -20,9 +20,14 @@
 package org.drools.drlx.parser;
 
 import com.github.javaparser.ast.Node;
+import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.PackageDeclaration;
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.expr.Expression;
+import com.github.javaparser.ast.expr.BinaryExpr;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
 import com.github.javaparser.ast.stmt.Statement;
@@ -31,11 +36,21 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
+import org.mvel3.parser.ast.expr.DrlxExpression;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
+import org.mvel3.parser.ast.expr.OOPathChunk;
+import org.mvel3.parser.ast.expr.OOPathExpr;
+import org.mvel3.parser.ast.expr.RuleBody;
+import org.mvel3.parser.ast.expr.RuleDeclaration;
+import org.mvel3.parser.ast.expr.RuleItem;
+import org.mvel3.parser.ast.expr.RulePattern;
+import org.mvel3.parser.ast.expr.RuleConsequence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsAntlrAST;
 import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsJavaParserAST;
+import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsJavaParserAST;
 
 /**
  * Parse DRLX expressions and rules using the DRLXParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
@@ -212,5 +227,67 @@ class DRLXToJavaParserVisitorTest {
 
         // Verify the resolved type
         assertThat(resolvedType.describe()).isEqualTo("java.util.ArrayList");
+    }
+
+    @Test
+    void testParseBasicRule() {
+        // very basic rule, not inside a class
+        String rule = """
+                package org.drools.drlx.parser;
+                
+                import org.drools.drlx.parser.domain.Person;
+                
+                unit MyUnit;
+                
+                rule CheckAge {
+                    Person p : /people[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        com.github.javaparser.ast.CompilationUnit compilationUnit = parseDrlxCompilationUnitAsJavaParserAST(rule);
+
+        assertThat(compilationUnit.getPackageDeclaration())
+                .map(PackageDeclaration::getNameAsString)
+                .hasValue("org.drools.drlx.parser");
+
+        assertThat(compilationUnit.getImports())
+                .map(ImportDeclaration::getNameAsString)
+                .containsExactly("org.drools.drlx.parser.domain.Person");
+
+        assertThat(compilationUnit.getTypes()).hasSize(1);
+
+        RuleDeclaration ruleDeclaration = (RuleDeclaration) compilationUnit.getTypes().get(0);
+        assertThat(ruleDeclaration.getNameAsString()).isEqualTo("CheckAge");
+
+        RuleBody ruleBody = ruleDeclaration.getRuleBody();
+        NodeList<RuleItem> items = ruleBody.getItems();
+        assertThat(items).hasSize(2);
+
+        RulePattern pattern = (RulePattern) items.get(0);
+        assertThat(pattern.getType().asString()).isEqualTo("Person");
+        assertThat(pattern.getBind().asString()).isEqualTo("p");
+
+        OOPathExpr ooPathExpr = pattern.getExpr();
+        assertThat(ooPathExpr.getChunks()).hasSize(1);
+        OOPathChunk firstChunk = ooPathExpr.getChunks().get(0);
+        assertThat(firstChunk.getField().asString()).isEqualTo("people");
+        assertThat(firstChunk.getConditions()).hasSize(1);
+
+        DrlxExpression condition = firstChunk.getConditions().get(0);
+        assertThat(condition.getBind()).isNull();
+        assertThat(condition.getExpr()).isInstanceOf(BinaryExpr.class);
+        BinaryExpr binaryExpr = (BinaryExpr) condition.getExpr();
+        assertThat(binaryExpr.getLeft()).isInstanceOf(NameExpr.class);
+        assertThat(((NameExpr) binaryExpr.getLeft()).getNameAsString()).isEqualTo("age");
+        assertThat(binaryExpr.getRight().toString()).isEqualTo("18");
+
+        RuleConsequence consequence = (RuleConsequence) items.get(1);
+        Statement stmt = consequence.getStatement();
+        assertThat(stmt).isInstanceOf(BlockStmt.class);
+        BlockStmt blockStmt = (BlockStmt) stmt;
+        assertThat(blockStmt.getStatements()).hasSize(1);
+        assertThat(blockStmt.getStatement(0).toString()).contains("System.out.println(p)");
+
     }
 }

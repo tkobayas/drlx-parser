@@ -27,6 +27,7 @@ import com.github.javaparser.TokenRange;
 import com.github.javaparser.ast.ArrayCreationLevel;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.Modifier;
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
@@ -59,6 +60,7 @@ import com.github.javaparser.ast.expr.TextBlockLiteralExpr;
 import com.github.javaparser.ast.expr.ThisExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
+import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.DoStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -125,6 +127,11 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
     public Node visitCompilationUnit(DRLXParser.CompilationUnitContext ctx) {
         CompilationUnit cu = new CompilationUnit();
 
+        if (ctx.packageDeclaration() != null) {
+            Name pkg = StaticJavaParser.parseName(ctx.packageDeclaration().qualifiedName().getText());
+            cu.setPackageDeclaration(new PackageDeclaration(pkg));
+        }
+
         if (ctx.importDeclaration() != null) {
             for (DRLXParser.ImportDeclarationContext importDecl : ctx.importDeclaration()) {
                 ImportDeclaration importDeclaration = (ImportDeclaration) visit(importDecl);
@@ -140,6 +147,36 @@ public class DRLXToJavaParserVisitor extends DRLXParserBaseVisitor<Node> {
                 Node node = visit(typeDecl);
                 if (node instanceof TypeDeclaration) {
                     cu.addType((TypeDeclaration<?>) node);
+                }
+            }
+        }
+
+        return cu;
+    }
+
+    @Override
+    public Node visitDrlxCompilationUnit(DRLXParser.DrlxCompilationUnitContext ctx) {
+        CompilationUnit cu = new CompilationUnit();
+
+        if (ctx.packageDeclaration() != null) {
+            Name pkg = StaticJavaParser.parseName(ctx.packageDeclaration().qualifiedName().getText());
+            cu.setPackageDeclaration(new PackageDeclaration(pkg));
+        }
+
+        if (ctx.importDeclaration() != null) {
+            for (DRLXParser.ImportDeclarationContext importDecl : ctx.importDeclaration()) {
+                ImportDeclaration importDeclaration = (ImportDeclaration) visit(importDecl);
+                if (importDeclaration != null) {
+                    cu.addImport(importDeclaration);
+                }
+            }
+        }
+
+        if (ctx.ruleDeclaration() != null) {
+            for (DRLXParser.RuleDeclarationContext ruleDecl : ctx.ruleDeclaration()) {
+                Node node = visit(ruleDecl);
+                if (node instanceof RuleDeclaration) {
+                    cu.addType((RuleDeclaration) node);
                 }
             }
         }

@@ -91,8 +91,6 @@ class DRLXParserTest {
         assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
     }
 
-
-
     @Test
     void testParseBasicRule() {
         // very basic rule, not inside a class
