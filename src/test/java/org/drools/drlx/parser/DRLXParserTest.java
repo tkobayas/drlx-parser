@@ -19,19 +19,13 @@
 
 package org.drools.drlx.parser;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DRLXHelper.parseExpressionAsAntlrAST;
 
 /**
  * Parse DRLX expressions and rules using the DRLXParser and verify the resulting antlr AST structure.
@@ -41,14 +35,9 @@ class DRLXParserTest {
     @Test
     void testParseSimpleExpr() {
         String expr = "name == \"Mark\"";
-        ParseTree tree = parseExpressionAsAntlrAST(expr);
+        DRLXParser.ExpressionContext expressionContext = parseExpressionAsAntlrAST(expr);
 
-        assertThat(tree)
-                .isNotNull()
-                .isInstanceOf(DRLXParser.MvelExpressionContext.class);
-
-        DRLXParser.MvelExpressionContext mvelExpressionContext = (DRLXParser.MvelExpressionContext) tree;
-        assertThat(mvelExpressionContext.getText()).isEqualTo("name==\"Mark\"");
+        assertThat(expressionContext.getText()).isEqualTo("name==\"Mark\"");
     }
 
     @Test
@@ -58,14 +47,8 @@ class DRLXParserTest {
                 }
                 """;
 
-        ParseTree tree = parseClassAsAntlrAST(expr);
+        DRLXParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(expr);
 
-        assertThat(tree)
-                .isNotNull()
-                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
-
-        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
-        assertThat(compilationUnitContext).isNotNull();
         assertThat(compilationUnitContext.getText()).isEqualTo("publicclassX{}<EOF>");
     }
 
@@ -80,13 +63,8 @@ class DRLXParserTest {
                 }
                 """;
 
-        ParseTree tree = parseClassAsAntlrAST(rule);
+        DRLXParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
 
-        assertThat(tree)
-                .isNotNull()
-                .isInstanceOf(DRLXParser.CompilationUnitContext.class);
-
-        DRLXParser.CompilationUnitContext compilationUnitContext = (DRLXParser.CompilationUnitContext) tree;
         assertThat(compilationUnitContext).isNotNull();
         assertThat(compilationUnitContext.typeDeclaration()).hasSize(1);
 
@@ -113,49 +91,7 @@ class DRLXParserTest {
         assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
     }
 
-    private static ParseTree parseExpressionAsAntlrAST(final String expression) {
-        return parseAntlrAST(expression, DRLXParser::mvelExpression);
-    }
 
-    private static ParseTree parseClassAsAntlrAST(final String classExpression) {
-        return parseAntlrAST(classExpression, DRLXParser::compilationUnit);
-    }
-
-    private static ParseTree parseDrlxAsAntlrAST(final String drlxExpression) {
-        return parseAntlrAST(drlxExpression, DRLXParser::drlxCompilationUnit);
-    }
-
-    private static ParseTree parseAntlrAST(final String input,
-                                           java.util.function.Function<DRLXParser, ParseTree> parseFunction) {
-        try {
-            // Create ANTLR4 lexer and parser
-            CharStream charStream = CharStreams.fromString(input);
-            DRLXLexer lexer = new DRLXLexer(charStream);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            DRLXParser parser = new DRLXParser(tokens);
-
-            // Add error handling
-            List<String> errors = new ArrayList<>();
-            parser.addErrorListener(new BaseErrorListener() {
-                @Override
-                public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                        int line, int charPositionInLine, String msg, RecognitionException e) {
-                    errors.add("Line " + line + ":" + charPositionInLine + " " + msg);
-                }
-            });
-
-            // Parse using the provided parse function
-            ParseTree tree = parseFunction.apply(parser);
-
-            if (!errors.isEmpty()) {
-                throw new RuntimeException("Parser errors: " + String.join(", ", errors));
-            }
-
-            return tree;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse : " + input, e);
-        }
-    }
 
     @Test
     void testParseBasicRule() {
@@ -173,14 +109,8 @@ class DRLXParserTest {
                 }
                 """;
 
-        ParseTree tree = parseDrlxAsAntlrAST(rule);
+        DRLXParser.DrlxCompilationUnitContext drlxCompilationUnitContext = parseDrlxCompilationUnitAsAntlrAST(rule);
 
-        assertThat(tree)
-                .isNotNull()
-                .isInstanceOf(DRLXParser.DrlxCompilationUnitContext.class);
-
-        DRLXParser.DrlxCompilationUnitContext drlxCompilationUnitContext = (DRLXParser.DrlxCompilationUnitContext) tree;
-        assertThat(drlxCompilationUnitContext).isNotNull();
         assertThat(drlxCompilationUnitContext.ruleDeclaration()).hasSize(1);
 
         DRLXParser.RuleDeclarationContext ruleDeclarationContext = drlxCompilationUnitContext.ruleDeclaration(0);

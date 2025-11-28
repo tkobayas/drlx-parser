@@ -43,6 +43,7 @@ import org.mvel3.parser.ast.expr.RuleDeclaration;
 import org.mvel3.parser.ast.expr.RulePattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
 import static org.drools.drlx.parser.TolerantDRLXParser.parseCompilationUnitAsAntlrAST;
 
 class TolerantDRLXToJavaParserVisitorTest {
@@ -55,9 +56,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                         System.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         // Verify class declaration
         assertThat(compilationUnit.getTypes()).hasSize(1);
@@ -116,9 +116,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { System.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         // Verify class declaration
         assertThat(compilationUnit.getTypes()).hasSize(1);
@@ -183,7 +182,7 @@ class TolerantDRLXToJavaParserVisitorTest {
         NameExpr nameExpr = (NameExpr) fieldAccess.getScope();
         assertThat(nameExpr.getName().asString()).isEqualTo("System");
 
-        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        Map<Integer, Node> tokenIdJPNodeMap = parseResult.getTokenIdJPNodeMap();
         System.out.println("tokenIdJPNodeMap :" + tokenIdJPNodeMap);
         Node node = tokenIdJPNodeMap.get(26);
         assertThat(node).isEqualTo(nameExpr); // expect "System" NameExpr
@@ -223,9 +222,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { System.out.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
@@ -252,7 +250,7 @@ class TolerantDRLXToJavaParserVisitorTest {
         assertThat(scopeFieldAccessExpr.getName().asString()).isEqualTo("out");
         assertThat(((NameExpr)scopeFieldAccessExpr.getScope()).getName().asString()).isEqualTo("System");
 
-        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        Map<Integer, Node> tokenIdJPNodeMap = parseResult.getTokenIdJPNodeMap();
         System.out.println(tokenIdJPNodeMap);
         Node node = tokenIdJPNodeMap.get(28);
         assertThat(node).isEqualTo(scopeFieldAccessExpr); // expect "System.out" FieldAccessExpr
@@ -292,9 +290,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { list#ArrayList#.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
@@ -321,7 +318,7 @@ class TolerantDRLXToJavaParserVisitorTest {
         assertThat(scopeInlineCastExpr.getExpression().asNameExpr().getName().asString()).isEqualTo("list");
         assertThat(scopeInlineCastExpr.getType().asString()).isEqualTo("ArrayList");
 
-        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        Map<Integer, Node> tokenIdJPNodeMap = parseResult.getTokenIdJPNodeMap();
         System.out.println(tokenIdJPNodeMap);
         Node node = tokenIdJPNodeMap.get(38); // token ID for '#' right before the incomplete '.'
         assertThat(node).isEqualTo(scopeInlineCastExpr); // expect "System.out" FieldAccessExpr
@@ -358,9 +355,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { 10.5B.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
@@ -386,7 +382,7 @@ class TolerantDRLXToJavaParserVisitorTest {
         BigDecimalLiteralExpr scopeBigDecimalLiteralExpr = (BigDecimalLiteralExpr) fieldAccess.getScope();
         assertThat(scopeBigDecimalLiteralExpr.getValue()).isEqualTo("10.5");
 
-        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        Map<Integer, Node> tokenIdJPNodeMap = parseResult.getTokenIdJPNodeMap();
         System.out.println(tokenIdJPNodeMap);
         Node node = tokenIdJPNodeMap.get(26); // token ID for '10.5B' right before the incomplete '.'
         assertThat(node).isEqualTo(scopeBigDecimalLiteralExpr); // expect "System.out" FieldAccessExpr
@@ -428,9 +424,8 @@ class TolerantDRLXToJavaParserVisitorTest {
                             p.address.
                 """;
 
-        ParseTree tree = parseCompilationUnitAsAntlrAST(compilationUnitString);
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
-        CompilationUnit compilationUnit = (CompilationUnit) visitor.visit(tree);
+        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
                 (ClassOrInterfaceDeclaration) compilationUnit.getType(0);
@@ -457,7 +452,7 @@ class TolerantDRLXToJavaParserVisitorTest {
         assertThat(scopeFieldAccessExpr.getName().asString()).isEqualTo("address");
         assertThat(((NameExpr)scopeFieldAccessExpr.getScope()).getName().asString()).isEqualTo("p");
 
-        Map<Integer, Node> tokenIdJPNodeMap = visitor.getTokenIdJPNodeMap();
+        Map<Integer, Node> tokenIdJPNodeMap = parseResult.getTokenIdJPNodeMap();
         System.out.println(tokenIdJPNodeMap);
         Node node = tokenIdJPNodeMap.get(76); // token ID for 'p.address' right before the incomplete '.'
         assertThat(node).isEqualTo(scopeFieldAccessExpr); // expect "System.out" FieldAccessExpr

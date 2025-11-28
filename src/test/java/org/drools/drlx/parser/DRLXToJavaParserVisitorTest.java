@@ -19,9 +19,6 @@
 
 package org.drools.drlx.parser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
@@ -32,17 +29,13 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import org.antlr.v4.runtime.BaseErrorListener;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsJavaParserAST;
 
 /**
  * Parse DRLX expressions and rules using the DRLXParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
@@ -60,16 +53,7 @@ class DRLXToJavaParserVisitorTest {
                 }
                 """;
 
-        // Parse the compilation unit
-        ParseTree tree = parseCompilationUnit(classCompilationUnit);
-
-        // Visit and convert to JavaParser AST
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
-        Node result = visitor.visit(tree);
-
-        // Verify the result
-        assertThat(result).isInstanceOf(com.github.javaparser.ast.CompilationUnit.class);
-        com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) result;
+        com.github.javaparser.ast.CompilationUnit compilationUnit = parseCompilationUnitAsJavaParserAST(classCompilationUnit);
 
         // Verify class declaration
         assertThat(compilationUnit.getTypes()).hasSize(1);
@@ -134,16 +118,7 @@ class DRLXToJavaParserVisitorTest {
                 }
                 """;
 
-        // Parse the compilation unit
-        ParseTree tree = parseCompilationUnit(ruleCompilationUnit);
-
-        // Visit and convert to JavaParser AST
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
-        Node result = visitor.visit(tree);
-
-        // Verify the result
-        assertThat(result).isInstanceOf(com.github.javaparser.ast.CompilationUnit.class);
-        com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) result;
+        com.github.javaparser.ast.CompilationUnit compilationUnit = parseCompilationUnitAsJavaParserAST(ruleCompilationUnit);
 
         // Verify class declaration
         assertThat(compilationUnit.getTypes()).hasSize(1);
@@ -210,14 +185,8 @@ class DRLXToJavaParserVisitorTest {
                 }
                 """;
 
-        // Parse the compilation unit
-        ParseTree tree = parseCompilationUnit(classCompilationUnit);
+        com.github.javaparser.ast.CompilationUnit compilationUnit = parseCompilationUnitAsJavaParserAST(classCompilationUnit);
 
-        // Visit and convert to JavaParser AST
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
-        Node result = visitor.visit(tree);
-
-        com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) result;
         MethodCallExpr methodCall = compilationUnit.getType(0)
                 .asClassOrInterfaceDeclaration().getMethodsByName("bar").get(0).getBody().get().getStatements().get(0)
                 .asExpressionStmt().getExpression()
@@ -243,36 +212,5 @@ class DRLXToJavaParserVisitorTest {
 
         // Verify the resolved type
         assertThat(resolvedType.describe()).isEqualTo("java.util.ArrayList");
-    }
-
-    private static ParseTree parseCompilationUnit(final String compilationUnit) {
-        try {
-            // Create ANTLR4 lexer and parser
-            CharStream charStream = CharStreams.fromString(compilationUnit);
-            DRLXLexer lexer = new DRLXLexer(charStream);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            DRLXParser parser = new DRLXParser(tokens);
-
-            // Add error handling
-            List<String> errors = new ArrayList<>();
-            parser.addErrorListener(new BaseErrorListener() {
-                @Override
-                public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                        int line, int charPositionInLine, String msg, RecognitionException e) {
-                    errors.add("Line " + line + ":" + charPositionInLine + " " + msg);
-                }
-            });
-
-            // Parse as a compilation unit
-            ParseTree tree = parser.compilationUnit();
-
-            if (!errors.isEmpty()) {
-                throw new RuntimeException("Parser errors: " + String.join(", ", errors));
-            }
-
-            return tree;
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to parse compilation unit: " + compilationUnit, e);
-        }
     }
 }
