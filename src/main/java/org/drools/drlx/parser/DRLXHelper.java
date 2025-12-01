@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.github.javaparser.ast.Node;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -12,6 +11,7 @@ import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.drools.drl.ast.descr.PackageDescr;
 
 /**
  * Helper class for DRLX parsing and processing.
@@ -57,6 +57,18 @@ public class DRLXHelper {
 
         DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
         return (com.github.javaparser.ast.CompilationUnit) visitor.visit(parseTree); // result is a CompilationUnit
+    }
+
+    //--- return drools descr model ---
+    public static PackageDescr parseDrlxCompilationUnitAsPackageDescr(final String input) {
+        CharStream charStream = CharStreams.fromString(input);
+        DRLXLexer lexer = new DRLXLexer(charStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        DRLXParser parser = new DRLXParser(tokens);
+
+        DRLXParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        DrlxToDescrVisitor visitor = new DrlxToDescrVisitor(tokens);
+        return (PackageDescr) visitor.visit(ctx);
     }
 
     //--- return JavaParser AST with tolerance (for code completion) ---
