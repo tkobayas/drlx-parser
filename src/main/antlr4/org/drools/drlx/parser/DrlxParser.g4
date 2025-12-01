@@ -1,11 +1,11 @@
 // DRLX Parser - minimal extension of MVEL3 parser
 
-parser grammar DRLXParser;
+parser grammar DrlxParser;
 
 import Mvel3Parser;
 
 options {
-    tokenVocab = DRLXLexer;
+    tokenVocab = DrlxLexer;
 }
 
 // Start rule for DRLX
@@ -33,7 +33,7 @@ drlxCompilationUnit
     ;
 
 unitDeclaration
-    : UNIT identifier ';'
+    : UNIT qualifiedName ';'
     ;
 
 // Rule declaration

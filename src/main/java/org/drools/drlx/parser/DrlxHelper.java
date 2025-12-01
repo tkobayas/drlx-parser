@@ -18,80 +18,80 @@ import org.drools.drl.ast.descr.PackageDescr;
  * This class is intended to provide wrapper methods to be used by clients and tests.
  * Small utility methods should be added to a different util class.
  */
-public class DRLXHelper {
+public class DrlxHelper {
 
-    private DRLXHelper() {
+    private DrlxHelper() {
         // Prevent instantiation
     }
 
     //--- return Antlr4 AST ---
-    public static DRLXParser.ExpressionContext parseExpressionAsAntlrAST(final String input) {
-        return (DRLXParser.ExpressionContext) parseAntlrAST(input, DRLXParser::expression);
+    public static DrlxParser.ExpressionContext parseExpressionAsAntlrAST(final String input) {
+        return (DrlxParser.ExpressionContext) parseAntlrAST(input, DrlxParser::expression);
     }
 
-    public static DRLXParser.CompilationUnitContext parseCompilationUnitAsAntlrAST(final String input) {
-        return (DRLXParser.CompilationUnitContext) parseAntlrAST(input, DRLXParser::compilationUnit);
+    public static DrlxParser.CompilationUnitContext parseCompilationUnitAsAntlrAST(final String input) {
+        return (DrlxParser.CompilationUnitContext) parseAntlrAST(input, DrlxParser::compilationUnit);
     }
 
-    public static DRLXParser.DrlxCompilationUnitContext parseDrlxCompilationUnitAsAntlrAST(final String input) {
-        return (DRLXParser.DrlxCompilationUnitContext) parseAntlrAST(input, DRLXParser::drlxCompilationUnit);
+    public static DrlxParser.DrlxCompilationUnitContext parseDrlxCompilationUnitAsAntlrAST(final String input) {
+        return (DrlxParser.DrlxCompilationUnitContext) parseAntlrAST(input, DrlxParser::drlxCompilationUnit);
     }
 
     //--- return JavaParser AST ---
     public static com.github.javaparser.ast.expr.Expression parseExpressionAsJavaParserAST(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::expression);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::expression);
 
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
+        DrlxToJavaParserVisitor visitor = new DrlxToJavaParserVisitor();
         return (com.github.javaparser.ast.expr.Expression) visitor.visit(parseTree);
     }
 
     public static com.github.javaparser.ast.CompilationUnit parseCompilationUnitAsJavaParserAST(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::compilationUnit);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::compilationUnit);
 
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
+        DrlxToJavaParserVisitor visitor = new DrlxToJavaParserVisitor();
         return (com.github.javaparser.ast.CompilationUnit) visitor.visit(parseTree);
     }
 
     public static com.github.javaparser.ast.CompilationUnit parseDrlxCompilationUnitAsJavaParserAST(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::drlxCompilationUnit);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::drlxCompilationUnit);
 
-        DRLXToJavaParserVisitor visitor = new DRLXToJavaParserVisitor();
+        DrlxToJavaParserVisitor visitor = new DrlxToJavaParserVisitor();
         return (com.github.javaparser.ast.CompilationUnit) visitor.visit(parseTree); // result is a CompilationUnit
     }
 
     //--- return drools descr model ---
     public static PackageDescr parseDrlxCompilationUnitAsPackageDescr(final String input) {
         CharStream charStream = CharStreams.fromString(input);
-        DRLXLexer lexer = new DRLXLexer(charStream);
+        DrlxLexer lexer = new DrlxLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
-        DRLXParser parser = new DRLXParser(tokens);
+        DrlxParser parser = new DrlxParser(tokens);
 
-        DRLXParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxToDescrVisitor visitor = new DrlxToDescrVisitor(tokens);
         return (PackageDescr) visitor.visit(ctx);
     }
 
     //--- return JavaParser AST with tolerance (for code completion) ---
     public static TolerantParseResult<com.github.javaparser.ast.expr.Expression> parseExpressionAsJavaParserASTWithTolerance(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::expression, true);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::expression, true);
 
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        TolerantDrlxToJavaParserVisitor visitor = new TolerantDrlxToJavaParserVisitor();
         com.github.javaparser.ast.expr.Expression expression = (com.github.javaparser.ast.expr.Expression) visitor.visit(parseTree);
         return new TolerantParseResult<>(expression, visitor.getTokenIdJPNodeMap());
     }
 
     public static TolerantParseResult<com.github.javaparser.ast.CompilationUnit> parseCompilationUnitAsJavaParserASTWithTolerance(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::compilationUnit, true);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::compilationUnit, true);
 
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        TolerantDrlxToJavaParserVisitor visitor = new TolerantDrlxToJavaParserVisitor();
         com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) visitor.visit(parseTree);
         return new TolerantParseResult<>(compilationUnit, visitor.getTokenIdJPNodeMap());
     }
 
     public static TolerantParseResult<com.github.javaparser.ast.CompilationUnit> parseDrlxCompilationUnitAsJavaParserASTWithTolerance(final String input) {
-        ParseTree parseTree = parseAntlrAST(input, DRLXParser::drlxCompilationUnit, true);
+        ParseTree parseTree = parseAntlrAST(input, DrlxParser::drlxCompilationUnit, true);
 
-        TolerantDRLXToJavaParserVisitor visitor = new TolerantDRLXToJavaParserVisitor();
+        TolerantDrlxToJavaParserVisitor visitor = new TolerantDrlxToJavaParserVisitor();
         com.github.javaparser.ast.CompilationUnit compilationUnit = (com.github.javaparser.ast.CompilationUnit) visitor.visit(parseTree); // result is a CompilationUnit
         return new TolerantParseResult<>(compilationUnit, visitor.getTokenIdJPNodeMap());
     }
@@ -99,18 +99,18 @@ public class DRLXHelper {
     //---
 
     public static ParseTree parseAntlrAST(final String input,
-                                          java.util.function.Function<DRLXParser, ParseTree> parseFunction) {
+                                          java.util.function.Function<DrlxParser, ParseTree> parseFunction) {
         return parseAntlrAST(input, parseFunction, false); // default is not to tolerate errors
     }
 
     public static ParseTree parseAntlrAST(final String input,
-                                          java.util.function.Function<DRLXParser, ParseTree> parseFunction, boolean tolerateErrors) {
+                                          java.util.function.Function<DrlxParser, ParseTree> parseFunction, boolean tolerateErrors) {
         try {
             // Create ANTLR4 lexer and parser
             CharStream charStream = CharStreams.fromString(input);
-            DRLXLexer lexer = new DRLXLexer(charStream);
+            DrlxLexer lexer = new DrlxLexer(charStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            DRLXParser parser = new DRLXParser(tokens);
+            DrlxParser parser = new DrlxParser(tokens);
 
             // We may remove the default console error listener to avoid printing errors to the console
             //parser.removeErrorListeners();

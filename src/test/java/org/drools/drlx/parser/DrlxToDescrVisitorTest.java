@@ -37,7 +37,7 @@ class DrlxToDescrVisitorTest {
 
                 import org.drools.drlx.parser.domain.Person;
 
-                unit org.drools.drlx.unit.MyUnit;
+                unit org.drools.drlx.ruleunit.MyUnit;
 
                 rule CheckAge {
                     Person p : /people[ age > 18 ],
@@ -45,14 +45,14 @@ class DrlxToDescrVisitorTest {
                 }
                 """;
 
-        PackageDescr packageDescr = DRLXHelper.parseDrlxCompilationUnitAsPackageDescr(rule);
+        PackageDescr packageDescr = DrlxHelper.parseDrlxCompilationUnitAsPackageDescr(rule);
 
         assertThat(packageDescr.getName()).isEqualTo("org.drools.drlx.parser");
         assertThat(packageDescr.getImports())
                 .extracting(importDescr -> importDescr.getTarget())
                 .containsExactly("org.drools.drlx.parser.domain.Person");
         assertThat(packageDescr.getUnit()).isNotNull();
-        assertThat(packageDescr.getUnit().getTarget()).isEqualTo("MyUnit");
+        assertThat(packageDescr.getUnit().getTarget()).isEqualTo("org.drools.drlx.ruleunit.MyUnit");
 
         assertThat(packageDescr.getRules()).hasSize(1);
         RuleDescr ruleDescr = packageDescr.getRules().get(0);

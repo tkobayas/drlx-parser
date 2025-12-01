@@ -17,7 +17,7 @@ import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
 
-public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
+public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
 
     public static final String COMPLETION_FIELD = "__COMPLETION_FIELD__";
 
@@ -29,7 +29,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
     }
 
     @Override
-    public Node visitBlock(DRLXParser.BlockContext ctx) {
+    public Node visitBlock(DrlxParser.BlockContext ctx) {
         BlockStmt blockStmt = new BlockStmt();
         blockStmt.setTokenRange(createTokenRange(ctx));
         NodeList<Statement> statements = new NodeList<>();
@@ -48,7 +48,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
             Expression chainedExpression = null;
 
             // TODO: review if this can be simplified. Probably we can chain statements after collecting them all
-            for (DRLXParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
+            for (DrlxParser.BlockStatementContext blockStatementCtx : ctx.blockStatement()) {
                 Node node = visit(blockStatementCtx);
                 if (node instanceof Statement) {
                     Statement stmt = (Statement) node;
@@ -104,7 +104,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
     }
 
     @Override
-    public Node visitBlockStatement(DRLXParser.BlockStatementContext ctx) {
+    public Node visitBlockStatement(DrlxParser.BlockStatementContext ctx) {
         if (ctx.localVariableDeclaration() != null) {
             // Handle local variable declaration
             VariableDeclarationExpr varDecl = (VariableDeclarationExpr) visit(ctx.localVariableDeclaration());
@@ -139,7 +139,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
     }
 
     @Override
-    public Node visitMemberReferenceExpression(DRLXParser.MemberReferenceExpressionContext ctx) {
+    public Node visitMemberReferenceExpression(DrlxParser.MemberReferenceExpressionContext ctx) {
         // Handle member reference like "java.math.MathContext.DECIMAL128"
         Expression scope = (Expression) visit(ctx.expression());
 
@@ -192,7 +192,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
         throw new IllegalArgumentException("Unsupported member reference: " + ctx.getText());
     }
 
-    private boolean hasTrailingDot(DRLXParser.MemberReferenceExpressionContext ctx) {
+    private boolean hasTrailingDot(DrlxParser.MemberReferenceExpressionContext ctx) {
         // Check if the last child is a DOT token (incomplete member access)
         if (ctx.children == null || ctx.children.isEmpty()) {
             return false;
@@ -203,7 +203,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
     }
 
 
-    private boolean areChildrenErrorNodes(DRLXParser.BlockStatementContext ctx) {
+    private boolean areChildrenErrorNodes(DrlxParser.BlockStatementContext ctx) {
         if (ctx.children == null || ctx.children.isEmpty()) {
             return false; // No children to check
         }
@@ -215,7 +215,7 @@ public class TolerantDRLXToJavaParserVisitor extends DRLXToJavaParserVisitor {
         return false;
     }
 
-    private Expression buildIncompleteExpression(DRLXParser.BlockStatementContext ctx) {
+    private Expression buildIncompleteExpression(DrlxParser.BlockStatementContext ctx) {
         if (ctx.children == null || ctx.children.isEmpty()) {
             return null;
         }

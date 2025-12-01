@@ -1,6 +1,6 @@
 // DRLX Lexer - minimal extension of MVEL3 lexer
 
-lexer grammar DRLXLexer;
+lexer grammar DrlxLexer;
 
 import Mvel3Lexer;
 

@@ -19,23 +19,22 @@
 
 package org.drools.drlx.parser;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DRLXHelper.parseExpressionAsAntlrAST;
+import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DrlxHelper.parseDrlxCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DrlxHelper.parseExpressionAsAntlrAST;
 
 /**
- * Parse DRLX expressions and rules using the DRLXParser and verify the resulting antlr AST structure.
+ * Parse DRLX expressions and rules using the DrlxParser and verify the resulting antlr AST structure.
  */
-class DRLXParserTest {
+class DrlxParserTest {
 
     @Test
     void testParseSimpleExpr() {
         String expr = "name == \"Mark\"";
-        DRLXParser.ExpressionContext expressionContext = parseExpressionAsAntlrAST(expr);
+        DrlxParser.ExpressionContext expressionContext = parseExpressionAsAntlrAST(expr);
 
         assertThat(expressionContext.getText()).isEqualTo("name==\"Mark\"");
     }
@@ -47,7 +46,7 @@ class DRLXParserTest {
                 }
                 """;
 
-        DRLXParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(expr);
+        DrlxParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(expr);
 
         assertThat(compilationUnitContext.getText()).isEqualTo("publicclassX{}<EOF>");
     }
@@ -63,30 +62,30 @@ class DRLXParserTest {
                 }
                 """;
 
-        DRLXParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
+        DrlxParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
 
         assertThat(compilationUnitContext).isNotNull();
         assertThat(compilationUnitContext.typeDeclaration()).hasSize(1);
 
-        DRLXParser.ClassDeclarationContext classDeclarationContext = compilationUnitContext.typeDeclaration(0).classDeclaration();
-        DRLXParser.RuleDeclarationContext ruleDeclarationContext = classDeclarationContext.classBody().classBodyDeclaration(0).memberDeclaration().ruleDeclaration();
+        DrlxParser.ClassDeclarationContext classDeclarationContext = compilationUnitContext.typeDeclaration(0).classDeclaration();
+        DrlxParser.RuleDeclarationContext ruleDeclarationContext = classDeclarationContext.classBody().classBodyDeclaration(0).memberDeclaration().ruleDeclaration();
 
         // Verify rule body structure
-        DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
+        DrlxParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
         assertThat(ruleBody.ruleItem()).hasSize(2); // 1 pattern + 1 consequence
 
         // Verify pattern structure (first rule item)
-        DRLXParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
+        DrlxParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
         assertThat(firstItem.rulePattern()).isNotNull();
-        DRLXParser.RulePatternContext pattern = firstItem.rulePattern();
+        DrlxParser.RulePatternContext pattern = firstItem.rulePattern();
         assertThat(pattern.identifier(0).getText()).isEqualTo("var"); // type
         assertThat(pattern.identifier(1).getText()).isEqualTo("a"); // bind
         assertThat(pattern.oopathExpression().getText()).isEqualTo("/as");
 
         // Verify consequence structure (second rule item)
-        DRLXParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
+        DrlxParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
         assertThat(secondItem.ruleConsequence()).isNotNull();
-        DRLXParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
+        DrlxParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
         assertThat(consequence.statement()).isNotNull();
         assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(a==3.2B);}"); // 3.2B is a BigDecimal literal in Mvel3
     }
@@ -107,28 +106,28 @@ class DRLXParserTest {
                 }
                 """;
 
-        DRLXParser.DrlxCompilationUnitContext drlxCompilationUnitContext = parseDrlxCompilationUnitAsAntlrAST(rule);
+        DrlxParser.DrlxCompilationUnitContext drlxCompilationUnitContext = parseDrlxCompilationUnitAsAntlrAST(rule);
 
         assertThat(drlxCompilationUnitContext.ruleDeclaration()).hasSize(1);
 
-        DRLXParser.RuleDeclarationContext ruleDeclarationContext = drlxCompilationUnitContext.ruleDeclaration(0);
+        DrlxParser.RuleDeclarationContext ruleDeclarationContext = drlxCompilationUnitContext.ruleDeclaration(0);
 
         // Verify rule body structure
-        DRLXParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
+        DrlxParser.RuleBodyContext ruleBody = ruleDeclarationContext.ruleBody();
         assertThat(ruleBody.ruleItem()).hasSize(2); // 1 pattern + 1 consequence
 
         // Verify pattern structure (first rule item)
-        DRLXParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
+        DrlxParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
         assertThat(firstItem.rulePattern()).isNotNull();
-        DRLXParser.RulePatternContext pattern = firstItem.rulePattern();
+        DrlxParser.RulePatternContext pattern = firstItem.rulePattern();
         assertThat(pattern.identifier(0).getText()).isEqualTo("Person"); // type
         assertThat(pattern.identifier(1).getText()).isEqualTo("p"); // bind
         assertThat(pattern.oopathExpression().getText()).isEqualTo("/people[age>18]");
 
         // Verify consequence structure (second rule item)
-        DRLXParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
+        DrlxParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
         assertThat(secondItem.ruleConsequence()).isNotNull();
-        DRLXParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
+        DrlxParser.RuleConsequenceContext consequence = secondItem.ruleConsequence();
         assertThat(consequence.statement()).isNotNull();
         assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(p);}");
     }

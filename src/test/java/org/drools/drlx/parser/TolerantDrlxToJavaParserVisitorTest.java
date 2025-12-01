@@ -33,7 +33,6 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 import org.mvel3.parser.ast.expr.BigDecimalLiteralExpr;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
@@ -43,10 +42,9 @@ import org.mvel3.parser.ast.expr.RuleDeclaration;
 import org.mvel3.parser.ast.expr.RulePattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
-import static org.drools.drlx.parser.TolerantDRLXParser.parseCompilationUnitAsAntlrAST;
+import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
 
-class TolerantDRLXToJavaParserVisitorTest {
+class TolerantDrlxToJavaParserVisitorTest {
 
     @Test
     void incompleteClass() {
@@ -56,7 +54,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                         System.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         // Verify class declaration
@@ -116,7 +114,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { System.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         // Verify class declaration
@@ -222,7 +220,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { System.out.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
@@ -290,7 +288,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { list#ArrayList#.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
@@ -355,7 +353,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                        do { 10.5B.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =
@@ -424,7 +422,7 @@ class TolerantDRLXToJavaParserVisitorTest {
                             p.address.
                 """;
 
-        DRLXHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
         CompilationUnit compilationUnit = parseResult.getResultNode();
 
         ClassOrInterfaceDeclaration classDecl =

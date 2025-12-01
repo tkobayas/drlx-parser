@@ -5,15 +5,15 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-public class TolerantDRLXParser {
+public class TolerantDrlxParser {
 
     public static ParseTree parseCompilationUnitAsAntlrAST(final String compilationUnit) {
         try {
             // Create ANTLR4 lexer and parser
             CharStream charStream = CharStreams.fromString(compilationUnit);
-            DRLXLexer lexer = new DRLXLexer(charStream);
+            DrlxLexer lexer = new DrlxLexer(charStream);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
-            DRLXParser parser = new DRLXParser(tokens);
+            DrlxParser parser = new DrlxParser(tokens);
 
             // We may remove the default console error listener to avoid printing errors to the console
             //parser.removeErrorListeners();

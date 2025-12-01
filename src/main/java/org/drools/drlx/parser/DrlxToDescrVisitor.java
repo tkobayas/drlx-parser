@@ -36,7 +36,7 @@ import org.drools.drl.ast.descr.UnitDescr;
  * Very small visitor that walks a DRLX parse tree and builds drools-descr objects.
  * This is intentionally minimal and currently handles only the simple rule shape used in tests.
  */
-public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
+public class DrlxToDescrVisitor extends DrlxParserBaseVisitor<Object> {
 
     private final TokenStream tokens;
 
@@ -49,7 +49,7 @@ public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
     }
 
     @Override
-    public PackageDescr visitDrlxCompilationUnit(DRLXParser.DrlxCompilationUnitContext ctx) {
+    public PackageDescr visitDrlxCompilationUnit(DrlxParser.DrlxCompilationUnitContext ctx) {
         PackageDescr pkg = new PackageDescr();
         if (ctx.packageDeclaration() != null) {
             pkg.setName(ctx.packageDeclaration().qualifiedName().getText());
@@ -83,7 +83,7 @@ public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
     }
 
     @Override
-    public ImportDescr visitImportDeclaration(DRLXParser.ImportDeclarationContext ctx) {
+    public ImportDescr visitImportDeclaration(DrlxParser.ImportDeclarationContext ctx) {
         String target = ctx.qualifiedName().getText();
         if (ctx.MUL() != null) {
             target = target + ".*";
@@ -92,12 +92,12 @@ public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
     }
 
     @Override
-    public UnitDescr visitUnitDeclaration(DRLXParser.UnitDeclarationContext ctx) {
-        return new UnitDescr(ctx.identifier().getText());
+    public UnitDescr visitUnitDeclaration(DrlxParser.UnitDeclarationContext ctx) {
+        return new UnitDescr(ctx.qualifiedName().getText());
     }
 
     @Override
-    public RuleDescr visitRuleDeclaration(DRLXParser.RuleDeclarationContext ctx) {
+    public RuleDescr visitRuleDeclaration(DrlxParser.RuleDeclarationContext ctx) {
         RuleDescr ruleDescr = new RuleDescr(ctx.identifier().getText());
         if (ctx.ruleBody() != null) {
             ctx.ruleBody().ruleItem().forEach(item -> {
@@ -114,7 +114,7 @@ public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
     }
 
     @Override
-    public PatternDescr visitRulePattern(DRLXParser.RulePatternContext ctx) {
+    public PatternDescr visitRulePattern(DrlxParser.RulePatternContext ctx) {
         // for now, take the variable type (= first identifier) as the pattern type
         // Later, we will likely resolve the type via RuleUnit's DataSource definitions.
         PatternDescr patternDescr = new PatternDescr(ctx.identifier(0).getText(), ctx.identifier(1).getText());
@@ -142,18 +142,18 @@ public class DrlxToDescrVisitor extends DRLXParserBaseVisitor<Object> {
     }
 
     @Override
-    public String visitRuleConsequence(DRLXParser.RuleConsequenceContext ctx) {
+    public String visitRuleConsequence(DrlxParser.RuleConsequenceContext ctx) {
         String statementText = getText(ctx.statement());
         return trimBraces(statementText);
     }
 
-    private List<String> extractConditions(DRLXParser.OopathExpressionContext ctx) {
-        List<DRLXParser.OopathChunkContext> oopathChunkContexts = ctx.oopathChunk();
+    private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {
+        List<DrlxParser.OopathChunkContext> oopathChunkContexts = ctx.oopathChunk();
         if (oopathChunkContexts.isEmpty()) {
             return List.of();
         }
         // For now, we assume a constraint exists only in the last chunk.
-        DRLXParser.OopathChunkContext lastOopathChunkContext = oopathChunkContexts.get(oopathChunkContexts.size() - 1);
+        DrlxParser.OopathChunkContext lastOopathChunkContext = oopathChunkContexts.get(oopathChunkContexts.size() - 1);
         return lastOopathChunkContext.drlxExpression().stream()
                 .map(this::getText)
                 .collect(Collectors.toList());

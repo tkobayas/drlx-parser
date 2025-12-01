@@ -19,7 +19,6 @@
 
 package org.drools.drlx.parser;
 
-import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -34,7 +33,6 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.junit.jupiter.api.Test;
 import org.mvel3.parser.ast.expr.DrlxExpression;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
@@ -47,16 +45,14 @@ import org.mvel3.parser.ast.expr.RulePattern;
 import org.mvel3.parser.ast.expr.RuleConsequence;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DRLXHelper.parseCompilationUnitAsJavaParserAST;
-import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DRLXHelper.parseDrlxCompilationUnitAsJavaParserAST;
+import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsJavaParserAST;
+import static org.drools.drlx.parser.DrlxHelper.parseDrlxCompilationUnitAsJavaParserAST;
 
 /**
- * Parse DRLX expressions and rules using the DRLXParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
+ * Parse DRLX expressions and rules using the DrlxParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
  * Verify the resulting JavaParser AST structure.
  */
-class DRLXToJavaParserVisitorTest {
+class DrlxToJavaParserVisitorTest {
 
     @Test
     void testVisitCompilationUnit_class() {
