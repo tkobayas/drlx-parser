@@ -22,9 +22,9 @@ package org.drools.drlx.parser;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DrlxHelper.parseDrlxCompilationUnitAsAntlrAST;
-import static org.drools.drlx.parser.DrlxHelper.parseExpressionAsAntlrAST;
+import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsAntlrAST;
+import static org.drools.drlx.util.DrlxHelper.parseDrlxCompilationUnitAsAntlrAST;
+import static org.drools.drlx.util.DrlxHelper.parseExpressionAsAntlrAST;
 
 /**
  * Parse DRLX expressions and rules using the DrlxParser and verify the resulting antlr AST structure.
@@ -96,12 +96,12 @@ class DrlxParserTest {
         String rule = """
                 package org.drools.drlx.parser;
                 
-                import org.drools.drlx.parser.domain.Person;
+                import org.drools.drlx.domain.Person;
                 
                 unit MyUnit;
                 
                 rule CheckAge {
-                    Person p : /people[ age > 18 ],
+                    Person p : /persons[ age > 18 ],
                     do { System.out.println(p); }
                 }
                 """;
@@ -122,7 +122,7 @@ class DrlxParserTest {
         DrlxParser.RulePatternContext pattern = firstItem.rulePattern();
         assertThat(pattern.identifier(0).getText()).isEqualTo("Person"); // type
         assertThat(pattern.identifier(1).getText()).isEqualTo("p"); // bind
-        assertThat(pattern.oopathExpression().getText()).isEqualTo("/people[age>18]");
+        assertThat(pattern.oopathExpression().getText()).isEqualTo("/persons[age>18]");
 
         // Verify consequence structure (second rule item)
         DrlxParser.RuleItemContext secondItem = ruleBody.ruleItem(1);

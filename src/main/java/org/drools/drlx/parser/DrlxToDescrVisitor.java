@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
+import org.drools.drl.ast.descr.EntryPointDescr;
 import org.drools.drl.ast.descr.ExprConstraintDescr;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.ImportDescr;
@@ -121,18 +122,21 @@ public class DrlxToDescrVisitor extends DrlxParserBaseVisitor<Object> {
 
         // for now, take the oopath base as a FromDescr data source
         // Later, we will likely use only the first part of the oopath as the data source. The rest would be constraints on the pattern.
-        String oopathBaseText = stripOopathBase(getText(ctx.oopathExpression()));
-        FromDescr fromDescr = new FromDescr();
-        fromDescr.setDataSource(new MVELExprDescr(oopathBaseText));
-        patternDescr.setSource(fromDescr);
+        String entryPointText = extractEntryPointFromOopath(getText(ctx.oopathExpression()));
+        patternDescr.setSource(new EntryPointDescr(entryPointText));
 
         List<String> conditions = extractConditions(ctx.oopathExpression());
         conditions.forEach(condition -> patternDescr.addConstraint(new ExprConstraintDescr(condition)));
         return patternDescr;
     }
 
-    private String stripOopathBase(String oopath) {
+    private String extractEntryPointFromOopath(String oopath) {
         String result = oopath;
+        // remove leading "/"
+        if (result.startsWith("/")) {
+            result = result.substring(1);
+        }
+
         // remove trailing "[...]" part. For now, we assume only one such part exists at the end.
         int bracketIndex = result.indexOf('[');
         if (bracketIndex >= 0) {

@@ -24,6 +24,7 @@ import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drl.ast.descr.PatternDescr;
 import org.drools.drl.ast.descr.RuleDescr;
+import org.drools.drlx.util.DrlxHelper;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,12 +36,12 @@ class DrlxToDescrVisitorTest {
         String rule = """
                 package org.drools.drlx.parser;
 
-                import org.drools.drlx.parser.domain.Person;
+                import org.drools.drlx.domain.Person;
 
                 unit org.drools.drlx.ruleunit.MyUnit;
 
                 rule CheckAge {
-                    Person p : /people[ age > 18 ],
+                    Person p : /persons[ age > 18 ],
                     do { System.out.println(p); }
                 }
                 """;
@@ -50,7 +51,7 @@ class DrlxToDescrVisitorTest {
         assertThat(packageDescr.getName()).isEqualTo("org.drools.drlx.parser");
         assertThat(packageDescr.getImports())
                 .extracting(importDescr -> importDescr.getTarget())
-                .containsExactly("org.drools.drlx.parser.domain.Person");
+                .containsExactly("org.drools.drlx.domain.Person");
         assertThat(packageDescr.getUnit()).isNotNull();
         assertThat(packageDescr.getUnit().getTarget()).isEqualTo("org.drools.drlx.ruleunit.MyUnit");
 
@@ -66,7 +67,7 @@ class DrlxToDescrVisitorTest {
         assertThat(patternDescr.getSource()).isInstanceOf(FromDescr.class);
         FromDescr fromDescr = (FromDescr) patternDescr.getSource();
         assertThat(fromDescr.getDataSource().getText().replaceAll("\\s+", ""))
-                .isEqualTo("/people");
+                .isEqualTo("/persons");
         assertThat(patternDescr.getDescrs()).hasSize(1);
         ExprConstraintDescr constraintDescr = (ExprConstraintDescr) patternDescr.getDescrs().get(0);
         assertThat(constraintDescr.getExpression().replaceAll("\\s+", ""))

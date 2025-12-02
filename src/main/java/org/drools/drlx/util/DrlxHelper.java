@@ -1,4 +1,4 @@
-package org.drools.drlx.parser;
+package org.drools.drlx.util;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +12,11 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.drools.drl.ast.descr.PackageDescr;
+import org.drools.drlx.parser.DrlxLexer;
+import org.drools.drlx.parser.DrlxParser;
+import org.drools.drlx.parser.DrlxToDescrVisitor;
+import org.drools.drlx.parser.DrlxToJavaParserVisitor;
+import org.drools.drlx.parser.TolerantDrlxToJavaParserVisitor;
 
 /**
  * Helper class for DRLX parsing and processing.

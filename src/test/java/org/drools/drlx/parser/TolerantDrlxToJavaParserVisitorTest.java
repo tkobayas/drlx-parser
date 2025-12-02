@@ -33,6 +33,7 @@ import com.github.javaparser.ast.stmt.Statement;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
+import org.drools.drlx.util.DrlxHelper;
 import org.junit.jupiter.api.Test;
 import org.mvel3.parser.ast.expr.BigDecimalLiteralExpr;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
@@ -42,7 +43,7 @@ import org.mvel3.parser.ast.expr.RuleDeclaration;
 import org.mvel3.parser.ast.expr.RulePattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
+import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
 
 class TolerantDrlxToJavaParserVisitorTest {
 

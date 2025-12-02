@@ -19,11 +19,11 @@
 
 package org.drools.drlx.parser;
 
+import com.github.javaparser.ast.ImportDeclaration;
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.PackageDeclaration;
-import com.github.javaparser.ast.ImportDeclaration;
-import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -39,14 +39,14 @@ import org.mvel3.parser.ast.expr.InlineCastExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
 import org.mvel3.parser.ast.expr.OOPathExpr;
 import org.mvel3.parser.ast.expr.RuleBody;
+import org.mvel3.parser.ast.expr.RuleConsequence;
 import org.mvel3.parser.ast.expr.RuleDeclaration;
 import org.mvel3.parser.ast.expr.RuleItem;
 import org.mvel3.parser.ast.expr.RulePattern;
-import org.mvel3.parser.ast.expr.RuleConsequence;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.drools.drlx.parser.DrlxHelper.parseCompilationUnitAsJavaParserAST;
-import static org.drools.drlx.parser.DrlxHelper.parseDrlxCompilationUnitAsJavaParserAST;
+import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsJavaParserAST;
+import static org.drools.drlx.util.DrlxHelper.parseDrlxCompilationUnitAsJavaParserAST;
 
 /**
  * Parse DRLX expressions and rules using the DrlxParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
@@ -231,12 +231,12 @@ class DrlxToJavaParserVisitorTest {
         String rule = """
                 package org.drools.drlx.parser;
                 
-                import org.drools.drlx.parser.domain.Person;
+                import org.drools.drlx.domain.Person;
                 
                 unit MyUnit;
                 
                 rule CheckAge {
-                    Person p : /people[ age > 18 ],
+                    Person p : /persons[ age > 18 ],
                     do { System.out.println(p); }
                 }
                 """;
@@ -249,7 +249,7 @@ class DrlxToJavaParserVisitorTest {
 
         assertThat(compilationUnit.getImports())
                 .map(ImportDeclaration::getNameAsString)
-                .containsExactly("org.drools.drlx.parser.domain.Person");
+                .containsExactly("org.drools.drlx.domain.Person");
 
         assertThat(compilationUnit.getTypes()).hasSize(1);
 
@@ -267,7 +267,7 @@ class DrlxToJavaParserVisitorTest {
         OOPathExpr ooPathExpr = pattern.getExpr();
         assertThat(ooPathExpr.getChunks()).hasSize(1);
         OOPathChunk firstChunk = ooPathExpr.getChunks().get(0);
-        assertThat(firstChunk.getField().asString()).isEqualTo("people");
+        assertThat(firstChunk.getField().asString()).isEqualTo("persons");
         assertThat(firstChunk.getConditions()).hasSize(1);
 
         DrlxExpression condition = firstChunk.getConditions().get(0);

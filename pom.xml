@@ -44,10 +44,17 @@
             <version>3.25.5</version>
         </dependency>
 
-        <!-- for DRLXToDescrVisitor -->
+        <!-- for DrlxToDescrVisitor -->
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-drl-ast</artifactId>
+            <version>999-SNAPSHOT</version>
+        </dependency>
+
+        <!-- for DrlxRuleBuilder -->
+        <dependency>
+            <groupId>org.drools</groupId>
+            <artifactId>drools-ruleunits-impl</artifactId>
             <version>999-SNAPSHOT</version>
         </dependency>
 
