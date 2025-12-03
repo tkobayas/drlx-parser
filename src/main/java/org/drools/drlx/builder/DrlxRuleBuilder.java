@@ -1,7 +1,9 @@
 package org.drools.drlx.builder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.drools.base.RuleBase;
 import org.drools.base.base.ClassObjectType;
@@ -13,6 +15,7 @@ import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
 import org.drools.base.rule.Pattern;
+import org.drools.base.rule.RuleConditionElement;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.drl.ast.descr.AndDescr;
@@ -28,6 +31,7 @@ import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.drools.util.TypeResolver;
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
+import org.mvel3.Type;
 
 /**
  * Create KiePackage and RuleImpl from PackageDescr
@@ -113,7 +117,7 @@ public class DrlxRuleBuilder {
                     if (descr instanceof ExprConstraintDescr exprConstraintDescr) {
                         String expression = exprConstraintDescr.getExpression();
                         // corresponds to new MVELConstraint()
-                        Constraint constraint = new DrlxLambdaConstraint(expression);
+                        Constraint constraint = new DrlxLambdaConstraint(expression, ((ClassObjectType) pattern.getObjectType()).getClassType());
                         pattern.addConstraint(constraint);
                     }
                 }
@@ -124,8 +128,22 @@ public class DrlxRuleBuilder {
         rule.setLhs(ge);
 
         // corresponds to ConsequenceBuilder.build()
-        rule.setConsequence(new DrlxLambdaConsequence((String) ruleDescr.getConsequence()));
+        // TODO: manage TypeMap (e.g. "p", Person.class)
+        Map<String, Type<?>> types = getTypeMap(ge);
+        rule.setConsequence(new DrlxLambdaConsequence((String) ruleDescr.getConsequence(), types));
+
+        // to populate requiredDeclarations, we may need to analyze bind variable names and call rule.setRequiredDeclarationsForConsequence()
+        // For now, we can use allDeclarations
 
         return rule;
+    }
+
+    // a quick hack
+    private  Map<String, Type<?>> getTypeMap(GroupElement ge) {
+        Map<String, Type<?>> types = new HashMap<>();
+        Pattern pattern = (Pattern) ge.getChildren().get(0);
+        Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+        types.put("p", Type.type(patternClass));
+        return types;
     }
 }
