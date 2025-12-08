@@ -19,6 +19,7 @@
 
 package org.drools.drlx.parser;
 
+import org.drools.drl.ast.descr.EntryPointDescr;
 import org.drools.drl.ast.descr.ExprConstraintDescr;
 import org.drools.drl.ast.descr.FromDescr;
 import org.drools.drl.ast.descr.PackageDescr;
@@ -64,13 +65,11 @@ class DrlxToDescrVisitorTest {
         PatternDescr patternDescr = (PatternDescr) ruleDescr.getLhs().getDescrs().get(0);
         assertThat(patternDescr.getObjectType()).isEqualTo("Person");
         assertThat(patternDescr.getIdentifier()).isEqualTo("p");
-        assertThat(patternDescr.getSource()).isInstanceOf(FromDescr.class);
-        FromDescr fromDescr = (FromDescr) patternDescr.getSource();
-        assertThat(fromDescr.getDataSource().getText().replaceAll("\\s+", ""))
-                .isEqualTo("/persons");
+        assertThat(patternDescr.getSource()).isInstanceOf(EntryPointDescr.class);
+        EntryPointDescr entryPointDescr = (EntryPointDescr) patternDescr.getSource();
+        assertThat(entryPointDescr.getEntryId()).isEqualTo("persons");
         assertThat(patternDescr.getDescrs()).hasSize(1);
         ExprConstraintDescr constraintDescr = (ExprConstraintDescr) patternDescr.getDescrs().get(0);
-        assertThat(constraintDescr.getExpression().replaceAll("\\s+", ""))
-                .isEqualTo("age>18");
+        assertThat(constraintDescr.getExpression()).isEqualTo("age > 18");
     }
 }

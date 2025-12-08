@@ -177,6 +177,20 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.4</version>
+                <configuration>
+                    <systemProperties>
+                        <property>
+                            <name>mvel3.compiler.lambda.resetOnTestStartup</name>
+                            <value>true</value>
+                        </property>
+                    </systemProperties>
+                 </configuration>
+            </plugin>
         </plugins>
     </build>
 

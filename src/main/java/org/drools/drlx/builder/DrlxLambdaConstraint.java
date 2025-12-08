@@ -35,7 +35,7 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     private void initializeLambdaConstraint() {
         // TODO: manage source code, hash, and implement cache
-        // TODO: extract declarations from the expression
+        // TODO: extract declarations from the expression (maybe create a map in the build phase)
         CompilerParameters<Object, Void, Boolean> evalInfo = MVEL.pojo(patternType,
                                                                        org.mvel3.transpiler.context.Declaration.of("age", int.class)
                 )
