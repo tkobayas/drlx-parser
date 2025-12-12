@@ -1,6 +1,5 @@
 package org.drools.drlx.builder;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.Map;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
-import org.drools.base.rule.Declaration;
 import org.drools.base.rule.consequence.Consequence;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.mvel3.Evaluator;
@@ -30,6 +28,10 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper> {
         this.declarationTypes = declarationTypes;
 
         initializeLambdaConsequence();
+    }
+
+    public Evaluator<Map<String, Object>, Void, String> getEvaluator() {
+        return evaluator;
     }
 
     private void initializeLambdaConsequence() {

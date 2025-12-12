@@ -33,11 +33,20 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
         initializeLambdaConstraint();
     }
 
+    public String getExpression() {
+        return expression;
+    }
+
+    public Evaluator<Object, Void, Boolean> getEvaluator() {
+        return evaluator;
+    }
+
     private void initializeLambdaConstraint() {
         // TODO: manage source code, hash, and implement cache
         // TODO: extract declarations from the expression (maybe create a map in the build phase)
         CompilerParameters<Object, Void, Boolean> evalInfo = MVEL.pojo(patternType,
-                                                                       org.mvel3.transpiler.context.Declaration.of("age", int.class)
+                                                                       org.mvel3.transpiler.context.Declaration.of("age", int.class),
+                                                                       org.mvel3.transpiler.context.Declaration.of("city", String.class)
                 )
                 .<Boolean>out(Boolean.class)
                 .expression(expression)
@@ -100,5 +109,10 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
     @Override
     public ContextEntry[] createContext() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return expression;
     }
 }

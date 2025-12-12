@@ -10,6 +10,7 @@ import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Declaration;
 import org.drools.base.rule.EntryPointId;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
@@ -128,7 +129,6 @@ public class DrlxRuleBuilder {
         rule.setLhs(ge);
 
         // corresponds to ConsequenceBuilder.build()
-        // TODO: manage TypeMap (e.g. "p", Person.class)
         Map<String, Type<?>> types = getTypeMap(ge);
         rule.setConsequence(new DrlxLambdaConsequence((String) ruleDescr.getConsequence(), types));
 
@@ -138,12 +138,14 @@ public class DrlxRuleBuilder {
         return rule;
     }
 
-    // a quick hack
     private  Map<String, Type<?>> getTypeMap(GroupElement ge) {
         Map<String, Type<?>> types = new HashMap<>();
-        Pattern pattern = (Pattern) ge.getChildren().get(0);
-        Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
-        types.put("p", Type.type(patternClass));
+        ge.getChildren().stream().filter(element -> element instanceof Pattern).forEach(pattern -> {
+            Pattern p = (Pattern) pattern;
+            Class<?> patternClass = ((ClassObjectType) p.getObjectType()).getClassType();
+            Declaration declaration = p.getDeclaration();
+            types.put(declaration.getIdentifier(), Type.type(patternClass));
+        });
         return types;
     }
 }
