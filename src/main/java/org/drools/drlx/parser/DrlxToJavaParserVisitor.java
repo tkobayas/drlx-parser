@@ -332,6 +332,8 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
         return methodCall;
     }
 
+    //-- Rule constructs --
+
     @Override
     public Node visitRuleDeclaration(DrlxParser.RuleDeclarationContext ctx) {
         // Create rule declaration
