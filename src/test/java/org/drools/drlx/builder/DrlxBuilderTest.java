@@ -12,10 +12,8 @@ import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.ReteDumper;
-import org.drools.drl.ast.descr.PackageDescr;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
-import org.drools.drlx.util.DrlxHelper;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
@@ -29,23 +27,21 @@ class DrlxBuilderTest {
 
     @Test
     void testBuildBasicRule() {
-        // very basic rule, not inside a class
         String rule = """
                 package org.drools.drlx.parser;
-                
+
                 import org.drools.drlx.domain.Person;
-                
+
                 unit MyUnit;
-                
+
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p); }
                 }
                 """;
 
-        PackageDescr packageDescr = DrlxHelper.parseDrlxCompilationUnitAsPackageDescr(rule);
-        DrlxRuleBuilder drlxRuleBuilder = new DrlxRuleBuilder();
-        KieBase kieBase = drlxRuleBuilder.createKieBase(packageDescr); // TBD: test RuleUnitInstance
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
 
@@ -63,17 +59,17 @@ class DrlxBuilderTest {
     void testLambdaSharing() {
         String rule = """
                 package org.drools.drlx.parser;
-                
+
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Address;
-                
+
                 unit MyUnit;
-                
+
                 rule CheckAge1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p); }
                 }
-                
+
                 rule CheckAge2 {
                     Address s : /addresses[ city == "Tokyo" ],
                         Person p : /persons[ age > 18 ],
@@ -83,9 +79,8 @@ class DrlxBuilderTest {
 
         LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
 
-        PackageDescr packageDescr = DrlxHelper.parseDrlxCompilationUnitAsPackageDescr(rule);
-        DrlxRuleBuilder drlxRuleBuilder = new DrlxRuleBuilder();
-        KieBase kieBase = drlxRuleBuilder.createKieBase(packageDescr);
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
 
         List<Path> classFiles = listClassFiles();
         assertThat(classFiles).hasSize(3);
@@ -96,10 +91,8 @@ class DrlxBuilderTest {
 
         List<DrlxLambdaConstraint> constraints = collectConstraints(kieBase, "age > 18");
 
-        System.out.println(stripHiddenClassNameSuffix(constraints.get(0).getEvaluator().getClass().getName()));
-
         assertThat(constraints).hasSize(2);
-        // class names are the same (e.g. GeneratorEvaluaor___0), but Class objects are different, because ClassManager is not share at the moment
+        // class names are the same (e.g. GeneratorEvaluaor___0), but Class objects are different, because ClassManager is not shared at the moment
         assertThat(stripHiddenClassNameSuffix(constraints.get(0).getEvaluator().getClass().getName()))
                 .isEqualTo(stripHiddenClassNameSuffix(constraints.get(1).getEvaluator().getClass().getName()));
 
