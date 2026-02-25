@@ -141,6 +141,127 @@ class DrlxBuilderTest {
                 .toList();
     }
 
+    @Test
+    void testPreBuild() throws IOException {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Address;
+
+                unit MyUnit;
+
+                rule CheckAge1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+
+                rule CheckAge2 {
+                    Address s : /addresses[ city == "Tokyo" ],
+                        Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        DrlxLambdaMetadata metadata = builder.preBuild(rule, DEFAULT_PERSISTENCE_PATH);
+
+        // CheckAge1: constraint(age > 18) -> 0, consequence(System.out.println(p);) -> 1
+        // CheckAge2: constraint(city == "Tokyo") -> 0, constraint(age > 18) -> 1, consequence(System.out.println(p);) -> 2
+        assertThat(metadata.size()).isEqualTo(5);
+        assertThat(metadata.get("CheckAge1", 0)).isNotNull();
+        assertThat(metadata.get("CheckAge1", 0).expression()).isEqualTo("age > 18");
+        assertThat(metadata.get("CheckAge1", 1)).isNotNull();
+        assertThat(metadata.get("CheckAge2", 0)).isNotNull();
+        assertThat(metadata.get("CheckAge2", 0).expression()).isEqualTo("city == \"Tokyo\"");
+        assertThat(metadata.get("CheckAge2", 1)).isNotNull();
+        assertThat(metadata.get("CheckAge2", 1).expression()).isEqualTo("age > 18");
+        assertThat(metadata.get("CheckAge2", 2)).isNotNull();
+
+        // metadata file exists on disk
+        Path metadataFile = DrlxLambdaMetadata.metadataFilePath(DEFAULT_PERSISTENCE_PATH);
+        assertThat(Files.exists(metadataFile)).isTrue();
+    }
+
+    @Test
+    void testRuntimeBuildWithPreCompiledClasses() throws IOException {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Address;
+
+                unit MyUnit;
+
+                rule CheckAge1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+
+                rule CheckAge2 {
+                    Address s : /addresses[ city == "Tokyo" ],
+                        Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        // Step 1: pre-build
+        DrlxLambdaMetadata metadata = builder.preBuild(rule, DEFAULT_PERSISTENCE_PATH);
+
+        // Step 2: runtime build with pre-compiled metadata
+        KieBase kieBase = builder.build(rule, metadata);
+
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint personsEntryPoint = kieSession.getEntryPoint("persons");
+        personsEntryPoint.insert(new Person("John", 25));
+        EntryPoint addressesEntryPoint = kieSession.getEntryPoint("addresses");
+        addressesEntryPoint.insert(new Address("Tokyo"));
+
+        int fired = kieSession.fireAllRules();
+        assertThat(fired).isEqualTo(2);
+
+        kieSession.dispose();
+    }
+
+    @Test
+    void testFallbackWhenMetadataMissing() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                rule CheckAge {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        // Build with empty metadata — should fall back to normal compilation
+        DrlxLambdaMetadata emptyMetadata = new DrlxLambdaMetadata();
+        KieBase kieBase = builder.build(rule, emptyMetadata);
+
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+        entryPoint.insert(new Person("John", 25));
+        int fired = kieSession.fireAllRules();
+
+        assertThat(fired).isEqualTo(1);
+
+        kieSession.dispose();
+    }
+
     private List<Path> listClassFiles() {
         try (Stream<Path> walk = Files.walk(DEFAULT_PERSISTENCE_PATH)) {
             return walk

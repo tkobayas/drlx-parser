@@ -1,5 +1,7 @@
 package org.drools.drlx.builder;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 import org.antlr.v4.runtime.CharStream;
@@ -37,6 +39,49 @@ public class DrlxRuleBuilder {
     public KieBase build(String drlxSource) {
         List<KiePackage> kiePackages = parse(drlxSource);
         return createKieBase(kiePackages);
+    }
+
+    /**
+     * Pre-builds DRLX source: compiles all lambdas and records metadata for later reuse.
+     * Saves metadata to the given output directory.
+     */
+    public DrlxLambdaMetadata preBuild(String drlxSource, Path outputDir) throws IOException {
+        CharStream charStream = CharStreams.fromString(drlxSource);
+        DrlxLexer lexer = new DrlxLexer(charStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        DrlxParser parser = new DrlxParser(tokens);
+
+        DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
+        visitor.visitDrlxCompilationUnit(ctx);
+
+        DrlxLambdaMetadata metadata = visitor.getMetadata();
+        metadata.save(outputDir);
+        return metadata;
+    }
+
+    /**
+     * Builds a KieBase using pre-compiled lambda metadata (in-memory).
+     */
+    public KieBase build(String drlxSource, DrlxLambdaMetadata metadata) {
+        CharStream charStream = CharStreams.fromString(drlxSource);
+        DrlxLexer lexer = new DrlxLexer(charStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        DrlxParser parser = new DrlxParser(tokens);
+
+        DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
+        visitor.setPreBuildMetadata(metadata);
+        List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
+        return createKieBase(kiePackages);
+    }
+
+    /**
+     * Builds a KieBase using pre-compiled lambda metadata loaded from a file.
+     */
+    public KieBase build(String drlxSource, Path metadataFile) throws IOException {
+        DrlxLambdaMetadata metadata = DrlxLambdaMetadata.load(metadataFile);
+        return build(drlxSource, metadata);
     }
 
     /**

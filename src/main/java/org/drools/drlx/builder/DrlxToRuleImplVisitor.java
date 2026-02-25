@@ -1,6 +1,9 @@
 package org.drools.drlx.builder;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +26,11 @@ import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
 import org.drools.util.TypeResolver;
 import org.kie.api.definition.KiePackage;
+import org.mvel3.ClassManager;
+import org.mvel3.Evaluator;
 import org.mvel3.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Visitor that walks a DRLX parse tree and directly builds RuleImpl/KiePackage,
@@ -32,9 +39,17 @@ import org.mvel3.Type;
  */
 public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
+    private static final Logger LOG = LoggerFactory.getLogger(DrlxToRuleImplVisitor.class);
+
     private final TokenStream tokens;
 
     private int patternId = 0;
+
+    private DrlxLambdaMetadata preBuildMetadata; // null = normal build
+
+    protected String currentRuleName;
+
+    protected int lambdaCounter;
 
     public DrlxToRuleImplVisitor() {
         this(null);
@@ -42,6 +57,10 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     public DrlxToRuleImplVisitor(TokenStream tokens) {
         this.tokens = tokens;
+    }
+
+    public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
+        this.preBuildMetadata = preBuildMetadata;
     }
 
     @Override
@@ -80,8 +99,11 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         return kiePackages;
     }
 
-    private RuleImpl buildRule(DrlxParser.RuleDeclarationContext ctx, TypeResolver typeResolver) {
+    protected RuleImpl buildRule(DrlxParser.RuleDeclarationContext ctx, TypeResolver typeResolver) {
         String ruleName = ctx.identifier().getText();
+        currentRuleName = ruleName;
+        lambdaCounter = 0;
+
         RuleImpl rule = new RuleImpl(ruleName);
         rule.setResource(rule.getResource());
 
@@ -95,7 +117,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                 } else if (item.ruleConsequence() != null) {
                     String consequence = extractConsequence(item.ruleConsequence());
                     Map<String, Type<?>> types = getTypeMap(ge);
-                    rule.setConsequence(new DrlxLambdaConsequence(consequence, types));
+                    rule.setConsequence(createLambdaConsequence(consequence, types));
                 }
             });
         }
@@ -105,7 +127,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         return rule;
     }
 
-    private Pattern buildPattern(DrlxParser.RulePatternContext ctx, TypeResolver typeResolver) {
+    protected Pattern buildPattern(DrlxParser.RulePatternContext ctx, TypeResolver typeResolver) {
         String typeName = ctx.identifier(0).getText();
         String bindName = ctx.identifier(1).getText();
 
@@ -127,11 +149,65 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         // constraints from oopath
         List<String> conditions = extractConditions(ctx.oopathExpression());
         for (String expression : conditions) {
-            Constraint constraint = new DrlxLambdaConstraint(expression, ((ClassObjectType) pattern.getObjectType()).getClassType());
+            Constraint constraint = createLambdaConstraint(expression, ((ClassObjectType) pattern.getObjectType()).getClassType());
             pattern.addConstraint(constraint);
         }
 
         return pattern;
+    }
+
+    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType) {
+        int capturedCounter = lambdaCounter++;
+        if (preBuildMetadata != null) {
+            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
+            if (entry != null && entry.expression().equals(expression)) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Evaluator<Object, Void, Boolean> evaluator = (Evaluator<Object, Void, Boolean>) loadPreCompiledEvaluator(entry.fqn(), entry.classFilePath());
+                    LOG.info("Loaded pre-compiled constraint evaluator for {}.{}", currentRuleName, capturedCounter);
+                    return new DrlxLambdaConstraint(expression, patternType, evaluator);
+                } catch (Exception e) {
+                    LOG.warn("Failed to load pre-compiled constraint for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
+                }
+            } else if (entry == null) {
+                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
+            } else {
+                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
+                        currentRuleName, capturedCounter, expression, entry.expression());
+            }
+        }
+        return new DrlxLambdaConstraint(expression, patternType);
+    }
+
+    protected DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+        int capturedCounter = lambdaCounter++;
+        if (preBuildMetadata != null) {
+            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
+            if (entry != null && entry.expression().equals(consequenceBlock)) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Evaluator<Map<String, Object>, Void, String> evaluator = (Evaluator<Map<String, Object>, Void, String>) loadPreCompiledEvaluator(entry.fqn(), entry.classFilePath());
+                    LOG.info("Loaded pre-compiled consequence evaluator for {}.{}", currentRuleName, capturedCounter);
+                    return new DrlxLambdaConsequence(consequenceBlock, declarationTypes, evaluator);
+                } catch (Exception e) {
+                    LOG.warn("Failed to load pre-compiled consequence for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
+                }
+            } else if (entry == null) {
+                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
+            } else {
+                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
+                        currentRuleName, capturedCounter, consequenceBlock, entry.expression());
+            }
+        }
+        return new DrlxLambdaConsequence(consequenceBlock, declarationTypes);
+    }
+
+    private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {
+        byte[] bytes = Files.readAllBytes(Path.of(classFilePath));
+        ClassManager classManager = new ClassManager();
+        classManager.define(Collections.singletonMap(fqn, bytes));
+        Class<?> clazz = classManager.getClass(fqn);
+        return clazz.getConstructor().newInstance();
     }
 
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {

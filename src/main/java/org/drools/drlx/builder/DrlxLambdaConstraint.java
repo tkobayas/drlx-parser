@@ -33,6 +33,12 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
         initializeLambdaConstraint();
     }
 
+    public DrlxLambdaConstraint(String expression, Class<?> patternType, Evaluator<Object, Void, Boolean> preCompiledEvaluator) {
+        this.expression = expression;
+        this.patternType = patternType;
+        this.evaluator = preCompiledEvaluator;
+    }
+
     public String getExpression() {
         return expression;
     }

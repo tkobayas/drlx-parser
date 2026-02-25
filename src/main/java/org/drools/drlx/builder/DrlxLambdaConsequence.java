@@ -30,6 +30,12 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper> {
         initializeLambdaConsequence();
     }
 
+    public DrlxLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, Evaluator<Map<String, Object>, Void, String> preCompiledEvaluator) {
+        this.consequenceBlock = consequenceBlock;
+        this.declarationTypes = declarationTypes;
+        this.evaluator = preCompiledEvaluator;
+    }
+
     public Evaluator<Map<String, Object>, Void, String> getEvaluator() {
         return evaluator;
     }
