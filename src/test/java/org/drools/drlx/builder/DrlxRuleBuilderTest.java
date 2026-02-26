@@ -23,7 +23,7 @@ import org.mvel3.lambdaextractor.LambdaRegistry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mvel3.lambdaextractor.LambdaRegistry.DEFAULT_PERSISTENCE_PATH;
 
-class DrlxBuilderTest {
+class DrlxRuleBuilderTest {
 
     @Test
     void testBuildBasicRule() {
