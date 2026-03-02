@@ -149,3 +149,42 @@ mvn test
 # Compiler tests only
 mvn test -Dtest="org.drools.drlx.tools.DrlxCompilerTest"
 ```
+
+### Running JMH benchmarks
+
+The project includes a JMH benchmark comparing KieBase build performance between
+DRL executable-model and DRLX 2-step builds.
+
+1. Build the fat jar:
+
+```bash
+mvn package -DskipTests
+```
+
+2. Run the benchmark:
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -foe true \
+  org.drools.drlx.perf.KieBaseBuildBenchmark
+```
+
+3. Customize the rule count with `-p`:
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -foe true \
+  -p ruleCount=10,50,100,200 \
+  org.drools.drlx.perf.KieBaseBuildBenchmark
+```
+
+4. Quick smoke test (1 fork, no warmup, 1 iteration):
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -f 1 -wi 0 -i 1 -r 5 -p ruleCount=10 -foe true \
+  org.drools.drlx.perf.KieBaseBuildBenchmark
+```
