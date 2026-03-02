@@ -201,14 +201,43 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.5.4</version>
-                <configuration>
-                    <systemProperties>
-                        <property>
-                            <name>mvel3.compiler.lambda.resetOnTestStartup</name>
-                            <value>true</value>
-                        </property>
-                    </systemProperties>
-                 </configuration>
+                <executions>
+                    <execution>
+                        <id>default-test</id>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/*NoPersistTest.java</exclude>
+                            </excludes>
+                            <systemProperties>
+                                <property>
+                                    <name>mvel3.compiler.lambda.resetOnTestStartup</name>
+                                    <value>true</value>
+                                </property>
+                            </systemProperties>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>no-persist-tests</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>**/*NoPersistTest.java</include>
+                            </includes>
+                            <systemProperties>
+                                <property>
+                                    <name>mvel3.compiler.lambda.persistence</name>
+                                    <value>false</value>
+                                </property>
+                                <property>
+                                    <name>mvel3.compiler.lambda.resetOnTestStartup</name>
+                                    <value>true</value>
+                                </property>
+                            </systemProperties>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>

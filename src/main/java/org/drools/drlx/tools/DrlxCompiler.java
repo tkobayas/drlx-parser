@@ -28,12 +28,17 @@ import org.slf4j.LoggerFactory;
  *
  * The {@link #build} method automatically detects pre-built metadata and uses
  * pre-compiled lambda classes when available, falling back to normal compilation otherwise.
+ *
+ * <p>For runtime-only use cases where no disk I/O is desired, use the
+ * {@link #noPersist()} factory method. This requires the JVM-wide system property
+ * {@code mvel3.compiler.lambda.persistence=false}.
  */
 public class DrlxCompiler {
 
     private static final Logger LOG = LoggerFactory.getLogger(DrlxCompiler.class);
 
     private final Path outputDir;
+    private final boolean persist;
     private final DrlxRuleBuilder builder = new DrlxRuleBuilder();
 
     /**
@@ -50,12 +55,47 @@ public class DrlxCompiler {
      */
     public DrlxCompiler(Path outputDir) {
         this.outputDir = outputDir;
+        this.persist = true;
+    }
+
+    /**
+     * Private constructor for no-persist mode.
+     */
+    private DrlxCompiler(boolean persist) {
+        this.outputDir = null;
+        this.persist = persist;
+    }
+
+    /**
+     * Creates a no-persist DrlxCompiler that builds KieBases entirely in memory.
+     * No lambda {@code .class} files or metadata are written to disk.
+     *
+     * <p>Requires the JVM-wide system property
+     * {@code -Dmvel3.compiler.lambda.persistence=false} to be set before class loading.
+     *
+     * @throws IllegalStateException if {@code LambdaRegistry.PERSISTENCE_ENABLED} is {@code true}
+     */
+    public static DrlxCompiler noPersist() {
+        if (LambdaRegistry.PERSISTENCE_ENABLED) {
+            throw new IllegalStateException(
+                    "Cannot create no-persist DrlxCompiler: LambdaRegistry.PERSISTENCE_ENABLED is true. " +
+                    "Set -Dmvel3.compiler.lambda.persistence=false before JVM startup.");
+        }
+        return new DrlxCompiler(false);
+    }
+
+    /**
+     * Returns whether this compiler persists lambda classes and metadata to disk.
+     */
+    public boolean isPersist() {
+        return persist;
     }
 
     /**
      * Step 1: Pre-build. Compiles all lambda classes and saves metadata to the output directory.
      */
     public void preBuild(Path drlxFile) throws IOException {
+        requirePersistMode();
         preBuild(Files.readString(drlxFile));
     }
 
@@ -63,6 +103,7 @@ public class DrlxCompiler {
      * Step 1: Pre-build from a classpath resource.
      */
     public void preBuild(InputStream drlxInput) throws IOException {
+        requirePersistMode();
         preBuild(new String(drlxInput.readAllBytes(), StandardCharsets.UTF_8));
     }
 
@@ -70,6 +111,7 @@ public class DrlxCompiler {
      * Step 1: Pre-build from a DRLX source string.
      */
     public void preBuild(String drlxSource) throws IOException {
+        requirePersistMode();
         builder.preBuild(drlxSource, outputDir);
         LOG.info("Pre-build complete. Metadata saved to {}", DrlxLambdaMetadata.metadataFilePath(outputDir));
     }
@@ -92,6 +134,10 @@ public class DrlxCompiler {
      * Step 2: Build from a DRLX source string.
      */
     public KieBase build(String drlxSource) throws IOException {
+        if (!persist) {
+            LOG.info("No-persist mode: compiling in memory");
+            return builder.build(drlxSource);
+        }
         Path metadataFile = DrlxLambdaMetadata.metadataFilePath(outputDir);
         if (Files.exists(metadataFile)) {
             LOG.info("Found pre-built metadata at {}, using pre-compiled lambda classes", metadataFile);
@@ -103,5 +149,13 @@ public class DrlxCompiler {
 
     public Path getOutputDir() {
         return outputDir;
+    }
+
+    private void requirePersistMode() {
+        if (!persist) {
+            throw new UnsupportedOperationException(
+                    "preBuild is not supported in no-persist mode. " +
+                    "Use build() directly to compile in memory.");
+        }
     }
 }
