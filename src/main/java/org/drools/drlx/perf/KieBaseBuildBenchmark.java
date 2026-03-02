@@ -33,7 +33,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @State(Scope.Benchmark)
 @Warmup(iterations = 3, time = 5)
 @Measurement(iterations = 5, time = 5)
-@Fork(value = 1, jvmArgsAppend = {"-Dmvel3.compiler.lambda.resetOnTestStartup=true"})
+@Fork(value = 1, jvmArgsAppend = {"-Dmvel3.compiler.lambda.persistence=false", "-Dmvel3.compiler.lambda.resetOnTestStartup=true"})
 public class KieBaseBuildBenchmark {
 
     @Param({"100"})
@@ -61,9 +61,8 @@ public class KieBaseBuildBenchmark {
     }
 
     @Benchmark
-    public KieBase buildWithDrlxOneStep() throws IOException {
-        DrlxCompiler compiler = new DrlxCompiler();
-        // no pre-build step, so build will compile lambdas on the fly
+    public KieBase buildWithDrlxNoPersist() throws IOException {
+        DrlxCompiler compiler = DrlxCompiler.noPersist();
         return compiler.build(drlxSource);
     }
 
