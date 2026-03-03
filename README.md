@@ -185,6 +185,6 @@ java -jar target/drlx-benchmarks.jar \
 ```bash
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
-  -f 1 -wi 0 -i 1 -r 5 -p ruleCount=10 -foe true \
+  -f 1 -wi 0 -i 1 -foe true \
   org.drools.drlx.perf.KieBaseBuildBenchmark
 ```
