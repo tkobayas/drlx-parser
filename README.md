@@ -214,7 +214,35 @@ java -jar target/drlx-benchmarks.jar \
   org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark
 ```
 
-4. Quick smoke test (1 fork):
+4. Profiling with async-profiler:
+
+async-profiler integrates with JMH via `-prof async`. Use `avgt` mode with warmup to collect enough samples for meaningful flamegraphs.
+
+##### CPU flamegraph
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -f 1 -bm avgt -wi 3 -i 5 -p ruleCount=100 -foe true \
+  -prof "async:output=flamegraph;event=cpu;simple=true;dir=/tmp/profile-cpu;libPath=/home/tkobayas/usr/local/devtools/async-profiler-2.9-linux-x64/build/libasyncProfiler.so" \
+  "org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark.buildWithDrlxNoPersist"
+```
+
+##### Wall-clock flamegraph
+
+Wall-clock profiling captures all threads including those blocked on I/O, locks, or sleeping — useful for identifying bottlenecks beyond pure CPU time:
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -f 1 -bm avgt -wi 3 -i 5 -p ruleCount=100 -foe true \
+  -prof "async:output=flamegraph;event=wall;simple=true;dir=/tmp/profile-wall;libPath=/home/tkobayas/usr/local/devtools/async-profiler-2.9-linux-x64/build/libasyncProfiler.so" \
+  "org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark.buildWithDrlxNoPersist"
+```
+
+Replace the benchmark method at the end with `.buildWithExecutableModel` to profile executable-model instead. Flamegraphs are written as HTML files to the specified `dir` — open them in a browser.
+
+5. Quick smoke test (1 fork):
 
 ```bash
 java -jar target/drlx-benchmarks.jar \
