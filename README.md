@@ -152,8 +152,8 @@ mvn test -Dtest="org.drools.drlx.tools.DrlxCompilerTest"
 
 ### Running JMH benchmarks
 
-The project includes a JMH benchmark comparing KieBase build performance between
-DRL executable-model and DRLX 2-step builds.
+The project includes JMH benchmarks comparing DRLX and executable-model performance.
+All benchmarks use `SingleShotTime` mode (cold-start, no JIT warmup).
 
 1. Build the fat jar:
 
@@ -161,13 +161,36 @@ DRL executable-model and DRLX 2-step builds.
 mvn package -DskipTests
 ```
 
-2. Run the benchmark:
+2. Run benchmarks:
+
+#### No-persistence benchmark (in-memory build only)
+
+Measures KieBase build time without disk I/O:
 
 ```bash
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
   -foe true \
-  org.drools.drlx.perf.KieBaseBuildBenchmark
+  org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark
+```
+
+#### Pre-build persistence benchmark (compile + persist to disk)
+
+Measures the full pre-build phase: parse, compile, and persist artifacts to a temp directory:
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -foe true \
+  org.drools.drlx.perf.KieBasePreBuildPersistenceBenchmark
+```
+
+#### Run all benchmarks
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -foe true
 ```
 
 3. Customize the rule count with `-p`:
@@ -177,14 +200,14 @@ java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
   -foe true \
   -p ruleCount=10,50,100,200 \
-  org.drools.drlx.perf.KieBaseBuildBenchmark
+  org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark
 ```
 
-4. Quick smoke test (1 fork, no warmup, 1 iteration):
+4. Quick smoke test (1 fork):
 
 ```bash
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
-  -f 1 -wi 0 -i 1 -foe true \
-  org.drools.drlx.perf.KieBaseBuildBenchmark
+  -f 1 -p ruleCount=10 -foe true \
+  org.drools.drlx.perf.KieBasePreBuildPersistenceBenchmark
 ```
