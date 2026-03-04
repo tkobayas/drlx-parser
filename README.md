@@ -185,6 +185,17 @@ java -jar target/drlx-benchmarks.jar \
   org.drools.drlx.perf.KieBasePreBuildPersistenceBenchmark
 ```
 
+#### Build using pre-built artifacts benchmark (KieBase creation only)
+
+Measures KieBase creation from pre-built artifacts on disk (compilation cost excluded):
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
+  -foe true \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+```
+
 #### Run all benchmarks
 
 ```bash
