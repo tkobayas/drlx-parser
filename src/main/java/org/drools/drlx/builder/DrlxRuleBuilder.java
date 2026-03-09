@@ -14,6 +14,8 @@ import org.drools.drlx.parser.DrlxParser;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
+import org.mvel3.ClassManager;
+import org.mvel3.lambdaextractor.LambdaRegistry;
 
 /**
  * Builder that creates KieBase from DRLX source, skipping Descr generation.
@@ -85,7 +87,7 @@ public class DrlxRuleBuilder {
     }
 
     /**
-     * Parses DRLX source into List&lt;KiePackage&gt; using the direct visitor.
+     * Parses DRLX source into List&lt;KiePackage&gt; using the direct visitor with batch compilation.
      */
     public List<KiePackage> parse(String drlxSource) {
         CharStream charStream = CharStreams.fromString(drlxSource);
@@ -95,6 +97,19 @@ public class DrlxRuleBuilder {
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
-        return visitor.visitDrlxCompilationUnit(ctx);
+
+        // Enable batch mode only when persistence is disabled (no-persist path).
+        // When persistence is enabled, the eager per-lambda path handles LambdaRegistry dedup/persistence.
+        if (!LambdaRegistry.PERSISTENCE_ENABLED) {
+            ClassManager sharedClassManager = new ClassManager();
+            visitor.enableBatchMode(sharedClassManager);
+        }
+
+        List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
+
+        // Batch compile all collected lambda sources in a single javac call
+        visitor.compileBatch(Thread.currentThread().getContextClassLoader());
+
+        return kiePackages;
     }
 }

@@ -5,6 +5,8 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,8 +29,12 @@ import org.drools.drlx.parser.DrlxParserBaseVisitor;
 import org.drools.util.TypeResolver;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.ClassManager;
+import org.mvel3.CompilerParameters;
 import org.mvel3.Evaluator;
+import org.mvel3.MVEL;
+import org.mvel3.MVELCompiler;
 import org.mvel3.Type;
+import org.mvel3.javacompiler.KieMemoryCompiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,6 +57,15 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     protected int lambdaCounter;
 
+    // Batch compilation fields
+    private boolean batchMode = false;
+    private ClassManager sharedClassManager;
+    private final Map<String, String> pendingSources = new LinkedHashMap<>();
+    private final List<PendingLambda> pendingLambdas = new ArrayList<>();
+    private int batchCounter = 0;
+
+    record PendingLambda(String fqn, Object target) {}
+
     public DrlxToRuleImplVisitor() {
         this(null);
     }
@@ -61,6 +76,28 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
         this.preBuildMetadata = preBuildMetadata;
+    }
+
+    public void enableBatchMode(ClassManager classManager) {
+        this.batchMode = true;
+        this.sharedClassManager = classManager;
+    }
+
+    public void compileBatch(ClassLoader classLoader) {
+        if (pendingSources.isEmpty()) {
+            return;
+        }
+        LOG.info("Batch-compiling {} lambda sources", pendingSources.size());
+        KieMemoryCompiler.compile(sharedClassManager, pendingSources, classLoader);
+        for (PendingLambda pl : pendingLambdas) {
+            if (pl.target() instanceof DrlxLambdaConstraint c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            } else if (pl.target() instanceof DrlxLambdaConsequence c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            }
+        }
+        pendingSources.clear();
+        pendingLambdas.clear();
     }
 
     @Override
@@ -176,7 +213,27 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                         currentRuleName, capturedCounter, expression, entry.expression());
             }
         }
+        if (batchMode) {
+            return createBatchConstraint(expression, patternType);
+        }
         return new DrlxLambdaConstraint(expression, patternType);
+    }
+
+    private DrlxLambdaConstraint createBatchConstraint(String expression, Class<?> patternType) {
+        // Build CompilerParameters with unique class name (same logic as DrlxLambdaConstraint.initializeLambdaConstraint)
+        CompilerParameters<Object, Void, Boolean> evalInfo = MVEL.pojo(patternType,
+                        org.mvel3.transpiler.context.Declaration.of("age", int.class),
+                        org.mvel3.transpiler.context.Declaration.of("city", String.class))
+                .<Boolean>out(Boolean.class)
+                .expression(expression)
+                .classManager(sharedClassManager)
+                .generatedClassName("GeneratorEvaluator__" + batchCounter++)
+                .build();
+        MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
+        pendingSources.put(ts.fqn(), ts.javaSource());
+        DrlxLambdaConstraint constraint = new DrlxLambdaConstraint(expression, patternType, (Evaluator<Object, Void, Boolean>) null);
+        pendingLambdas.add(new PendingLambda(ts.fqn(), constraint));
+        return constraint;
     }
 
     protected DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
@@ -199,7 +256,30 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                         currentRuleName, capturedCounter, consequenceBlock, entry.expression());
             }
         }
+        if (batchMode) {
+            return createBatchConsequence(consequenceBlock, declarationTypes);
+        }
         return new DrlxLambdaConsequence(consequenceBlock, declarationTypes);
+    }
+
+    private static final String RETURN_NULL = "\n return null;";
+
+    private DrlxLambdaConsequence createBatchConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+        // Build CompilerParameters with unique class name (same logic as DrlxLambdaConsequence.initializeLambdaConsequence)
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        CompilerParameters<Map<String, Object>, Void, String> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(org.mvel3.transpiler.context.Declaration.from(declarationTypes))
+                        .<String>out(String.class)
+                        .block(consequenceBlock + RETURN_NULL)
+                        .imports(new HashSet<>())
+                        .classManager(sharedClassManager)
+                        .generatedClassName("GeneratorEvaluator__" + batchCounter++)
+                        .build();
+        MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
+        pendingSources.put(ts.fqn(), ts.javaSource());
+        DrlxLambdaConsequence consequence = new DrlxLambdaConsequence(consequenceBlock, declarationTypes, (Evaluator<Map<String, Object>, Void, String>) null);
+        pendingLambdas.add(new PendingLambda(ts.fqn(), consequence));
+        return consequence;
     }
 
     private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {

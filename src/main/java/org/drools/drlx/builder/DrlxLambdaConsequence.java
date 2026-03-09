@@ -40,6 +40,10 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper> {
         return evaluator;
     }
 
+    public void setEvaluator(Evaluator<Map<String, Object>, Void, String> evaluator) {
+        this.evaluator = evaluator;
+    }
+
     private void initializeLambdaConsequence() {
         // TODO: manage source code, hash, and implement cache
         MVEL mvel = new MVEL();

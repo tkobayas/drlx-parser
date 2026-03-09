@@ -47,6 +47,10 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
         return evaluator;
     }
 
+    public void setEvaluator(Evaluator<Object, Void, Boolean> evaluator) {
+        this.evaluator = evaluator;
+    }
+
     private void initializeLambdaConstraint() {
         // TODO: manage source code, hash, and implement cache
         // TODO: extract declarations from the expression (maybe create a map in the build phase)
