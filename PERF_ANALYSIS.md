@@ -14,7 +14,7 @@ KieBasePreBuildPersistenceBenchmark.preBuildWithDrlx                          10
 KieBasePreBuildPersistenceBenchmark.preBuildWithExecutableModel               100    ss    5  1164.814 ± 205.089  ms/op
 ```
 
-### After Batch Compilation Optimization
+### After Batch Compilation (NoPersist path only)
 
 ```
 Benchmark                                                             (ruleCount)  Mode  Cnt     Score     Error  Units
@@ -26,7 +26,17 @@ KieBasePreBuildPersistenceBenchmark.preBuildWithDrlx                          10
 KieBasePreBuildPersistenceBenchmark.preBuildWithExecutableModel               100    ss    5  1164.982 ± 199.239  ms/op
 ```
 
-KieBase building is a one-time process, so SingleShotTime (`ss`) with no warmup is the appropriate benchmark mode. It measures true cold-start cost in a fresh JVM (5 forks, 1 measurement each).
+### After Batch Compilation (NoPersist + PreBuild paths)
+
+```
+Benchmark                                                             (ruleCount)  Mode  Cnt     Score     Error  Units
+KieBasePreBuildPersistenceBenchmark.preBuildWithDrlx                          100    ss   25   499.443 ±  84.663  ms/op
+KieBasePreBuildPersistenceBenchmark.preBuildWithExecutableModel               100    ss   25   164.198 ±  18.193  ms/op
+```
+
+Settings: `-f 5 -wi 3 -i 5 -bm ss` (5 forks, 3 warmup iterations for JIT, 5 measurement iterations per fork).
+
+KieBase building is a one-time process, so SingleShotTime (`ss`) is the appropriate benchmark mode. Adding warmup iterations (`-wi 3`) lets JIT optimize shared infrastructure (ANTLR, classloading) before measurement, isolating the code's efficiency from JVM cold-start noise.
 
 ## Summary of Ratios
 
@@ -38,12 +48,20 @@ KieBase building is a one-time process, so SingleShotTime (`ss`) with no warmup 
 | **PreBuild** | 4385 | 1165 | **3.76x** | Compile + persist to disk (maven plugin phase) |
 | **UsingPreBuild** | 2438 | 133 | **18.3x** | Load pre-built artifacts → KieBase (runtime) |
 
-### After Batch Compilation
+### After Batch Compilation (NoPersist only)
 
 | Scenario | DRLX (ms) | Exec-Model (ms) | Ratio | What it measures |
 |----------|-----------|-----------------|-------|------------------|
 | **NoPersist** | 2036 | 1247 | **1.63x** | Full in-memory build (compile + KieBase creation) |
 | **PreBuild** | 4359 | 1165 | **3.74x** | Compile + persist to disk (maven plugin phase) |
+| **UsingPreBuild** | 2397 | 147 | **16.3x** | Load pre-built artifacts → KieBase (runtime) |
+
+### After Batch Compilation (NoPersist + PreBuild)
+
+| Scenario | DRLX (ms) | Exec-Model (ms) | Ratio | What it measures |
+|----------|-----------|-----------------|-------|------------------|
+| **NoPersist** | 2036 | 1247 | **1.63x** | Full in-memory build (compile + KieBase creation) |
+| **PreBuild** | **499** | 164 | **3.04x** | Compile + persist to disk (maven plugin phase) |
 | **UsingPreBuild** | 2397 | 147 | **16.3x** | Load pre-built artifacts → KieBase (runtime) |
 
 The 2-step build splits NoPersist into PreBuild (offline) + UsingPreBuild (runtime).
@@ -56,13 +74,9 @@ The batch compilation optimization collects all 200 generated Java sources durin
 
 | Benchmark | Before | After | Change | Explanation |
 |-----------|--------|-------|--------|-------------|
-| **NoPersist** | 5994ms | **2036ms** | **2.95x faster** | 200 javac calls → 1 batch call. Compiler startup overhead (~3000-4000ms) eliminated. |
-| **PreBuild** | 4385ms | 4359ms | ~0.6% (noise) | Batch mode is gated by `!LambdaRegistry.PERSISTENCE_ENABLED`. PreBuild uses persistence → old eager path unchanged. |
+| **NoPersist** | 5994ms | **2036ms** | **2.95x faster** | 200 javac calls → 1 batch call. Compiler startup overhead eliminated. |
+| **PreBuild** | 4359ms | **499ms** | **8.74x faster** | Same batch approach + `compileAndPersist()` for disk persistence. |
 | **UsingPreBuild** | 2438ms | 2397ms | ~1.7% (noise) | Loads pre-compiled .class files from disk. No javac involved → batch optimization has zero effect. |
-
-### Why PreBuild did not improve
-
-Batch mode is only enabled when `LambdaRegistry.PERSISTENCE_ENABLED == false` (the no-persist path). The PreBuild benchmark runs with persistence enabled (the default), so it still uses the eager per-lambda compile + `LambdaRegistry` dedup/persistence flow. Applying batch compilation to the persistence path requires a more complex two-phase flow: transpile all sources → batch javac → then register/persist each output with `LambdaRegistry`.
 
 ### Why UsingPreBuild did not improve
 
@@ -77,10 +91,11 @@ This benchmark loads pre-compiled `.class` files from disk and calls `defineHidd
 | `MVELCompiler.java` | Added `TranspiledSource` record, `transpileToSource()` (transpile without javac), `resolveEvaluator()` (instantiate from ClassManager) |
 | `DrlxLambdaConstraint.java` | Added `setEvaluator()` for deferred resolution after batch compile |
 | `DrlxLambdaConsequence.java` | Added `setEvaluator()` for deferred resolution after batch compile |
-| `DrlxToRuleImplVisitor.java` | Added batch mode: `enableBatchMode()`, `compileBatch()`, pending lambda tracking with unique class names |
-| `DrlxRuleBuilder.java` | `parse()` enables batch mode when `!LambdaRegistry.PERSISTENCE_ENABLED`, calls `compileBatch()` after tree walk |
+| `DrlxToRuleImplVisitor.java` | Added batch mode: `enableBatchMode()`, `compileBatch()`, pending lambda tracking with unique class names. Batch fields made `protected` for subclass access. |
+| `DrlxPreBuildVisitor.java` | Overrides `compileBatch()` to use `KieMemoryCompiler.compileAndPersist()` + deferred metadata recording via `PendingPreBuildInfo`. Bypasses per-lambda `LambdaRegistry` flow. |
+| `DrlxRuleBuilder.java` | `parse()` enables batch mode when `!LambdaRegistry.PERSISTENCE_ENABLED && BATCH_ENABLED`. `preBuild()` enables batch mode when `BATCH_ENABLED`. Added `BATCH_ENABLED` system property (`drlx.compiler.batch`, default: `true`). |
 
-**Flow (batch mode):**
+**Flow (batch mode — NoPersist path):**
 
 ```
 DrlxRuleBuilder.parse()
@@ -94,6 +109,26 @@ DrlxRuleBuilder.parse()
     ├── KieMemoryCompiler.compile(sharedClassManager, allSources, classLoader)  // ONE javac call for all 200
     └── for each pending lambda:
         └── MVELCompiler.resolveEvaluator(sharedClassManager, fqn)  // instantiate from compiled class
+```
+
+**Flow (batch mode — PreBuild persistence path):**
+
+```
+DrlxRuleBuilder.preBuild()
+├── visitor.enableBatchMode(sharedClassManager)
+├── visitor.visitDrlxCompilationUnit()       // tree walk (same as NoPersist)
+│   └── for each lambda:
+│       ├── MVELCompiler.transpileToSource()
+│       ├── pendingSources.put(fqn, source)
+│       ├── pendingPreBuildInfos.add(ruleName, counterId, expression, fqn)  // deferred metadata
+│       └── return constraint/consequence with null evaluator
+└── visitor.compileBatch()  (DrlxPreBuildVisitor override)
+    ├── KieMemoryCompiler.compileAndPersist(sharedClassManager, allSources, classLoader, persistPath)
+    │   // ONE javac call + persist all 200 .class files to disk
+    ├── for each pending lambda:
+    │   └── MVELCompiler.resolveEvaluator(sharedClassManager, fqn)
+    └── for each pendingPreBuildInfo:
+        └── metadata.put(ruleName, counterId, fqn, persistedFilePath, expression)
 ```
 
 ## Key Findings
@@ -202,11 +237,13 @@ During loading of pre-compiled classes, `ClassEntry` still calls `MethodByteCode
 
 ~~Collect all 200 generated Java sources and compile in a **single** `KieMemoryCompiler.compile()` call. Compiler startup/initialization overhead is currently paid 200 times.~~
 
-**Result**: NoPersist DRLX dropped from **5994ms → 2036ms (2.95x faster)**, ratio vs exec-model narrowed from **4.74x → 1.63x**. Currently only applied to the no-persist path. Extending to the persistence path (PreBuild) requires a two-phase flow that integrates with `LambdaRegistry` dedup/persistence.
+**Result**: NoPersist DRLX dropped from **5994ms → 2036ms (2.95x faster)**, ratio vs exec-model narrowed from **4.74x → 1.63x**.
 
-### 4. Batch Compilation for Persistence Path (HIGH — fixes PreBuild)
+### 4. ~~Batch Compilation for Persistence Path (HIGH — fixes PreBuild)~~ ✅ DONE
 
-Apply the same batch compilation to the persistence-enabled path. Requires a two-phase flow: transpile all sources → batch javac → register/persist each output with `LambdaRegistry`. The current `compileEvaluatorClassWithPersistence()` interleaves compilation with `LambdaRegistry` registration, making it non-trivial to batch. Expected to bring PreBuild from ~4359ms to ~2000-2500ms.
+~~Apply the same batch compilation to the persistence-enabled path. Requires a two-phase flow: transpile all sources → batch javac → register/persist each output with `LambdaRegistry`.~~
+
+**Result**: PreBuild DRLX dropped from **4359ms → 499ms (8.74x faster)**, ratio vs exec-model narrowed from **3.74x → 3.04x**. `DrlxPreBuildVisitor` overrides `compileBatch()` to use `KieMemoryCompiler.compileAndPersist()` for a single javac call + batch disk persistence, bypassing the per-lambda `LambdaRegistry` flow entirely. Batch mode is controlled by `drlx.compiler.batch` system property (default: `true`).
 
 ### 5. Cache ANTLR parse result (MEDIUM — fixes UsingPreBuild)
 

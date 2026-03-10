@@ -7,17 +7,12 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
-import org.drools.compiler.kie.builder.impl.InternalKieModule;
 import org.drools.drlx.tools.DrlxCompiler;
-import org.drools.model.codegen.ExecutableModelProject;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
-import org.kie.api.builder.KieFileSystem;
 import org.kie.api.builder.KieModule;
-import org.kie.api.builder.ReleaseId;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
-import org.kie.internal.builder.InternalKieBuilder;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -42,13 +37,20 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 /**
  * Benchmarks KieBase building using pre-built artifacts (excludes compilation cost).
  *
- * Setup (Level.Trial) runs the full pre-build for both paths, persisting to disk:
- * - DRLX: DrlxCompiler.preBuild() creates .class files + metadata on disk
- * - Executable-model: KieBuilder.buildAll() + InternalKieModule.getBytes() writes kjar to disk
+ * Pre-build is automatically performed in a SEPARATE JVM process via {@link PreBuildRunner}
+ * during {@code @Setup(Level.Trial)}. This ensures that:
+ * <ul>
+ *   <li>Compilation warm-up does not leak into load-time measurement</li>
+ *   <li>Each forked JVM starts cold — matching real production deployment</li>
+ *   <li>Multiple {@code ruleCount} params work automatically</li>
+ * </ul>
  *
- * Benchmark methods measure only the KieBase creation from persisted artifacts:
- * - DRLX: DrlxCompiler.build() loads pre-compiled classes via metadata from disk
- * - Executable-model: loads kjar from disk, adds to KieRepository, creates KieBase
+ * <pre>
+ * java -jar target/drlx-benchmarks.jar \
+ *   -jvmArgs "-Xms4g -Xmx4g" \
+ *   -f 5 -wi 0 -i 1 -bm ss -p ruleCount=100 \
+ *   org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+ * </pre>
  */
 @BenchmarkMode(Mode.SingleShotTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -62,50 +64,37 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     private int ruleCount;
 
     private String drlxSource;
-    private Path tempDir;
+    private Path preBuildDir;
     private Path kjarPath;
-    private ReleaseId releaseId;
 
     @Setup(Level.Trial)
-    public void setup() throws IOException {
-        String drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount);
+    public void setup() throws IOException, InterruptedException {
+        preBuildDir = Files.createTempDirectory("prebuild-artifacts-bench-");
         drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount);
-        tempDir = Files.createTempDirectory("prebuild-artifacts-bench-");
+        kjarPath = preBuildDir.resolve("rules.kjar");
 
-        // Pre-build DRLX: creates .class files + metadata in tempDir
-        DrlxCompiler compiler = new DrlxCompiler(tempDir);
-        compiler.preBuild(drlxSource);
+        // Launch PreBuildRunner in a separate JVM process
+        String javaHome = System.getProperty("java.home");
+        String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
+        String classpath = System.getProperty("java.class.path");
 
-        // Pre-build executable-model: buildAll() then persist kjar to disk
-        KieServices ks = KieServices.Factory.get();
-        KieFileSystem kfs = ks.newKieFileSystem();
-        kfs.write("src/main/resources/rules.drl", drlSource);
-        InternalKieBuilder kieBuilder = (InternalKieBuilder) ks.newKieBuilder(kfs);
-        kieBuilder.buildAll(ExecutableModelProject.class);
-
-        InternalKieModule kieModule = (InternalKieModule) kieBuilder.getKieModule();
-        releaseId = kieModule.getReleaseId();
-
-        // Write kjar to disk
-        kjarPath = tempDir.resolve("rules.kjar");
-        Files.write(kjarPath, kieModule.getBytes());
-
-        // Remove from KieRepository so the benchmark must load from disk
-        ks.getRepository().removeKieModule(releaseId);
-    }
-
-    @Setup(Level.Invocation)
-    public void resetState() {
-        // Clear in-memory LambdaRegistry so DRLX build loads classes from disk via metadata.
-        // resetAndRemoveAllPersistedFiles() only deletes files under DEFAULT_PERSISTENCE_PATH,
-        // so the pre-built artifacts in tempDir survive.
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        ProcessBuilder pb = new ProcessBuilder(
+                javaBin, "-cp", classpath,
+                PreBuildRunner.class.getName(),
+                    preBuildDir.toAbsolutePath().toString(),
+                String.valueOf(ruleCount));
+        pb.inheritIO();
+        Process process = pb.start();
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            throw new RuntimeException("PreBuildRunner failed with exit code " + exitCode);
+        }
     }
 
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
-        if (tempDir != null && Files.exists(tempDir)) {
-            Files.walk(tempDir)
+        if (preBuildDir != null && Files.exists(preBuildDir)) {
+            Files.walk(preBuildDir)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
@@ -114,7 +103,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @Benchmark
     public KieBase buildWithDrlx() throws IOException {
-        DrlxCompiler compiler = new DrlxCompiler(tempDir);
+        DrlxCompiler compiler = new DrlxCompiler(preBuildDir);
         return compiler.build(drlxSource);
     }
 
@@ -132,7 +121,6 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
         Options opt = new OptionsBuilder()
                 .parent(cmdOptions)
                 .include(KieBaseBuildUsingPreBuildArtifactsBenchmark.class.getSimpleName())
-                .forks(1)
                 .build();
         new Runner(opt).run();
     }

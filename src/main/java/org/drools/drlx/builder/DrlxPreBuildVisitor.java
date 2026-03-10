@@ -30,8 +30,14 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
 
     record PendingPreBuildInfo(String ruleName, int counterId, String expression, String fqn) {}
 
+    private Path outputDir;
+
     public DrlxPreBuildVisitor(TokenStream tokens) {
         super(tokens);
+    }
+
+    public void setOutputDir(Path outputDir) {
+        this.outputDir = outputDir;
     }
 
     public DrlxLambdaMetadata getMetadata() {
@@ -77,7 +83,7 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
 
         // Batch compile + persist all classes in one javac call
         List<Path> persistedFiles = KieMemoryCompiler.compileAndPersist(
-                sharedClassManager, pendingSources, classLoader, null, LambdaRegistry.DEFAULT_PERSISTENCE_PATH);
+                sharedClassManager, pendingSources, classLoader, null, outputDir);
 
         // Resolve evaluators (same as parent)
         for (PendingLambda pl : pendingLambdas) {
@@ -92,7 +98,7 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
         Map<String, Path> fqnToPath = new java.util.HashMap<>();
         for (Path persistedFile : persistedFiles) {
             // Convert file path back to FQN: e.g., "target/.../org/mvel3/GeneratorEvaluator__0.class" -> "org.mvel3.GeneratorEvaluator__0"
-            String relativePath = LambdaRegistry.DEFAULT_PERSISTENCE_PATH.relativize(persistedFile).toString();
+            String relativePath = outputDir.relativize(persistedFile).toString();
             String fqn = relativePath.replace('/', '.').replace(".class", "");
             fqnToPath.put(fqn, persistedFile);
         }

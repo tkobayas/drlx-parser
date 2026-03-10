@@ -187,24 +187,48 @@ java -jar target/drlx-benchmarks.jar \
 
 #### Build using pre-built artifacts benchmark (KieBase creation only)
 
-Measures KieBase creation from pre-built artifacts on disk (compilation cost excluded):
+Measures KieBase creation from pre-built artifacts on disk (compilation cost excluded).
+This is a **2-step process** with full JVM restart separation, as recommended by Mark:
+
+**Step 1: Pre-build artifacts in a separate JVM**
+
+```bash
+java -cp target/drlx-benchmarks.jar \
+  org.drools.drlx.perf.PreBuildRunner /tmp/prebuild-dir 100
+```
+
+This generates DRLX `.class` files, metadata, and an executable-model kjar in `/tmp/prebuild-dir`.
+
+**Step 2: Run benchmark in fresh forked JVMs (loading only)**
+
+```bash
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g -Dbenchmark.prebuild.dir=/tmp/prebuild-dir" \
+  -f 5 -wi 0 -i 1 -bm ss \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+```
+
+Each fork starts completely cold — no compilation warm-up from pre-build leaks into load-time measurement.
+
+#### Run NoPersist + PreBuild benchmarks together
 
 ```bash
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
   -foe true \
-  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+  "org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark|org.drools.drlx.perf.KieBasePreBuildPersistenceBenchmark"
 ```
 
-#### Run all benchmarks
+Note: `KieBaseBuildUsingPreBuildArtifactsBenchmark` requires the separate pre-build step above and cannot be combined with the other benchmarks in a single run.
+
+3. Disable batch compilation (for comparison):
 
 ```bash
-java -jar target/drlx-benchmarks.jar \
-  -jvmArgs "-Xms4g -Xmx4g -Dmvel3.compiler.lambda.resetOnTestStartup=true" \
-  -foe true
+# Add to -jvmArgs to compare batch vs non-batch performance
+-Ddrlx.compiler.batch=false
 ```
 
-3. Customize the rule count with `-p`:
+4. Customize the rule count with `-p`:
 
 ```bash
 java -jar target/drlx-benchmarks.jar \
@@ -214,7 +238,7 @@ java -jar target/drlx-benchmarks.jar \
   org.drools.drlx.perf.KieBaseBuildNoPersistenceBenchmark
 ```
 
-4. Profiling with async-profiler:
+5. Profiling with async-profiler:
 
 async-profiler integrates with JMH via `-prof async`. Use `avgt` mode with warmup to collect enough samples for meaningful flamegraphs.
 
@@ -242,7 +266,7 @@ java -jar target/drlx-benchmarks.jar \
 
 Replace the benchmark method at the end with `.buildWithExecutableModel` to profile executable-model instead. Flamegraphs are written as HTML files to the specified `dir` — open them in a browser.
 
-5. Quick smoke test (1 fork):
+6. Quick smoke test (1 fork):
 
 ```bash
 java -jar target/drlx-benchmarks.jar \

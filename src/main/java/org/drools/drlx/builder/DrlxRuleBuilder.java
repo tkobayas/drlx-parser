@@ -58,6 +58,7 @@ public class DrlxRuleBuilder {
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
+        visitor.setOutputDir(outputDir);
 
         if (BATCH_ENABLED) {
             ClassManager sharedClassManager = new ClassManager();
