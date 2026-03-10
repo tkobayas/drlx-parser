@@ -1,11 +1,15 @@
 package org.drools.drlx.builder;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.TokenStream;
 import org.mvel3.Evaluator;
+import org.mvel3.MVELCompiler;
 import org.mvel3.Type;
+import org.mvel3.javacompiler.KieMemoryCompiler;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +25,11 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
 
     private final DrlxLambdaMetadata metadata = new DrlxLambdaMetadata();
 
+    // Deferred metadata recording for batch mode
+    private final List<PendingPreBuildInfo> pendingPreBuildInfos = new ArrayList<>();
+
+    record PendingPreBuildInfo(String ruleName, int counterId, String expression, String fqn) {}
+
     public DrlxPreBuildVisitor(TokenStream tokens) {
         super(tokens);
     }
@@ -34,7 +43,13 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType);
 
-        recordMetadata(currentRuleName, capturedCounter, constraint.getEvaluator(), expression);
+        if (batchMode) {
+            // In batch mode, evaluator is null — defer metadata recording until compileBatch
+            String fqn = pendingLambdas.get(pendingLambdas.size() - 1).fqn();
+            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, fqn));
+        } else {
+            recordMetadata(currentRuleName, capturedCounter, constraint.getEvaluator(), expression);
+        }
         return constraint;
     }
 
@@ -43,8 +58,58 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConsequence consequence = super.createLambdaConsequence(consequenceBlock, declarationTypes);
 
-        recordMetadata(currentRuleName, capturedCounter, consequence.getEvaluator(), consequenceBlock);
+        if (batchMode) {
+            // In batch mode, evaluator is null — defer metadata recording until compileBatch
+            String fqn = pendingLambdas.get(pendingLambdas.size() - 1).fqn();
+            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, consequenceBlock, fqn));
+        } else {
+            recordMetadata(currentRuleName, capturedCounter, consequence.getEvaluator(), consequenceBlock);
+        }
         return consequence;
+    }
+
+    @Override
+    public void compileBatch(ClassLoader classLoader) {
+        if (pendingSources.isEmpty()) {
+            return;
+        }
+        LOG.info("Batch-compiling and persisting {} lambda sources", pendingSources.size());
+
+        // Batch compile + persist all classes in one javac call
+        List<Path> persistedFiles = KieMemoryCompiler.compileAndPersist(
+                sharedClassManager, pendingSources, classLoader, null, LambdaRegistry.DEFAULT_PERSISTENCE_PATH);
+
+        // Resolve evaluators (same as parent)
+        for (PendingLambda pl : pendingLambdas) {
+            if (pl.target() instanceof DrlxLambdaConstraint c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            } else if (pl.target() instanceof DrlxLambdaConsequence c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            }
+        }
+
+        // Record metadata: map each FQN to its persisted file path
+        Map<String, Path> fqnToPath = new java.util.HashMap<>();
+        for (Path persistedFile : persistedFiles) {
+            // Convert file path back to FQN: e.g., "target/.../org/mvel3/GeneratorEvaluator__0.class" -> "org.mvel3.GeneratorEvaluator__0"
+            String relativePath = LambdaRegistry.DEFAULT_PERSISTENCE_PATH.relativize(persistedFile).toString();
+            String fqn = relativePath.replace('/', '.').replace(".class", "");
+            fqnToPath.put(fqn, persistedFile);
+        }
+
+        for (PendingPreBuildInfo info : pendingPreBuildInfos) {
+            Path classFilePath = fqnToPath.get(info.fqn());
+            if (classFilePath != null) {
+                metadata.put(info.ruleName(), info.counterId(), info.fqn(), classFilePath.toString(), info.expression());
+                LOG.info("Recorded pre-build metadata: {}.{} -> {} ({})", info.ruleName(), info.counterId(), info.fqn(), classFilePath);
+            } else {
+                LOG.warn("No persisted class file for FQN {}, skipping metadata for {}.{}", info.fqn(), info.ruleName(), info.counterId());
+            }
+        }
+
+        pendingSources.clear();
+        pendingLambdas.clear();
+        pendingPreBuildInfos.clear();
     }
 
     private void recordMetadata(String ruleName, int counterId, Evaluator<?, ?, ?> evaluator, String expression) {

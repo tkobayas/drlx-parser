@@ -58,11 +58,11 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     protected int lambdaCounter;
 
     // Batch compilation fields
-    private boolean batchMode = false;
-    private ClassManager sharedClassManager;
-    private final Map<String, String> pendingSources = new LinkedHashMap<>();
-    private final List<PendingLambda> pendingLambdas = new ArrayList<>();
-    private int batchCounter = 0;
+    protected boolean batchMode = false;
+    protected ClassManager sharedClassManager;
+    protected final Map<String, String> pendingSources = new LinkedHashMap<>();
+    protected final List<PendingLambda> pendingLambdas = new ArrayList<>();
+    protected int batchCounter = 0;
 
     record PendingLambda(String fqn, Object target) {}
 

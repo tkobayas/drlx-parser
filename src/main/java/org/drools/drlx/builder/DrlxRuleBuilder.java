@@ -58,7 +58,16 @@ public class DrlxRuleBuilder {
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
+
+        if (BATCH_ENABLED) {
+            ClassManager sharedClassManager = new ClassManager();
+            visitor.enableBatchMode(sharedClassManager);
+        }
+
         visitor.visitDrlxCompilationUnit(ctx);
+
+        // Batch compile + persist all collected lambda sources in a single javac call
+        visitor.compileBatch(Thread.currentThread().getContextClassLoader());
 
         DrlxLambdaMetadata metadata = visitor.getMetadata();
         metadata.save(outputDir);
