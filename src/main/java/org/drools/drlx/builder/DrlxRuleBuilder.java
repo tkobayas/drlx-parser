@@ -23,6 +23,9 @@ import org.mvel3.lambdaextractor.LambdaRegistry;
  */
 public class DrlxRuleBuilder {
 
+    public static final boolean BATCH_ENABLED =
+            Boolean.parseBoolean(System.getProperty("drlx.compiler.batch", "true"));
+
     public DrlxRuleBuilder() {
     }
 
@@ -100,7 +103,7 @@ public class DrlxRuleBuilder {
 
         // Enable batch mode only when persistence is disabled (no-persist path).
         // When persistence is enabled, the eager per-lambda path handles LambdaRegistry dedup/persistence.
-        if (!LambdaRegistry.PERSISTENCE_ENABLED) {
+        if (!LambdaRegistry.PERSISTENCE_ENABLED && BATCH_ENABLED) {
             ClassManager sharedClassManager = new ClassManager();
             visitor.enableBatchMode(sharedClassManager);
         }
