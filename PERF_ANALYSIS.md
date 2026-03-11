@@ -66,6 +66,14 @@ KieBase building is a one-time process, so SingleShotTime (`ss`) is the appropri
 
 The 2-step build splits NoPersist into PreBuild (offline) + UsingPreBuild (runtime).
 
+### Warm-JVM UsingPreBuild (avgt, 10 warmup + 10 measurement iterations)
+
+| Scenario | DRLX (ms) | Exec-Model (ms) | Ratio | What it measures |
+|----------|-----------|-----------------|-------|------------------|
+| **UsingPreBuild** | 7.344 | 6.281 | **1.17x** | Load pre-built artifacts → KieBase (warm JVM) |
+
+The 16.3x cold-start gap collapses to **1.17x** under warm JVM — JIT optimizes `defineHiddenClass()` and bytecode extraction.
+
 ## Batch Compilation Optimization — Impact Analysis
 
 The batch compilation optimization collects all 200 generated Java sources during the ANTLR tree walk and compiles them in a **single** `KieMemoryCompiler.compile()` call, eliminating 199 redundant Java compiler startup/initialization cycles.
@@ -224,14 +232,61 @@ The 2-step model is not a clean decomposition — UsingPreBuild has its own subs
 
 ## Optimization Paths (in order of impact)
 
-### 1. Batch `defineHiddenClass()` or use standard ClassLoader (HIGH — fixes UsingPreBuild)
+### 1. Replace `defineHiddenClass()` with `ClassLoader.defineClass()` on load path (HIGH — fixes UsingPreBuild)
 
-**Current**: 200 individual `new ClassManager()` + `defineHiddenClass()` calls.
-**Fix**: Load all 200 .class files into a single `ClassManager.define()` call with a 200-entry map, or better yet, bundle pre-built classes into a JAR and load via `URLClassLoader` — matching what executable-model does. Expected to bring UsingPreBuild from ~2397ms to ~200-400ms.
+**Root cause**: `loadPreCompiledEvaluator()` (`DrlxToRuleImplVisitor.java:285-291`) is called **200 times**, each time creating a **new `ClassManager`** and calling `defineHiddenClass()`. This is expensive per-call because:
+- Each hidden class is isolated — no constant pool sharing, separate class data
+- Full bytecode verification on each call
+- No JVM batching optimization
+- A new `MethodHandles.Lookup` is created per lambda
 
-### 2. Skip `MethodByteCodeExtractor` on the load path (HIGH — fixes UsingPreBuild)
+**Current code:**
+```java
+private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {
+    byte[] bytes = Files.readAllBytes(Path.of(classFilePath));
+    ClassManager classManager = new ClassManager();                 // NEW per lambda!
+    classManager.define(Collections.singletonMap(fqn, bytes));     // defineHiddenClass + bytecode extraction
+    Class<?> clazz = classManager.getClass(fqn);
+    return clazz.getConstructor().newInstance();
+}
+```
 
-During loading of pre-compiled classes, `ClassEntry` still calls `MethodByteCodeExtractor.extract("eval", bytes)` for deduplication. When loading pre-built artifacts, deduplication is unnecessary — the pre-build already ensured correctness. Add a fast-path that skips bytecode extraction and hashing.
+Inside `ClassManager.define()`, for each class:
+1. `ClassEntry` constructor calls `MethodByteCodeExtractor.extract("eval", bytes)` — ASM parses bytecode (~2-5ms)
+2. `Murmur3F` hash is computed for deduplication
+3. `lookup.defineHiddenClass(bytes, true)` — JVM hidden class definition (verify + link) (~5-10ms)
+
+**Fix**: Replace with a `ByteArrayClassLoader` using standard `ClassLoader.defineClass()`:
+
+```java
+class ByteArrayClassLoader extends ClassLoader {
+    private final Map<String, byte[]> classBytes;
+
+    ByteArrayClassLoader(ClassLoader parent, Map<String, byte[]> classBytes) {
+        super(parent);
+        this.classBytes = classBytes;
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        byte[] bytes = classBytes.get(name);
+        if (bytes != null) {
+            return defineClass(name, bytes, 0, bytes.length);
+        }
+        throw new ClassNotFoundException(name);
+    }
+}
+```
+
+`ClassLoader.defineClass()` is the standard JVM class loading mechanism (what `URLClassLoader` uses internally). It benefits from JVM-level batch verification optimizations and is significantly cheaper than `defineHiddenClass()`. This is what executable-model does (loads classes via `URLClassLoader`), and it's why its cold-start is only 147ms.
+
+**Tradeoff**: Hidden classes are GC'd when unreferenced (good for dynamic code), while ClassLoader-defined classes live as long as the ClassLoader. For pre-built KieBase artifacts that live for the application lifetime, this tradeoff is favorable.
+
+**Implementation approach**: Read all 200 `.class` files upfront into a `Map<String, byte[]>`, create a single `ByteArrayClassLoader`, then instantiate each evaluator via `Class.forName(fqn, true, loader).getConstructor().newInstance()`. This bypasses `ClassManager`, `ClassEntry`, `MethodByteCodeExtractor`, and `defineHiddenClass()` entirely on the load path. Expected to bring UsingPreBuild from ~2397ms close to executable-model's ~147ms.
+
+### 2. Skip `MethodByteCodeExtractor` on the load path (included in #1, or standalone fallback)
+
+If replacing `defineHiddenClass()` entirely is not feasible (e.g., hidden class GC semantics are needed), a smaller fix: add a `defineWithoutDedup(Map<String, byte[]>)` method to `ClassManager` that calls `defineHiddenClass()` directly without constructing `ClassEntry`. This skips `MethodByteCodeExtractor.extract()` + `Murmur3F` hashing (~29% of UsingPreBuild time). Also batch all 200 classes into a single `ClassManager` instead of creating one per lambda.
 
 ### 3. ~~Batch Compilation in MVEL3 (HIGH — fixes NoPersist)~~ ✅ DONE
 
@@ -260,6 +315,94 @@ Cache compiled evaluators by expression hash. With 100 unique rules this benchma
 - **`@Setup(Level.Invocation)` in PreBuild benchmark**: Setup/teardown time is included in ss measurements. The overhead (temp dir creation, LambdaRegistry reset) is <5ms — negligible for 1000-6000ms measurements.
 - **Setup warms some classes**: `@Setup(Level.Trial)` in UsingPreBuild loads ClassManager, ANTLR, etc. Both sides benefit roughly equally, making the numbers slightly optimistic vs truly cold production deployment.
 - **GC**: 4GB heap (`-Xms4g -Xmx4g`) means minimal GC pressure. No specific GC algorithm pinned — minor reproducibility concern.
+
+## Warm-JVM Analysis (avgt mode)
+
+### Benchmark Configuration
+
+```
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g" \
+  -f 1 -wi 10 -i 10 -bm avgt -p ruleCount=100 \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+```
+
+JDK 17.0.15, OpenJDK 64-Bit Server VM (Temurin), G1GC (default), 4GB heap.
+1 fork, 10 warmup iterations, 10 measurement iterations, average time.
+
+### Results
+
+| Benchmark | Score | Error | Units |
+|---|---|---|---|
+| buildWithDrlx | 7.344 | ± 1.172 | ms/op |
+| buildWithExecutableModel | 6.281 | ± 0.057 | ms/op |
+
+**Ratio: 1.17x** — near parity under warm JVM. The 16.3x cold-start gap disappears once JIT optimizes the `defineHiddenClass()` and bytecode extraction hot paths.
+
+The error for `buildWithDrlx` (±1.172, ~16%) is still ~20x larger than `buildWithExecutableModel` (±0.057, ~1%), consistent with the GC variance analysis below.
+
+### GC Variance Analysis (`-prof gc`)
+
+An earlier run with `-prof gc` revealed the root cause of DRLX's higher variance:
+
+#### GC Profile Comparison
+
+| Metric | buildWithDrlx | buildWithExecutableModel |
+|---|---|---|
+| Allocation per op | ~5.16 MB | ~4.00 MB |
+| GC count (10 iters) | 33 (3-4/iter) | 444 (39-48/iter) |
+| Total GC time (10 iters) | 5,599 ms | 1,979 ms |
+| Avg GC time per event | ~170 ms | ~4.5 ms |
+| GC time range per iter | 294-873 ms | 179-212 ms |
+
+### Root Cause: Infrequent but Expensive GC Pauses
+
+The two benchmarks exhibit fundamentally different GC behavior:
+
+**buildWithExecutableModel (stable)**: Allocates ~4 MB/op of short-lived objects that die quickly
+in young generation. This triggers frequent but cheap young GC collections (~4.5 ms each). The
+cost is predictable and evenly spread across iterations, resulting in low variance.
+
+**buildWithDrlx (high variance)**: Allocates ~5.16 MB/op. The ANTLR parse tree and visitor objects
+survive young generation because they remain live through the full parse -> visit -> build pipeline.
+This causes infrequent but expensive mixed/old-gen GC collections (~170 ms each). When an expensive
+GC lands inside a measurement window, that iteration is slow; when it doesn't, the iteration is
+fast.
+
+### Correlation Between GC Time and Iteration Time (buildWithDrlx)
+
+| Iteration | Time (ms/op) | GC time (ms) | GC count |
+|---|---|---|---|
+| 1 | 9.358 | 623 | 3 |
+| 2 | 6.910 | 332 | 4 |
+| 3 | 7.815 | 484 | 3 |
+| 4 | 8.838 | 757 | 3 |
+| 5 | 8.144 | 590 | 3 |
+| 6 | 6.828 | 347 | 4 |
+| 7 | 7.009 | 566 | 3 |
+| 8 | 9.202 | 873 | 3 |
+| 9 | 8.571 | 733 | 4 |
+| 10 | 6.742 | 294 | 3 |
+
+Same GC count across iterations, but GC duration per event varies wildly (294-873 ms),
+directly driving the benchmark variance.
+
+### Recommendations for Reducing Variance
+
+1. **`-gc true`** — Force GC between iterations to get consistent baselines (inflates absolute
+   times but stabilizes relative comparison).
+2. **Low-pause collector** — Use `-XX:+UseZGC` or `-XX:+UseShenandoahGC` to eliminate long
+   GC pauses. Won't fix extra allocation but will stabilize measurement variance.
+3. **Tune G1GC** — Try `-XX:MaxGCPauseMillis=5` to force more frequent but shorter collections.
+
+### Recommendations for Reducing Allocation
+
+1. **Reduce allocation** — The ~1.16 MB/op gap is mostly ANTLR parse tree nodes. Caching or
+   reusing the parse result (since `drlxSource` is the same across builds) would reduce
+   allocation significantly.
+2. **Optimize object lifetimes** — If parse tree nodes can be made shorter-lived (e.g., by
+   extracting needed data early and releasing the tree), they would be collected in young gen
+   instead of promoting to old gen, shifting from expensive mixed GCs to cheap young GCs.
 
 ## Files Involved
 
