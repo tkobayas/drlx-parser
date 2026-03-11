@@ -289,7 +289,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     protected Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
                                                        org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
                                                        List<BoundVariable> referencedBindings) {
-        lambdaCounter++;
+        int capturedCounter = lambdaCounter++;
 
         // Build MVEL declarations: current pattern's properties + external binding objects
         List<org.mvel3.transpiler.context.Declaration<?>> allDecls = new ArrayList<>(Arrays.asList(patternDeclarations));
@@ -303,6 +303,30 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                 .map(bv -> bv.pattern().getDeclaration())
                 .toArray(Declaration[]::new);
 
+        // Check pre-build metadata first
+        if (preBuildMetadata != null) {
+            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
+            if (entry != null && entry.expression().equals(expression)) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Evaluator<Map<String, Object>, Void, Boolean> evaluator =
+                            (Evaluator<Map<String, Object>, Void, Boolean>) loadPreCompiledEvaluator(entry.fqn(), entry.classFilePath());
+                    LOG.info("Loaded pre-compiled beta constraint evaluator for {}.{}", currentRuleName, capturedCounter);
+                    return new DrlxLambdaBetaConstraint(expression, patternType, evaluator, requiredDeclarations);
+                } catch (Exception e) {
+                    LOG.warn("Failed to load pre-compiled beta constraint for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
+                }
+            } else if (entry == null) {
+                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
+            } else {
+                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
+                        currentRuleName, capturedCounter, expression, entry.expression());
+            }
+        }
+
+        if (batchMode) {
+            return createBatchBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
+        }
         return new DrlxLambdaBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
     }
 
@@ -317,6 +341,25 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
         pendingSources.put(ts.fqn(), ts.javaSource());
         DrlxLambdaConstraint constraint = new DrlxLambdaConstraint(expression, patternType, (Evaluator<Object, Void, Boolean>) null);
+        pendingLambdas.add(new PendingLambda(ts.fqn(), constraint));
+        return constraint;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private DrlxLambdaBetaConstraint createBatchBetaConstraint(String expression, Class<?> patternType,
+                                                                  org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations,
+                                                                  Declaration[] requiredDeclarations) {
+        CompilerParameters<Map<String, Object>, Void, Boolean> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(mvelDeclarations)
+                        .<Boolean>out(Boolean.class)
+                        .expression(expression)
+                        .classManager(sharedClassManager)
+                        .generatedClassName("GeneratorEvaluator__" + batchCounter++)
+                        .build();
+        MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
+        pendingSources.put(ts.fqn(), ts.javaSource());
+        DrlxLambdaBetaConstraint constraint = new DrlxLambdaBetaConstraint(expression, patternType,
+                (Evaluator<Map<String, Object>, Void, Boolean>) null, requiredDeclarations);
         pendingLambdas.add(new PendingLambda(ts.fqn(), constraint));
         return constraint;
     }

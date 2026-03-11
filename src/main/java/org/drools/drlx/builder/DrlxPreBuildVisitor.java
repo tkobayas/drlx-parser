@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.antlr.v4.runtime.TokenStream;
+import org.drools.base.rule.constraint.Constraint;
 import org.mvel3.Evaluator;
 import org.mvel3.MVELCompiler;
 import org.mvel3.Type;
@@ -55,6 +56,24 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
             pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, fqn));
         } else {
             recordMetadata(currentRuleName, capturedCounter, constraint.getEvaluator(), expression);
+        }
+        return constraint;
+    }
+
+    @Override
+    protected Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
+                                                       org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
+                                                       java.util.List<BoundVariable> referencedBindings) {
+        int capturedCounter = lambdaCounter; // capture before super increments it
+        Constraint constraint = super.createBetaLambdaConstraint(expression, patternType, patternDeclarations, referencedBindings);
+
+        if (batchMode) {
+            // In batch mode, evaluator is null — defer metadata recording until compileBatch
+            String fqn = pendingLambdas.get(pendingLambdas.size() - 1).fqn();
+            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, fqn));
+        } else {
+            DrlxLambdaBetaConstraint betaConstraint = (DrlxLambdaBetaConstraint) constraint;
+            recordMetadata(currentRuleName, capturedCounter, betaConstraint.getEvaluator(), expression);
         }
         return constraint;
     }
