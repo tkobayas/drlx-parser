@@ -63,6 +63,42 @@ class DrlxCompilerTest {
     }
 
     @Test
+    void testTwoStepBuildWithJoin() throws IOException {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                rule JoinRule {
+                    Person p1 : /seniors[ age > 30 ],
+                    Person p2 : /juniors[ age < p1.age ],
+                    do { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
+                }
+                """;
+
+        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+        DrlxCompiler compiler = new DrlxCompiler();
+
+        // Step 1: pre-build
+        compiler.preBuild(rule);
+
+        // Step 2: build (auto-detects metadata)
+        KieBase kieBase = compiler.build(rule);
+
+        KieSession kieSession = kieBase.newKieSession();
+        kieSession.getEntryPoint("seniors").insert(new Person("Alice", 40));
+        kieSession.getEntryPoint("juniors").insert(new Person("Bob", 25));
+
+        int fired = kieSession.fireAllRules();
+        assertThat(fired).isEqualTo(1);
+
+        kieSession.dispose();
+    }
+
+    @Test
     void testBuildWithoutPreBuild() throws IOException {
         String rule = """
                 package org.drools.drlx.parser;

@@ -14,6 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -117,6 +118,8 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         for (PendingLambda pl : pendingLambdas) {
             if (pl.target() instanceof DrlxLambdaConstraint c) {
                 c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            } else if (pl.target() instanceof DrlxLambdaBetaConstraint c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
             } else if (pl.target() instanceof DrlxLambdaConsequence c) {
                 c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
             }
@@ -161,6 +164,9 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         return kiePackages;
     }
 
+    // Tracks bound variables from previously-built patterns within the current rule
+    record BoundVariable(String name, Class<?> type, Pattern pattern) {}
+
     protected RuleImpl buildRule(DrlxParser.RuleDeclarationContext ctx, TypeResolver typeResolver) {
         String ruleName = ctx.identifier().getText();
         currentRuleName = ruleName;
@@ -171,11 +177,20 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
         GroupElement ge = GroupElementFactory.newAndInstance();
 
+        // Track bound variables as patterns are built
+        Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
+
         if (ctx.ruleBody() != null) {
             ctx.ruleBody().ruleItem().forEach(item -> {
                 if (item.rulePattern() != null) {
-                    Pattern pattern = buildPattern(item.rulePattern(), typeResolver);
+                    Pattern pattern = buildPattern(item.rulePattern(), typeResolver, boundVariables);
                     ge.addChild(pattern);
+                    // Register this pattern's binding for subsequent patterns
+                    Declaration decl = pattern.getDeclaration();
+                    if (decl != null) {
+                        Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+                        boundVariables.put(decl.getIdentifier(), new BoundVariable(decl.getIdentifier(), patternClass, pattern));
+                    }
                 } else if (item.ruleConsequence() != null) {
                     String consequence = extractConsequence(item.ruleConsequence());
                     Map<String, Type<?>> types = getTypeMap(ge);
@@ -189,7 +204,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         return rule;
     }
 
-    protected Pattern buildPattern(DrlxParser.RulePatternContext ctx, TypeResolver typeResolver) {
+    protected Pattern buildPattern(DrlxParser.RulePatternContext ctx, TypeResolver typeResolver, Map<String, BoundVariable> boundVariables) {
         String typeName = ctx.identifier(0).getText();
         String bindName = ctx.identifier(1).getText();
 
@@ -213,11 +228,36 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         org.mvel3.transpiler.context.Declaration<?>[] declarations = extractDeclarations(patternClass);
         List<String> conditions = extractConditions(ctx.oopathExpression());
         for (String expression : conditions) {
-            Constraint constraint = createLambdaConstraint(expression, patternClass, declarations);
-            pattern.addConstraint(constraint);
+            // Check if expression references any bound variable from previous patterns
+            List<BoundVariable> referencedBindings = findReferencedBindings(expression, boundVariables);
+            if (referencedBindings.isEmpty()) {
+                Constraint constraint = createLambdaConstraint(expression, patternClass, declarations);
+                pattern.addConstraint(constraint);
+            } else {
+                Constraint constraint = createBetaLambdaConstraint(expression, patternClass, declarations, referencedBindings);
+                pattern.addConstraint(constraint);
+            }
         }
 
         return pattern;
+    }
+
+    /**
+     * Find bound variables from previous patterns that are referenced in the expression.
+     * Uses word-boundary matching to avoid false positives.
+     */
+    private List<BoundVariable> findReferencedBindings(String expression, Map<String, BoundVariable> boundVariables) {
+        List<BoundVariable> referenced = new ArrayList<>();
+        for (Map.Entry<String, BoundVariable> entry : boundVariables.entrySet()) {
+            String varName = entry.getKey();
+            // Word-boundary check: varName must not be preceded/followed by identifier characters
+            java.util.regex.Pattern regex = java.util.regex.Pattern.compile(
+                    "(?<![a-zA-Z0-9_])" + java.util.regex.Pattern.quote(varName) + "(?![a-zA-Z0-9_])");
+            if (regex.matcher(expression).find()) {
+                referenced.add(entry.getValue());
+            }
+        }
+        return referenced;
     }
 
     protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
@@ -244,6 +284,26 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
             return createBatchConstraint(expression, patternType, declarations);
         }
         return new DrlxLambdaConstraint(expression, patternType, declarations);
+    }
+
+    protected Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
+                                                       org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
+                                                       List<BoundVariable> referencedBindings) {
+        lambdaCounter++;
+
+        // Build MVEL declarations: current pattern's properties + external binding objects
+        List<org.mvel3.transpiler.context.Declaration<?>> allDecls = new ArrayList<>(Arrays.asList(patternDeclarations));
+        for (BoundVariable bv : referencedBindings) {
+            allDecls.add(org.mvel3.transpiler.context.Declaration.of(bv.name(), bv.type()));
+        }
+        org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations = allDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
+
+        // Build Drools required declarations from the referenced patterns
+        Declaration[] requiredDeclarations = referencedBindings.stream()
+                .map(bv -> bv.pattern().getDeclaration())
+                .toArray(Declaration[]::new);
+
+        return new DrlxLambdaBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
     }
 
     private DrlxLambdaConstraint createBatchConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {

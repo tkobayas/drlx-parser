@@ -89,6 +89,8 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
         for (PendingLambda pl : pendingLambdas) {
             if (pl.target() instanceof DrlxLambdaConstraint c) {
                 c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
+            } else if (pl.target() instanceof DrlxLambdaBetaConstraint c) {
+                c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
             } else if (pl.target() instanceof DrlxLambdaConsequence c) {
                 c.setEvaluator(MVELCompiler.resolveEvaluator(sharedClassManager, pl.fqn()));
             }
