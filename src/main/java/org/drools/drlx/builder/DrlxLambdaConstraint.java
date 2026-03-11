@@ -21,14 +21,17 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     private Class<?> patternType;
 
+    private org.mvel3.transpiler.context.Declaration<?>[] declarations;
+
     private Evaluator<Object, Void, Boolean> evaluator;
 
     public DrlxLambdaConstraint() {
     }
 
-    public DrlxLambdaConstraint(String expression, Class<?> patternType) {
+    public DrlxLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         this.expression = expression;
         this.patternType = patternType;
+        this.declarations = declarations;
 
         initializeLambdaConstraint();
     }
@@ -53,11 +56,8 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     private void initializeLambdaConstraint() {
         // TODO: manage source code, hash, and implement cache
-        // TODO: extract declarations from the expression (maybe create a map in the build phase)
         CompilerParameters<Object, Void, Boolean> evalInfo = MVEL.pojo(patternType,
-                                                                       org.mvel3.transpiler.context.Declaration.of("age", int.class),
-                                                                       org.mvel3.transpiler.context.Declaration.of("city", String.class)
-                )
+                        declarations[0], java.util.Arrays.copyOfRange(declarations, 1, declarations.length))
                 .<Boolean>out(Boolean.class)
                 .expression(expression)
                 .classManager(new ClassManager())
@@ -78,7 +78,7 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     @Override
     public DrlxLambdaConstraint clone() {
-        return new DrlxLambdaConstraint(this.expression, this.patternType);
+        return new DrlxLambdaConstraint(this.expression, this.patternType, this.declarations);
     }
 
     @Override

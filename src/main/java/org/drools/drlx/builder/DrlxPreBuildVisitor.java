@@ -45,9 +45,9 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
     }
 
     @Override
-    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType) {
+    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         int capturedCounter = lambdaCounter; // capture before super increments it
-        DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType);
+        DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType, declarations);
 
         if (batchMode) {
             // In batch mode, evaluator is null — defer metadata recording until compileBatch

@@ -1,14 +1,19 @@
 package org.drools.drlx.builder;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -65,6 +70,26 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     protected int batchCounter = 0;
 
     record PendingLambda(String fqn, Object target) {}
+
+    private static final ConcurrentHashMap<Class<?>, org.mvel3.transpiler.context.Declaration<?>[]> DECLARATION_CACHE = new ConcurrentHashMap<>();
+
+    static org.mvel3.transpiler.context.Declaration<?>[] extractDeclarations(Class<?> patternType) {
+        return DECLARATION_CACHE.computeIfAbsent(patternType, clz -> {
+            try {
+                BeanInfo beanInfo = Introspector.getBeanInfo(clz, Object.class);
+                org.mvel3.transpiler.context.Declaration<?>[] declarations = Arrays.stream(beanInfo.getPropertyDescriptors())
+                        .filter(pd -> pd.getReadMethod() != null)
+                        .map(pd -> org.mvel3.transpiler.context.Declaration.of(pd.getName(), pd.getReadMethod().getReturnType()))
+                        .toArray(org.mvel3.transpiler.context.Declaration[]::new);
+                if (declarations.length == 0) {
+                    LOG.warn("No JavaBean properties found for type {}", clz.getName());
+                }
+                return declarations;
+            } catch (IntrospectionException e) {
+                throw new RuntimeException("Failed to introspect " + clz.getName(), e);
+            }
+        });
+    }
 
     public DrlxToRuleImplVisitor() {
         this(null);
@@ -184,16 +209,18 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         pattern.setSource(new EntryPointId(entryPointText));
 
         // constraints from oopath
+        Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+        org.mvel3.transpiler.context.Declaration<?>[] declarations = extractDeclarations(patternClass);
         List<String> conditions = extractConditions(ctx.oopathExpression());
         for (String expression : conditions) {
-            Constraint constraint = createLambdaConstraint(expression, ((ClassObjectType) pattern.getObjectType()).getClassType());
+            Constraint constraint = createLambdaConstraint(expression, patternClass, declarations);
             pattern.addConstraint(constraint);
         }
 
         return pattern;
     }
 
-    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType) {
+    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         int capturedCounter = lambdaCounter++;
         if (preBuildMetadata != null) {
             DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
@@ -214,16 +241,14 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
             }
         }
         if (batchMode) {
-            return createBatchConstraint(expression, patternType);
+            return createBatchConstraint(expression, patternType, declarations);
         }
-        return new DrlxLambdaConstraint(expression, patternType);
+        return new DrlxLambdaConstraint(expression, patternType, declarations);
     }
 
-    private DrlxLambdaConstraint createBatchConstraint(String expression, Class<?> patternType) {
-        // Build CompilerParameters with unique class name (same logic as DrlxLambdaConstraint.initializeLambdaConstraint)
+    private DrlxLambdaConstraint createBatchConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         CompilerParameters<Object, Void, Boolean> evalInfo = MVEL.pojo(patternType,
-                        org.mvel3.transpiler.context.Declaration.of("age", int.class),
-                        org.mvel3.transpiler.context.Declaration.of("city", String.class))
+                        declarations[0], Arrays.copyOfRange(declarations, 1, declarations.length))
                 .<Boolean>out(Boolean.class)
                 .expression(expression)
                 .classManager(sharedClassManager)
