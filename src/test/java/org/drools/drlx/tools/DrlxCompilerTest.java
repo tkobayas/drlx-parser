@@ -99,6 +99,51 @@ class DrlxCompilerTest {
     }
 
     @Test
+    void testTwoStepBuildWithMultiLevelJoin() throws IOException {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                rule MultiLevelJoinRule {
+                    Person p1 : /persons1[ age > 30 ],
+                    Person p2 : /persons2[ age < p1.age ],
+                    Person p3 : /persons3[ age > p1.age - p2.age ],
+                    do { System.out.println(p3.getName() + " age > " + p1.getName() + ".age - " + p2.getName() + ".age"); }
+                }
+                """;
+
+        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+        DrlxCompiler compiler = new DrlxCompiler();
+
+        // Step 1: pre-build
+        compiler.preBuild(rule);
+
+        // Step 2: build (auto-detects metadata)
+        KieBase kieBase = compiler.build(rule);
+
+        KieSession kieSession = kieBase.newKieSession();
+        // p1: age 40, p2: age 25 (< 40), p3: age 20
+        // p3 constraint: age > p1.age - p2.age => 20 > 40 - 25 => 20 > 15 => true
+        kieSession.getEntryPoint("persons1").insert(new Person("Alice", 40));
+        kieSession.getEntryPoint("persons2").insert(new Person("Bob", 25));
+        kieSession.getEntryPoint("persons3").insert(new Person("Charlie", 20));
+
+        int fired = kieSession.fireAllRules();
+        assertThat(fired).isEqualTo(1);
+
+        // Insert a person that should NOT match: age 10 > 15 => false
+        kieSession.getEntryPoint("persons3").insert(new Person("Dave", 10));
+        int fired2 = kieSession.fireAllRules();
+        assertThat(fired2).isEqualTo(0);
+
+        kieSession.dispose();
+    }
+
+    @Test
     void testBuildWithoutPreBuild() throws IOException {
         String rule = """
                 package org.drools.drlx.parser;
