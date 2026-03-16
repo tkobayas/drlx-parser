@@ -63,6 +63,9 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     @Param({"100"})
     private int ruleCount;
 
+    @Param({"alpha", "join"})
+    private String ruleType;
+
     private String drlxSource;
     private Path preBuildDir;
     private Path kjarPath;
@@ -70,7 +73,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     @Setup(Level.Trial)
     public void setup() throws IOException, InterruptedException {
         preBuildDir = Files.createTempDirectory("prebuild-artifacts-bench-");
-        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount);
+        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
         kjarPath = preBuildDir.resolve("rules.kjar");
 
         // Launch PreBuildRunner in a separate JVM process
@@ -82,7 +85,8 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
                 javaBin, "-cp", classpath,
                 PreBuildRunner.class.getName(),
                     preBuildDir.toAbsolutePath().toString(),
-                String.valueOf(ruleCount));
+                String.valueOf(ruleCount),
+                ruleType);
         pb.inheritIO();
         Process process = pb.start();
         int exitCode = process.waitFor();

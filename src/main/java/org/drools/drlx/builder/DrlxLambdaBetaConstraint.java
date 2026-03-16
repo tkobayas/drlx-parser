@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.reteoo.BaseTuple;
@@ -42,6 +43,8 @@ public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry
     private org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations;
 
     record PropertyExtractor(String name, Method getter) {}
+
+    private static final ConcurrentHashMap<Class<?>, PropertyExtractor[]> EXTRACTOR_CACHE = new ConcurrentHashMap<>();
 
     public DrlxLambdaBetaConstraint() {
     }
@@ -88,15 +91,17 @@ public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry
     }
 
     private static PropertyExtractor[] buildPropertyExtractors(Class<?> patternType) {
-        try {
-            BeanInfo beanInfo = Introspector.getBeanInfo(patternType, Object.class);
-            return Arrays.stream(beanInfo.getPropertyDescriptors())
-                    .filter(pd -> pd.getReadMethod() != null)
-                    .map(pd -> new PropertyExtractor(pd.getName(), pd.getReadMethod()))
-                    .toArray(PropertyExtractor[]::new);
-        } catch (IntrospectionException e) {
-            throw new RuntimeException("Failed to introspect " + patternType.getName(), e);
-        }
+        return EXTRACTOR_CACHE.computeIfAbsent(patternType, clz -> {
+            try {
+                BeanInfo beanInfo = Introspector.getBeanInfo(clz, Object.class);
+                return Arrays.stream(beanInfo.getPropertyDescriptors())
+                        .filter(pd -> pd.getReadMethod() != null)
+                        .map(pd -> new PropertyExtractor(pd.getName(), pd.getReadMethod()))
+                        .toArray(PropertyExtractor[]::new);
+            } catch (IntrospectionException e) {
+                throw new RuntimeException("Failed to introspect " + clz.getName(), e);
+            }
+        });
     }
 
     private void initializeLambdaConstraint() {

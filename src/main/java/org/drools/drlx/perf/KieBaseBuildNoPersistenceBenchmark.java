@@ -45,13 +45,16 @@ public class KieBaseBuildNoPersistenceBenchmark {
     @Param({"100"})
     private int ruleCount;
 
+    @Param({"alpha", "join"})
+    private String ruleType;
+
     private String drlSource;
     private String drlxSource;
 
     @Setup(Level.Trial)
     public void setup() {
-        drlSource = generateDrl(ruleCount);
-        drlxSource = generateDrlx(ruleCount);
+        drlSource = generateDrl(ruleCount, ruleType);
+        drlxSource = generateDrlx(ruleCount, ruleType);
     }
 
     @Setup(Level.Invocation)
@@ -93,7 +96,15 @@ public class KieBaseBuildNoPersistenceBenchmark {
         return compiler.build(drlxSource);
     }
 
-    static String generateDrl(int count) {
+    static String generateDrl(int count, String ruleType) {
+        return "join".equals(ruleType) ? generateDrlJoin(count) : generateDrlAlpha(count);
+    }
+
+    static String generateDrlx(int count, String ruleType) {
+        return "join".equals(ruleType) ? generateDrlxJoin(count) : generateDrlxAlpha(count);
+    }
+
+    static String generateDrlAlpha(int count) {
         StringBuilder sb = new StringBuilder();
         sb.append("package org.drools.drlx.perf;\n\n");
         sb.append("import org.drools.drlx.domain.Person;\n\n");
@@ -108,7 +119,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
         return sb.toString();
     }
 
-    static String generateDrlx(int count) {
+    static String generateDrlxAlpha(int count) {
         StringBuilder sb = new StringBuilder();
         sb.append("package org.drools.drlx.perf;\n\n");
         sb.append("import org.drools.drlx.domain.Person;\n\n");
@@ -117,6 +128,37 @@ public class KieBaseBuildNoPersistenceBenchmark {
             sb.append("rule Rule_").append(i).append(" {\n");
             sb.append("    Person p : /persons[ age > ").append(i).append(" ],\n");
             sb.append("    do { System.out.println(p); }\n");
+            sb.append("}\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlJoin(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule \"Rule_").append(i).append("\"\n");
+            sb.append("when\n");
+            sb.append("    $p1 : Person( age > ").append(i).append(" ) from entry-point \"persons1\"\n");
+            sb.append("    $p2 : Person( age < $p1.age ) from entry-point \"persons2\"\n");
+            sb.append("then\n");
+            sb.append("    System.out.println($p2);\n");
+            sb.append("end\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlxJoin(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        sb.append("unit MyUnit;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule Rule_").append(i).append(" {\n");
+            sb.append("    Person p1 : /persons1[ age > ").append(i).append(" ],\n");
+            sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
+            sb.append("    do { System.out.println(p2); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();

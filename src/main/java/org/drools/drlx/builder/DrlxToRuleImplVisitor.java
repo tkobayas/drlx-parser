@@ -70,6 +70,9 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     protected final List<PendingLambda> pendingLambdas = new ArrayList<>();
     protected int batchCounter = 0;
 
+    // Shared ClassManager for loading pre-compiled evaluators (avoids creating a new ClassLoader per lambda)
+    private ClassManager preBuildClassManager;
+
     record PendingLambda(String fqn, Object target) {}
 
     private static final ConcurrentHashMap<Class<?>, org.mvel3.transpiler.context.Declaration<?>[]> DECLARATION_CACHE = new ConcurrentHashMap<>();
@@ -412,9 +415,11 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {
         byte[] bytes = Files.readAllBytes(Path.of(classFilePath));
-        ClassManager classManager = new ClassManager();
-        classManager.define(Collections.singletonMap(fqn, bytes));
-        Class<?> clazz = classManager.getClass(fqn);
+        if (preBuildClassManager == null) {
+            preBuildClassManager = new ClassManager();
+        }
+        preBuildClassManager.define(Collections.singletonMap(fqn, bytes));
+        Class<?> clazz = preBuildClassManager.getClass(fqn);
         return clazz.getConstructor().newInstance();
     }
 

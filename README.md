@@ -187,28 +187,11 @@ java -jar target/drlx-benchmarks.jar \
 
 #### Build using pre-built artifacts benchmark (KieBase creation only)
 
-Measures KieBase creation from pre-built artifacts on disk (compilation cost excluded).
-This is a **2-step process** with full JVM restart separation, as recommended by Mark:
-
-**Step 1: Pre-build artifacts in a separate JVM**
+Inside KieBaseBuildUsingPreBuildArtifactsBenchmark, PreBuildRunner prepares the pre-build artifacts once, then each benchmark iteration creates a new KieBase loading from those artifacts — measuring only the load time without compilation:
 
 ```bash
-java -cp target/drlx-benchmarks.jar \
-  org.drools.drlx.perf.PreBuildRunner /tmp/prebuild-dir 100
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -gc true -f 1 -wi 10 -i 10 -bm avgt -p ruleCount=100 org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
 ```
-
-This generates DRLX `.class` files, metadata, and an executable-model kjar in `/tmp/prebuild-dir`.
-
-**Step 2: Run benchmark in fresh forked JVMs (loading only)**
-
-```bash
-java -jar target/drlx-benchmarks.jar \
-  -jvmArgs "-Xms4g -Xmx4g -Dbenchmark.prebuild.dir=/tmp/prebuild-dir" \
-  -f 5 -wi 0 -i 1 -bm ss \
-  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
-```
-
-Each fork starts completely cold — no compilation warm-up from pre-build leaks into load-time measurement.
 
 #### Run NoPersist + PreBuild benchmarks together
 

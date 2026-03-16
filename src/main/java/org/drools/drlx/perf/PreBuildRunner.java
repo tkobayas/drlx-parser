@@ -32,14 +32,16 @@ public class PreBuildRunner {
 
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
-            System.err.println("Usage: PreBuildRunner <output-dir> [ruleCount]");
+            System.err.println("Usage: PreBuildRunner <output-dir> [ruleCount] [ruleType]");
             System.err.println("  output-dir : directory to write pre-built artifacts");
             System.err.println("  ruleCount  : number of rules to generate (default: 100)");
+            System.err.println("  ruleType   : 'alpha' or 'join' (default: alpha)");
             System.exit(1);
         }
 
         Path outputDir = Path.of(args[0]);
         int ruleCount = args.length >= 2 ? Integer.parseInt(args[1]) : 100;
+        String ruleType = args.length >= 3 ? args[2] : "alpha";
 
         // Clean up stale artifacts from previous runs
         if (Files.exists(outputDir)) {
@@ -49,16 +51,16 @@ public class PreBuildRunner {
                     .forEach(File::delete);
         }
         Files.createDirectories(outputDir);
-        System.out.println("Pre-building " + ruleCount + " rules to: " + outputDir);
+        System.out.println("Pre-building " + ruleCount + " " + ruleType + " rules to: " + outputDir);
 
         // Pre-build DRLX
-        String drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount);
+        String drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
         DrlxCompiler compiler = new DrlxCompiler(outputDir);
         compiler.preBuild(drlxSource);
         System.out.println("DRLX pre-build complete.");
 
         // Pre-build executable-model kjar
-        String drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount);
+        String drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount, ruleType);
         KieServices ks = KieServices.Factory.get();
         KieFileSystem kfs = ks.newKieFileSystem();
         kfs.write("src/main/resources/rules.drl", drlSource);

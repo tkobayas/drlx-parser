@@ -52,14 +52,17 @@ public class KieBasePreBuildPersistenceBenchmark {
     @Param({"100"})
     private int ruleCount;
 
+    @Param({"alpha", "join"})
+    private String ruleType;
+
     private String drlSource;
     private String drlxSource;
     private Path tempDir;
 
     @Setup(Level.Trial)
     public void setup() {
-        drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount);
-        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount);
+        drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount, ruleType);
+        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
     }
 
     @Setup(Level.Invocation)
