@@ -330,7 +330,7 @@ java -jar target/drlx-benchmarks.jar \
 JDK 17.0.15, OpenJDK 64-Bit Server VM (Temurin), G1GC (default), 4GB heap.
 1 fork, 10 warmup iterations, 10 measurement iterations, average time.
 
-### Results
+### Results (alpha only)
 
 | Benchmark | Score | Error | Units |
 |---|---|---|---|
@@ -340,6 +340,50 @@ JDK 17.0.15, OpenJDK 64-Bit Server VM (Temurin), G1GC (default), 4GB heap.
 **Ratio: 1.17x** — near parity under warm JVM. The 16.3x cold-start gap disappears once JIT optimizes the `defineHiddenClass()` and bytecode extraction hot paths.
 
 The error for `buildWithDrlx` (±1.172, ~16%) is still ~20x larger than `buildWithExecutableModel` (±0.057, ~1%), consistent with the GC variance analysis below.
+
+### Results (alpha + join + multiJoin)
+
+| Rule Type | Lambdas/rule | DRLX (ms) | Exec-model (ms) | Ratio |
+|---|---|---|---|---|
+| Alpha | 2 | 7.386 ± 0.770 | 6.314 ± 0.149 | 1.17x |
+| Join | 3 | 12.528 ± 2.517 | 7.593 ± 0.381 | 1.65x |
+| MultiJoin | 4 | 24.470 ± 0.536 | 8.455 ± 0.266 | 2.90x |
+
+DRLX scales linearly with lambda count (~6ms per additional lambda/rule for 100 rules), while exec-model scales nearly flat (+2.1ms from alpha to multiJoin). The gap triples from alpha (1.17x) to multiJoin (2.90x).
+
+### CPU Profile Analysis (multiJoin, async-profiler)
+
+Profile source: `flame-cpu-forward.html` from async-profiler on `buildWithDrlx` with `ruleType=multiJoin`.
+
+Total benchmark samples: 4083.
+
+| Component | Samples | % of total | Notes |
+|---|---|---|---|
+| **ANTLR parsing** (`DrlxParser.drlxCompilationUnit`) | ~2019 | **49%** | Parsing DRLX source text |
+| **`ClassLoader.defineClass0`** (JVM native) | ~1179 | **29%** | Bytecode verification + linking per lambda class |
+| `ClassManager$ClassEntry.<init>` | ~152 | 4% | ClassManager overhead |
+| `Files.readAllBytes` | ~165 | 4% | File I/O for loading class bytes — **not a bottleneck** |
+| `createKieBase` | 100 | 2% | KieBase assembly |
+| `findReferencedBindings` | 73 | 2% | Regex scanning for bound variables |
+| Other | ~395 | 10% | |
+
+#### Breakdown by call site
+
+`loadPreCompiledEvaluator` is called from three paths. Each path's cost is dominated by `ClassLoader.defineClass0`:
+
+| Call site | `loadPreCompiledEvaluator` samples | `defineClass0` samples |
+|---|---|---|
+| `createBetaLambdaConstraint` | 853 | 631 |
+| `createLambdaConstraint` (alpha) | 412 | 269 |
+| `createLambdaConsequence` | 387 | 279 |
+| **Total** | **1652** | **1179** |
+
+#### Key insight
+
+The file I/O hypothesis was wrong. Bulk-loading class file bytes (`Files.readAllBytes`) would save only ~4% of build time. The actual cost is in the JVM's class loading machinery (`defineClass0`), not disk reads. The two dominant costs are:
+
+1. **ANTLR parsing (49%)** — Even with pre-built artifacts, the DRLX source is fully parsed to walk the tree and match lambdas with metadata entries. Exec-model skips this entirely since rules are already compiled into Java.
+2. **JVM class definition (29%)** — `defineClass0` (native bytecode verification + linking) is expensive when defining 400 individual lambda classes via `ClassManager.define()` → `defineHiddenClass()`.
 
 ### GC Variance Analysis (`-prof gc`)
 
