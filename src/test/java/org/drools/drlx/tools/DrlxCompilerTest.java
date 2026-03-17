@@ -144,6 +144,70 @@ class DrlxCompilerTest {
     }
 
     @Test
+    void testLambdaSharingInPreBuild() throws IOException {
+        // 3 rules with identical beta constraint (age < p1.age), identical consequence (System.out.println(p2)),
+        // but different alpha constraints (age > 0, age > 1, age > 2).
+        // Pre-build should produce only 4 unique class files (3 alpha + 1 shared beta + 1 shared consequence = 5 lambdas, but 4 unique).
+        // Wait: 3 unique alphas + 1 shared beta + 1 shared consequence = 5 unique classes? No:
+        // Each rule has: 1 alpha (unique) + 1 beta (shared) + 1 consequence (shared) = 3 lambdas per rule = 9 total.
+        // But only 3 unique alphas + 1 unique beta + 1 unique consequence = 5 unique classes.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                rule Rule_0 {
+                    Person p1 : /persons1[ age > 0 ],
+                    Person p2 : /persons2[ age < p1.age ],
+                    do { System.out.println(p2); }
+                }
+
+                rule Rule_1 {
+                    Person p1 : /persons1[ age > 1 ],
+                    Person p2 : /persons2[ age < p1.age ],
+                    do { System.out.println(p2); }
+                }
+
+                rule Rule_2 {
+                    Person p1 : /persons1[ age > 2 ],
+                    Person p2 : /persons2[ age < p1.age ],
+                    do { System.out.println(p2); }
+                }
+                """;
+
+        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+        DrlxCompiler compiler = new DrlxCompiler();
+
+        // Step 1: pre-build
+        compiler.preBuild(rule);
+
+        // Count .class files produced — should be 5 (3 unique alpha + 1 shared beta + 1 shared consequence)
+        // Without dedup it would be 9 (3 rules x 3 lambdas each)
+        Path outputDir = compiler.getOutputDir();
+        long classFileCount;
+        try (var stream = Files.walk(outputDir)) {
+            classFileCount = stream.filter(p -> p.toString().endsWith(".class")).count();
+        }
+        assertThat(classFileCount).isEqualTo(5);
+
+        // Step 2: build — should still work correctly with shared classes
+        KieBase kieBase = compiler.build(rule);
+
+        KieSession kieSession = kieBase.newKieSession();
+        kieSession.getEntryPoint("persons1").insert(new Person("Alice", 40));
+        kieSession.getEntryPoint("persons2").insert(new Person("Bob", 25));
+
+        // All 3 rules should fire: Bob.age(25) < Alice.age(40) for all, and Alice.age(40) > 0, 1, 2
+        int fired = kieSession.fireAllRules();
+        assertThat(fired).isEqualTo(3);
+
+        kieSession.dispose();
+    }
+
+    @Test
     void testBuildWithoutPreBuild() throws IOException {
         String rule = """
                 package org.drools.drlx.parser;

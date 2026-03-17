@@ -73,6 +73,12 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     // Shared ClassManager for loading pre-compiled evaluators (avoids creating a new ClassLoader per lambda)
     private ClassManager preBuildClassManager;
 
+    // Cache: transpiled Java source -> fqn (for batch dedup of identical lambdas)
+    private final Map<String, String> sourceToFqn = new HashMap<>();
+
+    // Cache: fqn -> loaded Class (avoids redundant ClassManager.define() calls on the load path)
+    private final Map<String, Class<?>> loadedClassCache = new HashMap<>();
+
     record PendingLambda(String fqn, Object target) {}
 
     private static final ConcurrentHashMap<Class<?>, org.mvel3.transpiler.context.Declaration<?>[]> DECLARATION_CACHE = new ConcurrentHashMap<>();
@@ -342,9 +348,9 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                 .generatedClassName("GeneratorEvaluator__" + batchCounter++)
                 .build();
         MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
-        pendingSources.put(ts.fqn(), ts.javaSource());
+        String fqn = deduplicateSource(ts);
         DrlxLambdaConstraint constraint = new DrlxLambdaConstraint(expression, patternType, (Evaluator<Object, Void, Boolean>) null);
-        pendingLambdas.add(new PendingLambda(ts.fqn(), constraint));
+        pendingLambdas.add(new PendingLambda(fqn, constraint));
         return constraint;
     }
 
@@ -360,10 +366,10 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                         .generatedClassName("GeneratorEvaluator__" + batchCounter++)
                         .build();
         MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
-        pendingSources.put(ts.fqn(), ts.javaSource());
+        String fqn = deduplicateSource(ts);
         DrlxLambdaBetaConstraint constraint = new DrlxLambdaBetaConstraint(expression, patternType,
                 (Evaluator<Map<String, Object>, Void, Boolean>) null, requiredDeclarations);
-        pendingLambdas.add(new PendingLambda(ts.fqn(), constraint));
+        pendingLambdas.add(new PendingLambda(fqn, constraint));
         return constraint;
     }
 
@@ -407,19 +413,49 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
                         .generatedClassName("GeneratorEvaluator__" + batchCounter++)
                         .build();
         MVELCompiler.TranspiledSource ts = new MVELCompiler().transpileToSource(evalInfo);
-        pendingSources.put(ts.fqn(), ts.javaSource());
+        String fqn = deduplicateSource(ts);
         DrlxLambdaConsequence consequence = new DrlxLambdaConsequence(consequenceBlock, declarationTypes, (Evaluator<Map<String, Object>, Void, String>) null);
-        pendingLambdas.add(new PendingLambda(ts.fqn(), consequence));
+        pendingLambdas.add(new PendingLambda(fqn, consequence));
         return consequence;
     }
 
-    private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {
-        byte[] bytes = Files.readAllBytes(Path.of(classFilePath));
-        if (preBuildClassManager == null) {
-            preBuildClassManager = new ClassManager();
+    /**
+     * Deduplicate transpiled sources: if an identical Java source was already transpiled,
+     * reuse the existing fqn instead of adding a duplicate to the batch.
+     * The class name is stripped from the source before comparison, since identical expressions
+     * get different generated class names (e.g., GeneratorEvaluator__1 vs GeneratorEvaluator__4).
+     */
+    private String deduplicateSource(MVELCompiler.TranspiledSource ts) {
+        String normalizedSource = normalizeSource(ts.javaSource());
+        String existingFqn = sourceToFqn.get(normalizedSource);
+        if (existingFqn != null) {
+            LOG.debug("Dedup: reusing {} for identical source (skipped {})", existingFqn, ts.fqn());
+            return existingFqn;
         }
-        preBuildClassManager.define(Collections.singletonMap(fqn, bytes));
-        Class<?> clazz = preBuildClassManager.getClass(fqn);
+        sourceToFqn.put(normalizedSource, ts.fqn());
+        pendingSources.put(ts.fqn(), ts.javaSource());
+        return ts.fqn();
+    }
+
+    /**
+     * Strip the generated class name from the source so that identical method bodies
+     * with different class names (e.g., GeneratorEvaluator__0 vs GeneratorEvaluator__3) compare equal.
+     */
+    private static String normalizeSource(String javaSource) {
+        return javaSource.replaceFirst("class\\s+\\S+\\s+implements", "class __ implements");
+    }
+
+    private Object loadPreCompiledEvaluator(String fqn, String classFilePath) throws Exception {
+        Class<?> clazz = loadedClassCache.get(fqn);
+        if (clazz == null) {
+            byte[] bytes = Files.readAllBytes(Path.of(classFilePath));
+            if (preBuildClassManager == null) {
+                preBuildClassManager = new ClassManager();
+            }
+            preBuildClassManager.define(Collections.singletonMap(fqn, bytes));
+            clazz = preBuildClassManager.getClass(fqn);
+            loadedClassCache.put(fqn, clazz);
+        }
         return clazz.getConstructor().newInstance();
     }
 
