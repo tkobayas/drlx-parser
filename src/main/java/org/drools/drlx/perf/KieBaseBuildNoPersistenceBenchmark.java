@@ -45,7 +45,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
     @Param({"100"})
     private int ruleCount;
 
-    @Param({"alpha", "join"})
+    @Param({"alpha", "join", "multiJoin"})
     private String ruleType;
 
     private String drlSource;
@@ -97,11 +97,19 @@ public class KieBaseBuildNoPersistenceBenchmark {
     }
 
     static String generateDrl(int count, String ruleType) {
-        return "join".equals(ruleType) ? generateDrlJoin(count) : generateDrlAlpha(count);
+        return switch (ruleType) {
+            case "join" -> generateDrlJoin(count);
+            case "multiJoin" -> generateDrlMultiJoin(count);
+            default -> generateDrlAlpha(count);
+        };
     }
 
     static String generateDrlx(int count, String ruleType) {
-        return "join".equals(ruleType) ? generateDrlxJoin(count) : generateDrlxAlpha(count);
+        return switch (ruleType) {
+            case "join" -> generateDrlxJoin(count);
+            case "multiJoin" -> generateDrlxMultiJoin(count);
+            default -> generateDrlxAlpha(count);
+        };
     }
 
     static String generateDrlAlpha(int count) {
@@ -159,6 +167,39 @@ public class KieBaseBuildNoPersistenceBenchmark {
             sb.append("    Person p1 : /persons1[ age > ").append(i).append(" ],\n");
             sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
             sb.append("    do { System.out.println(p2); }\n");
+            sb.append("}\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlMultiJoin(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule \"Rule_").append(i).append("\"\n");
+            sb.append("when\n");
+            sb.append("    $p1 : Person( age > ").append(i).append(" ) from entry-point \"persons1\"\n");
+            sb.append("    $p2 : Person( age < $p1.age ) from entry-point \"persons2\"\n");
+            sb.append("    $p3 : Person( age > $p1.age - $p2.age ) from entry-point \"persons3\"\n");
+            sb.append("then\n");
+            sb.append("    System.out.println($p3);\n");
+            sb.append("end\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlxMultiJoin(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        sb.append("unit MyUnit;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule Rule_").append(i).append(" {\n");
+            sb.append("    Person p1 : /persons1[ age > ").append(i).append(" ],\n");
+            sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
+            sb.append("    Person p3 : /persons3[ age > p1.age - p2.age ],\n");
+            sb.append("    do { System.out.println(p3); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();
