@@ -15,6 +15,7 @@ import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.ClassManager;
+import org.mvel3.MVELBatchCompiler;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 
 /**
@@ -61,8 +62,8 @@ public class DrlxRuleBuilder {
         visitor.setOutputDir(outputDir);
 
         if (BATCH_ENABLED) {
-            ClassManager sharedClassManager = new ClassManager();
-            visitor.enableBatchMode(sharedClassManager);
+            MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), outputDir);
+            visitor.enableBatchMode(batchCompiler);
         }
 
         visitor.visitDrlxCompilationUnit(ctx);
@@ -111,11 +112,10 @@ public class DrlxRuleBuilder {
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
 
-        // Enable batch mode only when persistence is disabled (no-persist path).
-        // When persistence is enabled, the eager per-lambda path handles LambdaRegistry dedup/persistence.
-        if (!LambdaRegistry.PERSISTENCE_ENABLED && BATCH_ENABLED) {
-            ClassManager sharedClassManager = new ClassManager();
-            visitor.enableBatchMode(sharedClassManager);
+        if (BATCH_ENABLED) {
+            Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+            MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
+            visitor.enableBatchMode(batchCompiler);
         }
 
         List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);

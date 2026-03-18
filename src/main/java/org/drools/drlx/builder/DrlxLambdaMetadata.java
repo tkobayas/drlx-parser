@@ -15,12 +15,12 @@ public class DrlxLambdaMetadata {
 
     private final Map<String, String> entries = new LinkedHashMap<>();
 
-    public record LambdaEntry(String fqn, String classFilePath, String expression) {
+    public record LambdaEntry(String fqn, int physicalId, String expression) {
     }
 
-    public void put(String ruleName, int counterId, String fqn, String classFilePath, String expression) {
+    public void put(String ruleName, int counterId, String fqn, int physicalId, String expression) {
         String key = ruleName + "." + counterId;
-        String value = fqn + SEPARATOR + classFilePath + SEPARATOR + expression;
+        String value = fqn + SEPARATOR + physicalId + SEPARATOR + expression;
         entries.put(key, value);
     }
 
@@ -34,7 +34,11 @@ public class DrlxLambdaMetadata {
         if (parts.length != 3) {
             return null;
         }
-        return new LambdaEntry(parts[0], parts[1], parts[2]);
+        try {
+            return new LambdaEntry(parts[0], Integer.parseInt(parts[1]), parts[2]);
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public int size() {
