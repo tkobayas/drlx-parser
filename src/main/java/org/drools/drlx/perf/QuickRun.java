@@ -1,6 +1,8 @@
 package org.drools.drlx.perf;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.tools.DrlxCompiler;
@@ -58,19 +60,21 @@ public class QuickRun {
 
     private static void runDrlxTwoStep() throws IOException {
         // ---- DRLX two-step (pre-build + build from pre-compiled artifacts)
-        String drlx = KieBaseBuildNoPersistenceBenchmark.generateDrlx(10, "multiJoin");
+        Path preBuildDir = Files.createTempDirectory("quickrun-prebuild-");
+        String drlx = KieBaseBuildNoPersistenceBenchmark.generateDrlx(10, "join");
         System.out.println(drlx);
-        DrlxCompiler compiler = new DrlxCompiler();
 
         // Step 1: pre-build (compile lambdas and persist metadata/classes to disk)
-        compiler.preBuild(drlx);
+        DrlxCompiler preBuildCompiler = new DrlxCompiler(preBuildDir);
+        preBuildCompiler.preBuild(drlx);
+        System.out.println("--- Pre-build done. Artifacts in: " + preBuildDir);
 
         // Step 2: build KieBase using pre-compiled lambda classes
-        KieBase kieBase = compiler.build(drlx);
+        DrlxCompiler buildCompiler = new DrlxCompiler(preBuildDir);
+        KieBase kieBase = buildCompiler.build(drlx);
         KieSession kieSession = kieBase.newKieSession();
         kieSession.getEntryPoint("persons1").insert(new Person("John", 3));
         kieSession.getEntryPoint("persons2").insert(new Person("Paul", 2));
-        kieSession.getEntryPoint("persons3").insert(new Person("George", 26));
         int fired = kieSession.fireAllRules();
         System.out.println("fired = " + fired);
     }

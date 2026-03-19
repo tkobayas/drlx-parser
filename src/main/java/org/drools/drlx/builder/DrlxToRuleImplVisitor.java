@@ -57,6 +57,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
     private int patternId = 0;
 
     private DrlxLambdaMetadata preBuildMetadata; // null = normal build
+    private Path outputDir; // directory containing pre-compiled .class files
 
     protected String currentRuleName;
 
@@ -105,6 +106,10 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
         this.preBuildMetadata = preBuildMetadata;
+    }
+
+    public void setOutputDir(Path outputDir) {
+        this.outputDir = outputDir;
     }
 
     public void enableBatchMode(MVELBatchCompiler batchCompiler) {

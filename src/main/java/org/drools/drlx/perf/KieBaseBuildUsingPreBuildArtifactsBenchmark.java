@@ -13,7 +13,6 @@ import org.kie.api.KieServices;
 import org.kie.api.builder.KieModule;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
-import org.mvel3.lambdaextractor.LambdaRegistry;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -57,8 +56,13 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @State(Scope.Benchmark)
 @Warmup(iterations = 0)
 @Measurement(iterations = 1)
-@Fork(value = 5, jvmArgsAppend = {"-Dmvel3.compiler.lambda.resetOnTestStartup=true"})
+@Fork(value = 5)
 public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
+
+    // Use the well-known default path directly to avoid triggering LambdaRegistry class init
+    // before pre-build artifacts exist. LambdaRegistry must initialize AFTER @Setup completes.
+    private static final Path DEFAULT_OUTPUT_DIR = Path.of(
+            System.getProperty("mvel3.compiler.lambda.persistence.path", "target/generated-classes/mvel"));
 
     @Param({"100"})
     private int ruleCount;
@@ -67,16 +71,22 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     private String ruleType;
 
     private String drlxSource;
-    private Path preBuildDir;
     private Path kjarPath;
 
     @Setup(Level.Trial)
     public void setup() throws IOException, InterruptedException {
-        preBuildDir = Files.createTempDirectory("prebuild-artifacts-bench-");
-        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
-        kjarPath = preBuildDir.resolve("rules.kjar");
+        // Clean up the default output directory once at the beginning
+        if (Files.exists(DEFAULT_OUTPUT_DIR)) {
+            Files.walk(DEFAULT_OUTPUT_DIR)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
 
-        // Launch PreBuildRunner in a separate JVM process
+        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
+        kjarPath = DEFAULT_OUTPUT_DIR.resolve("rules.kjar");
+
+        // Launch PreBuildRunner in a separate JVM process, writing to the default path
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         String classpath = System.getProperty("java.class.path");
@@ -84,7 +94,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
         ProcessBuilder pb = new ProcessBuilder(
                 javaBin, "-cp", classpath,
                 PreBuildRunner.class.getName(),
-                    preBuildDir.toAbsolutePath().toString(),
+                DEFAULT_OUTPUT_DIR.toAbsolutePath().toString(),
                 String.valueOf(ruleCount),
                 ruleType);
         pb.inheritIO();
@@ -97,8 +107,8 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
-        if (preBuildDir != null && Files.exists(preBuildDir)) {
-            Files.walk(preBuildDir)
+        if (Files.exists(DEFAULT_OUTPUT_DIR)) {
+            Files.walk(DEFAULT_OUTPUT_DIR)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
@@ -107,7 +117,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @Benchmark
     public KieBase buildWithDrlx() throws IOException {
-        DrlxCompiler compiler = new DrlxCompiler(preBuildDir);
+        DrlxCompiler compiler = new DrlxCompiler();
         return compiler.build(drlxSource);
     }
 
