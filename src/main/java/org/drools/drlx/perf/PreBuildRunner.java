@@ -31,31 +31,33 @@ import org.kie.internal.builder.InternalKieBuilder;
 public class PreBuildRunner {
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
-            System.err.println("Usage: PreBuildRunner <output-dir> [ruleCount] [ruleType]");
-            System.err.println("  output-dir : directory to write pre-built artifacts");
-            System.err.println("  ruleCount  : number of rules to generate (default: 100)");
-            System.err.println("  ruleType   : 'alpha' or 'join' (default: alpha)");
+        if (args.length < 2) {
+            System.err.println("Usage: PreBuildRunner <drlx-output-dir> <kjar-output-dir> [ruleCount] [ruleType]");
+            System.err.println("  drlx-output-dir : directory to write DRLX pre-built artifacts");
+            System.err.println("  kjar-output-dir : directory to write executable-model kjar");
+            System.err.println("  ruleCount       : number of rules to generate (default: 100)");
+            System.err.println("  ruleType        : 'alpha', 'join', or 'multiJoin' (default: alpha)");
             System.exit(1);
         }
 
-        Path outputDir = Path.of(args[0]);
-        int ruleCount = args.length >= 2 ? Integer.parseInt(args[1]) : 100;
-        String ruleType = args.length >= 3 ? args[2] : "alpha";
+        Path drlxOutputDir = Path.of(args[0]);
+        Path kjarOutputDir = Path.of(args[1]);
+        int ruleCount = args.length >= 3 ? Integer.parseInt(args[2]) : 100;
+        String ruleType = args.length >= 4 ? args[3] : "alpha";
 
-        // Clean up stale artifacts from previous runs
-        if (Files.exists(outputDir)) {
-            Files.walk(outputDir)
+        // Clean up stale DRLX artifacts from previous runs
+        if (Files.exists(drlxOutputDir)) {
+            Files.walk(drlxOutputDir)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
         }
-        Files.createDirectories(outputDir);
-        System.out.println("Pre-building " + ruleCount + " " + ruleType + " rules to: " + outputDir);
+        Files.createDirectories(drlxOutputDir);
+        System.out.println("Pre-building " + ruleCount + " " + ruleType + " rules to: " + drlxOutputDir);
 
         // Pre-build DRLX
         String drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
-        DrlxCompiler compiler = new DrlxCompiler(outputDir);
+        DrlxCompiler compiler = new DrlxCompiler(drlxOutputDir);
         compiler.preBuild(drlxSource);
         System.out.println("DRLX pre-build complete.");
 
@@ -68,10 +70,10 @@ public class PreBuildRunner {
         kieBuilder.buildAll(ExecutableModelProject.class);
 
         InternalKieModule kieModule = (InternalKieModule) kieBuilder.getKieModule();
-        Path kjarPath = outputDir.resolve("rules.kjar");
+        Path kjarPath = kjarOutputDir.resolve("rules.kjar");
         Files.write(kjarPath, kieModule.getBytes());
         System.out.println("Executable-model pre-build complete. kjar: " + kjarPath);
 
-        System.out.println("Done. Run benchmark with: -Dbenchmark.prebuild.dir=" + outputDir.toAbsolutePath());
+        System.out.println("Done.");
     }
 }

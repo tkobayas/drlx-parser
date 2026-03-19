@@ -72,6 +72,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     private String drlxSource;
     private Path kjarPath;
+    private Path kjarDir;
 
     @Setup(Level.Trial)
     public void setup() throws IOException, InterruptedException {
@@ -84,9 +85,11 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
         }
 
         drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
-        kjarPath = DEFAULT_OUTPUT_DIR.resolve("rules.kjar");
+        kjarDir = Files.createTempDirectory("prebuild-kjar-");
+        kjarPath = kjarDir.resolve("rules.kjar");
 
-        // Launch PreBuildRunner in a separate JVM process, writing to the default path
+        // Launch PreBuildRunner in a separate JVM process
+        // DRLX artifacts go to DEFAULT_OUTPUT_DIR, kjar goes to kjarDir
         String javaHome = System.getProperty("java.home");
         String javaBin = javaHome + File.separator + "bin" + File.separator + "java";
         String classpath = System.getProperty("java.class.path");
@@ -95,6 +98,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
                 javaBin, "-cp", classpath,
                 PreBuildRunner.class.getName(),
                 DEFAULT_OUTPUT_DIR.toAbsolutePath().toString(),
+                kjarDir.toAbsolutePath().toString(),
                 String.valueOf(ruleCount),
                 ruleType);
         pb.inheritIO();
@@ -109,6 +113,12 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     public void tearDown() throws IOException {
         if (Files.exists(DEFAULT_OUTPUT_DIR)) {
             Files.walk(DEFAULT_OUTPUT_DIR)
+                    .sorted(Comparator.reverseOrder())
+                    .map(Path::toFile)
+                    .forEach(File::delete);
+        }
+        if (kjarDir != null && Files.exists(kjarDir)) {
+            Files.walk(kjarDir)
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
