@@ -8,6 +8,7 @@
     <logger name="org.mvel3" level="DEBUG"/>
     <logger name="org.mvel3.parser.antlr4" level="DEBUG"/>
     <logger name="org.mvel3.transpiler" level="DEBUG"/>
+    <logger name="org.drools.drlx" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="STDOUT" />
