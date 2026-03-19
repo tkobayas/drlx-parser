@@ -45,7 +45,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
     @Param({"100"})
     private int ruleCount;
 
-    @Param({"alpha", "join", "multiJoin"})
+    @Param({"alpha", "multiAlpha", "join", "multiJoin"})
     private String ruleType;
 
     private String drlSource;
@@ -100,6 +100,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
         return switch (ruleType) {
             case "join" -> generateDrlJoin(count);
             case "multiJoin" -> generateDrlMultiJoin(count);
+            case "multiAlpha" -> generateDrlMultiAlpha(count);
             default -> generateDrlAlpha(count);
         };
     }
@@ -108,6 +109,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
         return switch (ruleType) {
             case "join" -> generateDrlxJoin(count);
             case "multiJoin" -> generateDrlxMultiJoin(count);
+            case "multiAlpha" -> generateDrlxMultiAlpha(count);
             default -> generateDrlxAlpha(count);
         };
     }
@@ -200,6 +202,35 @@ public class KieBaseBuildNoPersistenceBenchmark {
             sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
             sb.append("    Person p3 : /persons3[ age > p1.age - p2.age ],\n");
             sb.append("    do { System.out.println(p3); }\n");
+            sb.append("}\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlMultiAlpha(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule \"Rule_").append(i).append("\"\n");
+            sb.append("when\n");
+            sb.append("    $p : Person( age == ").append(i).append(", value1 == \"A\", value2 == \"B\", value3 == \"C\" ) from entry-point \"persons\"\n");
+            sb.append("then\n");
+            sb.append("    System.out.println($p);\n");
+            sb.append("end\n\n");
+        }
+        return sb.toString();
+    }
+
+    static String generateDrlxMultiAlpha(int count) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("package org.drools.drlx.perf;\n\n");
+        sb.append("import org.drools.drlx.domain.Person;\n\n");
+        sb.append("unit MyUnit;\n\n");
+        for (int i = 0; i < count; i++) {
+            sb.append("rule Rule_").append(i).append(" {\n");
+            sb.append("    Person p : /persons[ age == ").append(i).append(", value1 == \"A\", value2 == \"B\", value3 == \"C\" ],\n");
+            sb.append("    do { System.out.println(p); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();

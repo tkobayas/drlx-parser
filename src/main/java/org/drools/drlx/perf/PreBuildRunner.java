@@ -36,7 +36,7 @@ public class PreBuildRunner {
             System.err.println("  drlx-output-dir : directory to write DRLX pre-built artifacts");
             System.err.println("  kjar-output-dir : directory to write executable-model kjar");
             System.err.println("  ruleCount       : number of rules to generate (default: 100)");
-            System.err.println("  ruleType        : 'alpha', 'join', or 'multiJoin' (default: alpha)");
+            System.err.println("  ruleType        : 'alpha', 'join', 'multiJoin', or 'multiAlpha' (default: alpha)");
             System.exit(1);
         }
 

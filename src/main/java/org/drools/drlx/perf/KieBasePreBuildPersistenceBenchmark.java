@@ -52,7 +52,7 @@ public class KieBasePreBuildPersistenceBenchmark {
     @Param({"100"})
     private int ruleCount;
 
-    @Param({"alpha", "join", "multiJoin"})
+    @Param({"alpha", "multiAlpha", "join", "multiJoin"})
     private String ruleType;
 
     private String drlSource;
