@@ -58,6 +58,9 @@ public class DrlxRuleBuilder {
         DrlxParser parser = new DrlxParser(tokens);
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        if (DrlxParseTreeSnapshot.isEnabled()) {
+            DrlxParseTreeSnapshot.save(drlxSource, ctx, tokens, outputDir);
+        }
         DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
         visitor.setOutputDir(outputDir);
 
@@ -80,12 +83,36 @@ public class DrlxRuleBuilder {
      * Builds a KieBase using pre-compiled lambda metadata (in-memory).
      */
     public KieBase build(String drlxSource, DrlxLambdaMetadata metadata) {
+        return build(drlxSource, metadata, null);
+    }
+
+    /**
+     * Builds a KieBase using pre-compiled lambda metadata and an optional serialized parse tree snapshot.
+     */
+    public KieBase build(String drlxSource, DrlxLambdaMetadata metadata, Path snapshotFile) {
+        if (DrlxParseTreeSnapshot.isEnabled() && snapshotFile != null) {
+            try {
+                DrlxParseTreeSnapshot.Rehydrated rehydrated = DrlxParseTreeSnapshot.load(drlxSource, snapshotFile);
+                if (rehydrated != null) {
+                    return build(rehydrated.context(), rehydrated.tokens(), metadata);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to load serialized parse tree snapshot from " + snapshotFile, e);
+            }
+        }
+
         CharStream charStream = CharStreams.fromString(drlxSource);
         DrlxLexer lexer = new DrlxLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         DrlxParser parser = new DrlxParser(tokens);
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
+        return build(ctx, tokens, metadata);
+    }
+
+    private KieBase build(DrlxParser.DrlxCompilationUnitContext ctx,
+                          CommonTokenStream tokens,
+                          DrlxLambdaMetadata metadata) {
         DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
         visitor.setPreBuildMetadata(metadata);
         List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
@@ -97,7 +124,7 @@ public class DrlxRuleBuilder {
      */
     public KieBase build(String drlxSource, Path metadataFile) throws IOException {
         DrlxLambdaMetadata metadata = DrlxLambdaMetadata.load(metadataFile);
-        return build(drlxSource, metadata);
+        return build(drlxSource, metadata, DrlxParseTreeSnapshot.snapshotFilePath(metadataFile.getParent()));
     }
 
     /**

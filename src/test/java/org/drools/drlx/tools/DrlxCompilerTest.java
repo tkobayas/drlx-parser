@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.drools.drlx.builder.DrlxLambdaMetadata;
+import org.drools.drlx.builder.DrlxParseTreeSnapshot;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
@@ -15,6 +16,54 @@ import org.mvel3.lambdaextractor.LambdaRegistry;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DrlxCompilerTest {
+
+    @Test
+    void testTwoStepBuildWithSerializedParseTreeSnapshot() throws IOException {
+        String previous = System.getProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
+        System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, "true");
+
+        try {
+            String rule = """
+                    package org.drools.drlx.parser;
+
+                    import org.drools.drlx.domain.Person;
+
+                    unit MyUnit;
+
+                    rule CheckAge {
+                        Person p : /persons[ age > 18 ],
+                        do { System.out.println(p.getName()); }
+                    }
+                    """;
+
+            LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+            Path outputDir = Files.createTempDirectory("drlx-snapshot-");
+            DrlxCompiler compiler = new DrlxCompiler(outputDir);
+
+            compiler.preBuild(rule);
+
+            Path metadataFile = DrlxLambdaMetadata.metadataFilePath(outputDir);
+            Path snapshotFile = DrlxParseTreeSnapshot.snapshotFilePath(outputDir);
+            assertThat(Files.exists(metadataFile)).isTrue();
+            assertThat(Files.exists(snapshotFile)).isTrue();
+
+            KieBase kieBase = compiler.build(rule);
+            KieSession kieSession = kieBase.newKieSession();
+            kieSession.getEntryPoint("persons").insert(new Person("John", 25));
+
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(1);
+
+            kieSession.dispose();
+        } finally {
+            if (previous == null) {
+                System.clearProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
+            } else {
+                System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, previous);
+            }
+        }
+    }
 
     @Test
     void testTwoStepBuild() throws IOException {

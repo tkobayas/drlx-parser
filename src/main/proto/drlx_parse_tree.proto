@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package org.drools.drlx.builder.proto;
+
+option java_package = "org.drools.drlx.builder.proto";
+option java_outer_classname = "DrlxParseTreeProto";
+
+message ParseTreeSnapshot {
+  string source_hash = 1;
+  repeated TokenSnapshot tokens = 2;
+  NodeSnapshot root = 3;
+}
+
+message TokenSnapshot {
+  int32 type = 1;
+  string text = 2;
+  int32 line = 3;
+  int32 char_position_in_line = 4;
+  int32 channel = 5;
+  int32 start_index = 6;
+  int32 stop_index = 7;
+  int32 token_index = 8;
+}
+
+message NodeSnapshot {
+  enum Kind {
+    RULE_CONTEXT = 0;
+    TERMINAL = 1;
+  }
+
+  Kind kind = 1;
+  string class_name = 2;
+  int32 invoking_state = 3;
+  int32 start_token_index = 4;
+  int32 stop_token_index = 5;
+  int32 token_index = 6;
+  repeated NodeSnapshot children = 7;
+}
