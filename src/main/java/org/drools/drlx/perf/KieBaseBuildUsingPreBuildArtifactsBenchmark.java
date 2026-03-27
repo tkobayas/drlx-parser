@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
+import org.drools.drlx.builder.DrlxParseTreeSnapshot;
 import org.drools.drlx.tools.DrlxCompiler;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
@@ -63,6 +64,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     // before pre-build artifacts exist. LambdaRegistry must initialize AFTER @Setup completes.
     private static final Path DEFAULT_OUTPUT_DIR = Path.of(
             System.getProperty("mvel3.compiler.lambda.persistence.path", "target/generated-classes/mvel"));
+    private static final String SERIALIZED_PARSE_TREE_ENABLED = "true";
 
     @Param({"100"})
     private int ruleCount;
@@ -76,6 +78,8 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @Setup(Level.Trial)
     public void setup() throws IOException, InterruptedException {
+        System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, SERIALIZED_PARSE_TREE_ENABLED);
+
         // Clean up the default output directory once at the beginning
         if (Files.exists(DEFAULT_OUTPUT_DIR)) {
             Files.walk(DEFAULT_OUTPUT_DIR)
@@ -95,7 +99,9 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
         String classpath = System.getProperty("java.class.path");
 
         ProcessBuilder pb = new ProcessBuilder(
-                javaBin, "-cp", classpath,
+                javaBin,
+                "-D" + DrlxParseTreeSnapshot.ENABLED_PROPERTY + "=" + SERIALIZED_PARSE_TREE_ENABLED,
+                "-cp", classpath,
                 PreBuildRunner.class.getName(),
                 DEFAULT_OUTPUT_DIR.toAbsolutePath().toString(),
                 kjarDir.toAbsolutePath().toString(),
@@ -111,6 +117,8 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
+        System.clearProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
+
         if (Files.exists(DEFAULT_OUTPUT_DIR)) {
             Files.walk(DEFAULT_OUTPUT_DIR)
                     .sorted(Comparator.reverseOrder())
