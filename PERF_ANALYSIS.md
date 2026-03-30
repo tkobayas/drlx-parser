@@ -303,9 +303,33 @@ If replacing `defineHiddenClass()` entirely is not feasible (e.g., hidden class 
 
 **Result**: PreBuild DRLX dropped from **4359ms → 499ms (8.74x faster)**, ratio vs exec-model narrowed from **3.74x → 3.04x**. `DrlxPreBuildVisitor` overrides `compileBatch()` to use `KieMemoryCompiler.compileAndPersist()` for a single javac call + batch disk persistence, bypassing the per-lambda `LambdaRegistry` flow entirely. Batch mode is controlled by `drlx.compiler.batch` system property (default: `true`).
 
-### 5. Cache ANTLR parse result (MEDIUM — fixes UsingPreBuild)
+### 5. ~~Cache ANTLR parse result (MEDIUM — fixes UsingPreBuild)~~ Prototype evaluated
 
-In the 2-step flow, DRLX source is parsed twice (PreBuild + UsingPreBuild). Serialize the parse tree or metadata to avoid re-parsing. Saves ~100-300ms on the runtime path.
+A Protobuf-backed serialized parse-tree prototype was implemented behind
+`drlx.compiler.serializedParseTree=true`. The pre-build step writes
+`drlx-parse-tree.pb` (token stream + concrete ANTLR node types), and the runtime
+build rehydrates `DrlxParser.*Context` objects instead of reparsing DRLX text.
+
+**Result**: This improves warm-JVM `UsingPreBuild`, but not enough to change the
+overall conclusion. The protobuf path removes ANTLR parsing cost, but replaces it
+with expensive protobuf decode + reflection-driven ANTLR context rehydration.
+
+**Warm-JVM multiJoin results (`-gc true`, avgt):**
+
+| Rule Count | DRLX protobuf parse-tree (ms) | Exec-model (ms) | Ratio |
+|---|---|---|---|
+| 100 | **11.941 ± 0.477** | 8.378 ± 1.537 | **1.43x** |
+| 1000 | **117.192 ± 12.269** | 72.344 ± 26.143 | **1.62x** |
+
+Compared to the earlier warm-JVM `multiJoin` result without parse-tree caching
+(`15.622 ± 2.651 ms/op` vs `8.506 ± 5.557 ms/op`, ratio `1.84x`), the protobuf
+prototype reduces DRLX time by about **24%** at `ruleCount=100`. The gap narrows,
+but DRLX remains slower than exec-model for `multiJoin`.
+
+**Conclusion**: Caching the parse result is directionally correct, but
+serializing/reconstructing ANTLR contexts is too expensive to be the final design.
+The next step should be a DRLX-specific AST/IR that avoids both reparsing and
+ANTLR-object rehydration.
 
 ### 6. Expression-Based Caching (LOW for this benchmark)
 
@@ -364,6 +388,38 @@ DRLX is now **faster than exec-model** for alpha, multiAlpha, and join rule type
 
 Compared to earlier runs (without `-gc true`), alpha ratio improved from 1.17x to 0.66x — the forced GC between iterations eliminates the GC variance that previously inflated DRLX times.
 
+### Serialized Parse-Tree Experiment (Protobuf)
+
+The `UsingPreBuild` benchmark was rerun with the protobuf-backed serialized parse
+tree enabled (`drlx.compiler.serializedParseTree=true`) for the DRLX path.
+
+#### Benchmark Configuration
+
+```
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g" \
+  -gc true -f 1 -wi 3 -i 3 -bm avgt \
+  -p ruleCount=100 -p ruleType=multiJoin \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g" \
+  -gc true -f 1 -wi 3 -i 3 -bm avgt \
+  -p ruleCount=1000 -p ruleType=multiJoin \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+```
+
+#### Results
+
+| Rule Count | DRLX protobuf parse-tree (ms) | Exec-model (ms) | Ratio |
+|---|---|---|---|
+| 100 | **11.941 ± 0.477** | 8.378 ± 1.537 | **1.43x** |
+| 1000 | **117.192 ± 12.269** | 72.344 ± 26.143 | **1.62x** |
+
+The protobuf snapshot improves `multiJoin`, but both DRLX and exec-model still
+scale roughly linearly. The improvement is real, but the runtime remains dominated
+by DRLX-specific work that protobuf rehydration does not remove.
+
 ### CPU Profile Analysis (multiJoin, async-profiler)
 
 Profile source: `flame-cpu-forward.html` from async-profiler on `buildWithDrlx` with `ruleType=multiJoin`.
@@ -397,6 +453,60 @@ The file I/O hypothesis was wrong. Bulk-loading class file bytes (`Files.readAll
 
 1. **ANTLR parsing (49%)** — Even with pre-built artifacts, the DRLX source is fully parsed to walk the tree and match lambdas with metadata entries. Exec-model skips this entirely since rules are already compiled into Java.
 2. **JVM class definition (29%)** — `defineClass0` (native bytecode verification + linking) is expensive when defining 400 individual lambda classes via `ClassManager.define()` → `defineHiddenClass()`.
+
+### CPU Profile Analysis (join, protobuf serialized parse-tree)
+
+Profile source: `flame-cpu-forward.html` from async-profiler on `buildWithDrlx`
+with `ruleType=join`, `ruleCount=100`, and `drlx.compiler.serializedParseTree=true`.
+
+Total benchmark samples in the measured path: 4216.
+
+| Component | Samples | % of measured path | Notes |
+|---|---|---|---|
+| **`DrlxParseTreeSnapshot.load`** | 2366 | **56%** | New dominant cost after removing reparsing |
+| `DrlxParseTreeProto.ParseTreeSnapshot.parseFrom` | 436 | 10% | Raw protobuf decode |
+| **`DrlxParseTreeSnapshot.fromProtoNode`** | 1879 | **45%** | Recursive ANTLR context rehydration |
+| **`DrlxToRuleImplVisitor.visitDrlxCompilationUnit`** | 1635 | **39%** | Rule visit/build still substantial |
+| `DrlxRuleBuilder.createKieBase` | 192 | 5% | KieBase assembly |
+
+#### Breakdown inside protobuf rehydration
+
+The dominant protobuf cost is not reading bytes from disk. It is rebuilding the
+ANTLR object graph:
+
+- repeated `Class.forName`
+- repeated `Class.getConstructor` / `Class.getConstructor0`
+- repeated `Constructor.newInstance`
+- deep recursive `fromProtoNode(...)`
+
+This makes the protobuf approach fundamentally different from a compact AST/IR
+cache: protobuf removes parser runtime work, but pays heavily in reflection and
+object reconstruction.
+
+#### Hidden-class loading is still expensive
+
+Even after removing reparsing, lambda evaluator loading remains a major runtime
+cost inside the visitor:
+
+| Call site | Samples | Notes |
+|---|---|---|
+| `createLambdaConstraint` | 1240 | Alpha constraint path |
+| `loadPreCompiledEvaluator` (alpha) | 1223 | Mostly evaluator class loading |
+| `ClassManager.define` (alpha) | 1013 | Dominated by hidden class definition |
+| `MethodHandles.Lookup.defineHiddenClass` (alpha) | 920 | Native bytecode verify + link |
+| `createBetaLambdaConstraint` | 61 | Join/beta constraint path |
+| `createLambdaConsequence` | 59 | Consequence path |
+
+#### Key insight
+
+The protobuf experiment confirms that **reparsing is not the only bottleneck**.
+Removing ANTLR parse time helps, but protobuf-based ANTLR context rehydration
+becomes the new dominant cost. A DRLX-specific AST/IR remains the more promising
+direction because it can avoid:
+
+1. reparsing DRLX text
+2. protobuf decode into full ANTLR context objects
+3. reflection-heavy ANTLR context reconstruction
 
 ### GC Variance Analysis (`-prof gc`)
 
