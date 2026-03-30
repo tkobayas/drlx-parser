@@ -303,33 +303,66 @@ If replacing `defineHiddenClass()` entirely is not feasible (e.g., hidden class 
 
 **Result**: PreBuild DRLX dropped from **4359ms → 499ms (8.74x faster)**, ratio vs exec-model narrowed from **3.74x → 3.04x**. `DrlxPreBuildVisitor` overrides `compileBatch()` to use `KieMemoryCompiler.compileAndPersist()` for a single javac call + batch disk persistence, bypassing the per-lambda `LambdaRegistry` flow entirely. Batch mode is controlled by `drlx.compiler.batch` system property (default: `true`).
 
-### 5. ~~Cache ANTLR parse result (MEDIUM — fixes UsingPreBuild)~~ Prototype evaluated
+### 5. Cache Build Input: ParseTree vs RuleAST (MEDIUM — fixes UsingPreBuild)
 
-A Protobuf-backed serialized parse-tree prototype was implemented behind
-`drlx.compiler.serializedParseTree=true`. The pre-build step writes
-`drlx-parse-tree.pb` (token stream + concrete ANTLR node types), and the runtime
-build rehydrates `DrlxParser.*Context` objects instead of reparsing DRLX text.
+Two cache strategies were prototyped behind `drlx.compiler.cacheStrategy`:
 
-**Result**: This improves warm-JVM `UsingPreBuild`, but not enough to change the
-overall conclusion. The protobuf path removes ANTLR parsing cost, but replaces it
-with expensive protobuf decode + reflection-driven ANTLR context rehydration.
+- `parsetree`: persist `drlx-parse-tree.pb` and rehydrate `DrlxParser.*Context`
+- `ruleast`: persist `drlx-rule-ast.pb`, a compact DRLX-specific rule AST
 
-**Warm-JVM multiJoin results (`-gc true`, avgt):**
+The `ruleast` strategy stores only the semantic rule data needed at runtime
+(package/imports/rules/patterns/consequence text), then rebuilds `RuleImpl`
+without reconstructing ANTLR runtime objects.
 
-| Rule Count | DRLX protobuf parse-tree (ms) | Exec-model (ms) | Ratio |
-|---|---|---|---|
-| 100 | **11.941 ± 0.477** | 8.378 ± 1.537 | **1.43x** |
-| 1000 | **117.192 ± 12.269** | 72.344 ± 26.143 | **1.62x** |
+#### Benchmark Configuration
 
-Compared to the earlier warm-JVM `multiJoin` result without parse-tree caching
-(`15.622 ± 2.651 ms/op` vs `8.506 ± 5.557 ms/op`, ratio `1.84x`), the protobuf
-prototype reduces DRLX time by about **24%** at `ruleCount=100`. The gap narrows,
-but DRLX remains slower than exec-model for `multiJoin`.
+```
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g" \
+  -gc true -f 1 -wi 5 -i 5 -bm avgt \
+  -p ruleCount=100 -p ruleType=multiJoin \
+  -p runConfig=none,parsetree,ruleast,exec-model \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
 
-**Conclusion**: Caching the parse result is directionally correct, but
-serializing/reconstructing ANTLR contexts is too expensive to be the final design.
-The next step should be a DRLX-specific AST/IR that avoids both reparsing and
-ANTLR-object rehydration.
+java -jar target/drlx-benchmarks.jar \
+  -jvmArgs "-Xms4g -Xmx4g" \
+  -gc true -f 1 -wi 5 -i 5 -bm avgt \
+  -p ruleCount=1000 -p ruleType=multiJoin \
+  -p runConfig=none,parsetree,ruleast,exec-model \
+  org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+```
+
+#### Results
+
+| Rule Count | DRLX none (ms) | DRLX parseTree (ms) | DRLX ruleAst (ms) | Exec-model (ms) |
+|---|---|---|---|---|
+| 100 | 15.354 ± 0.176 | 11.802 ± 0.380 | **3.641 ± 0.555** | 8.365 ± 0.896 |
+| 1000 | 147.945 ± 3.816 | 118.029 ± 3.170 | **38.831 ± 3.427** | 71.734 ± 2.840 |
+
+#### Interpretation
+
+- `parsetree` improves DRLX, but only modestly:
+  - `100 rules`: `15.354 -> 11.802 ms` (**1.30x faster**)
+  - `1000 rules`: `147.945 -> 118.029 ms` (**1.25x faster**)
+- `ruleast` changes the ranking entirely:
+  - vs DRLX `none`:
+    - `100 rules`: **4.22x faster**
+    - `1000 rules`: **3.81x faster**
+  - vs exec-model:
+    - `100 rules`: **2.30x faster**
+    - `1000 rules`: **1.85x faster**
+
+#### Conclusion
+
+- `parsetree` is useful as a measurement point, but ANTLR rehydration is too
+  expensive to be the final design.
+- `ruleast` is the first cache strategy that clearly outperforms exec-model on
+  `multiJoin`.
+- The architectural downside of `ruleast` is maintainability: there are
+  currently two `RuleImpl` construction paths, `ParseTree -> RuleImpl`
+  (`DrlxToRuleImplVisitor`) and `RuleAST -> RuleImpl`
+  (`DrlxRuleAstRuntimeBuilder`). If `ruleast` becomes the chosen direction,
+  the next cleanup step should be a shared semantic-model-to-`RuleImpl` builder.
 
 ### 6. Expression-Based Caching (LOW for this benchmark)
 
@@ -388,37 +421,42 @@ DRLX is now **faster than exec-model** for alpha, multiAlpha, and join rule type
 
 Compared to earlier runs (without `-gc true`), alpha ratio improved from 1.17x to 0.66x — the forced GC between iterations eliminates the GC variance that previously inflated DRLX times.
 
-### Serialized Parse-Tree Experiment (Protobuf)
+### Build Cache Strategy Experiment (Protobuf)
 
-The `UsingPreBuild` benchmark was rerun with the protobuf-backed serialized parse
-tree enabled (`drlx.compiler.serializedParseTree=true`) for the DRLX path.
+The `UsingPreBuild` benchmark was rerun with both protobuf-backed cache
+strategies:
+
+- `parsetree`: serialized ANTLR parse tree
+- `ruleast`: serialized DRLX-specific Rule AST
 
 #### Benchmark Configuration
 
 ```
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g" \
-  -gc true -f 1 -wi 3 -i 3 -bm avgt \
+  -gc true -f 1 -wi 5 -i 5 -bm avgt \
   -p ruleCount=100 -p ruleType=multiJoin \
+  -p runConfig=none,parsetree,ruleast,exec-model \
   org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
 
 java -jar target/drlx-benchmarks.jar \
   -jvmArgs "-Xms4g -Xmx4g" \
-  -gc true -f 1 -wi 3 -i 3 -bm avgt \
+  -gc true -f 1 -wi 5 -i 5 -bm avgt \
   -p ruleCount=1000 -p ruleType=multiJoin \
+  -p runConfig=none,parsetree,ruleast,exec-model \
   org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
 ```
 
 #### Results
 
-| Rule Count | DRLX protobuf parse-tree (ms) | Exec-model (ms) | Ratio |
-|---|---|---|---|
-| 100 | **11.941 ± 0.477** | 8.378 ± 1.537 | **1.43x** |
-| 1000 | **117.192 ± 12.269** | 72.344 ± 26.143 | **1.62x** |
+| Rule Count | DRLX none (ms) | DRLX parseTree (ms) | DRLX ruleAst (ms) | Exec-model (ms) |
+|---|---|---|---|---|
+| 100 | 15.354 ± 0.176 | 11.802 ± 0.380 | **3.641 ± 0.555** | 8.365 ± 0.896 |
+| 1000 | 147.945 ± 3.816 | 118.029 ± 3.170 | **38.831 ± 3.427** | 71.734 ± 2.840 |
 
-The protobuf snapshot improves `multiJoin`, but both DRLX and exec-model still
-scale roughly linearly. The improvement is real, but the runtime remains dominated
-by DRLX-specific work that protobuf rehydration does not remove.
+The protobuf parse-tree snapshot improves `multiJoin`, but its benefit is much
+smaller than the RuleAST snapshot. `ruleast` avoids both reparsing and ANTLR
+context rehydration, which is why it scales much better.
 
 ### CPU Profile Analysis (multiJoin, async-profiler)
 
@@ -498,6 +536,44 @@ cost inside the visitor:
 | `createLambdaConsequence` | 59 | Consequence path |
 
 #### Key insight
+
+The parse-tree cache removes ANTLR parsing, but most of the saved work is
+replaced by ANTLR context rehydration. This is why `parsetree` helps, but does
+not fundamentally change the ranking against exec-model.
+
+### CPU Profile Analysis (multiJoin, RuleAST)
+
+Profile source: `flame-cpu-forward.html` from async-profiler on `build`
+with `ruleType=multiJoin`, `ruleCount=100`, and `runConfig=ruleast`.
+
+Total benchmark samples in the measured path: 3632.
+
+| Component | Samples | % of measured path | Notes |
+|---|---|---|---|
+| **`DrlxRuleAstRuntimeBuilder.buildPattern`** | 3020 | **83%** | Dominant RuleAST rebuild cost |
+| **`createLambdaConstraint`** | 2501 | **69%** | Alpha constraint path |
+| `createBetaLambdaConstraint` | 195 | 5% | Beta constraint path |
+| `createLambdaConsequence` | 58 | 2% | Consequence path |
+| `findReferencedBindings` | 203 | 6% | AST-specific binding detection |
+| **`DrlxRuleAstSnapshot.load`** | 84 | **2%** | Cache load is now small |
+| `DrlxRuleAstProto.CompilationUnitSnapshot.parseFrom` | 49 | 1% | Raw protobuf decode |
+
+#### Hidden-class loading is now the dominant remaining cost
+
+Inside the RuleAST path, the dominant work is no longer cache deserialization.
+It is evaluator class loading:
+
+| Call site | Samples | Notes |
+|---|---|---|
+| `loadPreCompiledEvaluator` (alpha) | 2472 | Main runtime cost |
+| `ClassManager.define` (alpha) | 1894 | Hidden class definition path |
+| `MethodHandles.Lookup.defineHiddenClass` (alpha) | 1666 | Native bytecode verify + link |
+
+#### Key insight
+
+`ruleast` successfully removes the ANTLR bottleneck. Cache loading becomes
+almost irrelevant, and the remaining ceiling is the hidden-class loading path
+for precompiled evaluators.
 
 The protobuf experiment confirms that **reparsing is not the only bottleneck**.
 Removing ANTLR parse time helps, but protobuf-based ANTLR context rehydration

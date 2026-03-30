@@ -4,8 +4,10 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.drools.drlx.builder.DrlxBuildCacheStrategy;
 import org.drools.drlx.builder.DrlxLambdaMetadata;
 import org.drools.drlx.builder.DrlxParseTreeSnapshot;
+import org.drools.drlx.builder.DrlxRuleAstSnapshot;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
@@ -19,8 +21,9 @@ class DrlxCompilerTest {
 
     @Test
     void testTwoStepBuildWithSerializedParseTreeSnapshot() throws IOException {
-        String previous = System.getProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
-        System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, "true");
+        String previousStrategy = System.getProperty(DrlxBuildCacheStrategy.PROPERTY);
+        String previousCompatibilityFlag = System.getProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
+        System.setProperty(DrlxBuildCacheStrategy.PROPERTY, "parseTree");
 
         try {
             String rule = """
@@ -57,10 +60,65 @@ class DrlxCompilerTest {
 
             kieSession.dispose();
         } finally {
-            if (previous == null) {
+            if (previousStrategy == null) {
+                System.clearProperty(DrlxBuildCacheStrategy.PROPERTY);
+            } else {
+                System.setProperty(DrlxBuildCacheStrategy.PROPERTY, previousStrategy);
+            }
+            if (previousCompatibilityFlag == null) {
                 System.clearProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
             } else {
-                System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, previous);
+                System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, previousCompatibilityFlag);
+            }
+        }
+    }
+
+    @Test
+    void testTwoStepBuildWithRuleAstSnapshot() throws IOException {
+        String previousStrategy = System.getProperty(DrlxBuildCacheStrategy.PROPERTY);
+        System.setProperty(DrlxBuildCacheStrategy.PROPERTY, "ruleAst");
+
+        try {
+            String rule = """
+                    package org.drools.drlx.parser;
+
+                    import org.drools.drlx.domain.Person;
+
+                    unit MyUnit;
+
+                    rule JoinRule {
+                        Person p1 : /seniors[ age > 30 ],
+                        Person p2 : /juniors[ age < p1.age ],
+                        do { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
+                    }
+                    """;
+
+            LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+
+            Path outputDir = Files.createTempDirectory("drlx-rule-ast-");
+            DrlxCompiler compiler = new DrlxCompiler(outputDir);
+
+            compiler.preBuild(rule);
+
+            Path metadataFile = DrlxLambdaMetadata.metadataFilePath(outputDir);
+            Path snapshotFile = DrlxRuleAstSnapshot.snapshotFilePath(outputDir);
+            assertThat(Files.exists(metadataFile)).isTrue();
+            assertThat(Files.exists(snapshotFile)).isTrue();
+
+            KieBase kieBase = compiler.build(rule);
+            KieSession kieSession = kieBase.newKieSession();
+            kieSession.getEntryPoint("seniors").insert(new Person("Alice", 40));
+            kieSession.getEntryPoint("juniors").insert(new Person("Bob", 25));
+
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(1);
+
+            kieSession.dispose();
+        } finally {
+            if (previousStrategy == null) {
+                System.clearProperty(DrlxBuildCacheStrategy.PROPERTY);
+            } else {
+                System.setProperty(DrlxBuildCacheStrategy.PROPERTY, previousStrategy);
             }
         }
     }

@@ -7,13 +7,15 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
-import org.drools.drlx.builder.DrlxParseTreeSnapshot;
+import org.drools.drlx.builder.DrlxBuildCacheStrategy;
+import org.drools.drlx.domain.Person;
 import org.drools.drlx.tools.DrlxCompiler;
 import org.kie.api.KieBase;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieModule;
 import org.kie.api.io.Resource;
 import org.kie.api.runtime.KieContainer;
+import org.kie.api.runtime.KieSession;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -64,7 +66,6 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     // before pre-build artifacts exist. LambdaRegistry must initialize AFTER @Setup completes.
     private static final Path DEFAULT_OUTPUT_DIR = Path.of(
             System.getProperty("mvel3.compiler.lambda.persistence.path", "target/generated-classes/mvel"));
-    private static final String SERIALIZED_PARSE_TREE_ENABLED = "true";
 
     @Param({"100"})
     private int ruleCount;
@@ -72,13 +73,16 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     @Param({"alpha", "multiAlpha", "join", "multiJoin"})
     private String ruleType;
 
+    @Param({"none", "parsetree", "ruleast", "exec-model"})
+    private String runConfig;
+
     private String drlxSource;
     private Path kjarPath;
     private Path kjarDir;
 
     @Setup(Level.Trial)
     public void setup() throws IOException, InterruptedException {
-        System.setProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY, SERIALIZED_PARSE_TREE_ENABLED);
+        configureCacheStrategy();
 
         // Clean up the default output directory once at the beginning
         if (Files.exists(DEFAULT_OUTPUT_DIR)) {
@@ -100,7 +104,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
         ProcessBuilder pb = new ProcessBuilder(
                 javaBin,
-                "-D" + DrlxParseTreeSnapshot.ENABLED_PROPERTY + "=" + SERIALIZED_PARSE_TREE_ENABLED,
+                "-D" + DrlxBuildCacheStrategy.PROPERTY + "=" + cacheStrategyForRunConfig(),
                 "-cp", classpath,
                 PreBuildRunner.class.getName(),
                 DEFAULT_OUTPUT_DIR.toAbsolutePath().toString(),
@@ -117,7 +121,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
     @TearDown(Level.Trial)
     public void tearDown() throws IOException {
-        System.clearProperty(DrlxParseTreeSnapshot.ENABLED_PROPERTY);
+        System.clearProperty(DrlxBuildCacheStrategy.PROPERTY);
 
         if (Files.exists(DEFAULT_OUTPUT_DIR)) {
             Files.walk(DEFAULT_OUTPUT_DIR)
@@ -134,18 +138,36 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     }
 
     @Benchmark
-    public KieBase buildWithDrlx() throws IOException {
+    public KieBase build() throws IOException {
+        if ("exec-model".equals(runConfig)) {
+            KieServices ks = KieServices.Factory.get();
+            Resource kjarResource = ks.getResources().newFileSystemResource(kjarPath.toFile());
+            KieModule kieModule = ks.getRepository().addKieModule(kjarResource);
+            KieContainer kieContainer = ks.newKieContainer(kieModule.getReleaseId());
+            return kieContainer.getKieBase();
+        }
+
         DrlxCompiler compiler = new DrlxCompiler();
         return compiler.build(drlxSource);
     }
 
-    @Benchmark
-    public KieBase buildWithExecutableModel() {
-        KieServices ks = KieServices.Factory.get();
-        Resource kjarResource = ks.getResources().newFileSystemResource(kjarPath.toFile());
-        KieModule kieModule = ks.getRepository().addKieModule(kjarResource);
-        KieContainer kieContainer = ks.newKieContainer(kieModule.getReleaseId());
-        return kieContainer.getKieBase();
+    private void configureCacheStrategy() {
+        String cacheStrategy = cacheStrategyForRunConfig();
+        if (cacheStrategy == null) {
+            System.clearProperty(DrlxBuildCacheStrategy.PROPERTY);
+        } else {
+            System.setProperty(DrlxBuildCacheStrategy.PROPERTY, cacheStrategy);
+        }
+    }
+
+    private String cacheStrategyForRunConfig() {
+        return switch (runConfig) {
+            case "none" -> "none";
+            case "parsetree" -> "parsetree";
+            case "ruleast" -> "ruleast";
+            case "exec-model" -> "none";
+            default -> throw new IllegalArgumentException("Unknown runConfig: " + runConfig);
+        };
     }
 
     public static void main(String[] args) throws RunnerException, CommandLineOptionException {

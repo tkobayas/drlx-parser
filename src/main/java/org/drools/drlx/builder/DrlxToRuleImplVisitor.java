@@ -54,7 +54,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
 
     private final TokenStream tokens;
 
-    private int patternId = 0;
+    protected int patternId = 0;
 
     private DrlxLambdaMetadata preBuildMetadata; // null = normal build
     private Path outputDir; // directory containing pre-compiled .class files

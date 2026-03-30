@@ -37,7 +37,7 @@ public final class DrlxParseTreeSnapshot {
     }
 
     public static boolean isEnabled() {
-        return Boolean.parseBoolean(System.getProperty(ENABLED_PROPERTY, "false"));
+        return DrlxBuildCacheStrategy.current() == DrlxBuildCacheStrategy.PARSE_TREE;
     }
 
     public static Path snapshotFilePath(Path dir) {

@@ -58,9 +58,7 @@ public class DrlxRuleBuilder {
         DrlxParser parser = new DrlxParser(tokens);
 
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
-        if (DrlxParseTreeSnapshot.isEnabled()) {
-            DrlxParseTreeSnapshot.save(drlxSource, ctx, tokens, outputDir);
-        }
+        persistBuildCache(drlxSource, ctx, tokens, outputDir);
         DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
         visitor.setOutputDir(outputDir);
 
@@ -87,18 +85,12 @@ public class DrlxRuleBuilder {
     }
 
     /**
-     * Builds a KieBase using pre-compiled lambda metadata and an optional serialized parse tree snapshot.
+     * Builds a KieBase using pre-compiled lambda metadata and an optional cached build artifact directory.
      */
-    public KieBase build(String drlxSource, DrlxLambdaMetadata metadata, Path snapshotFile) {
-        if (DrlxParseTreeSnapshot.isEnabled() && snapshotFile != null) {
-            try {
-                DrlxParseTreeSnapshot.Rehydrated rehydrated = DrlxParseTreeSnapshot.load(drlxSource, snapshotFile);
-                if (rehydrated != null) {
-                    return build(rehydrated.context(), rehydrated.tokens(), metadata);
-                }
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load serialized parse tree snapshot from " + snapshotFile, e);
-            }
+    public KieBase build(String drlxSource, DrlxLambdaMetadata metadata, Path cacheDir) {
+        KieBase cachedBuild = buildFromCache(drlxSource, metadata, cacheDir);
+        if (cachedBuild != null) {
+            return cachedBuild;
         }
 
         CharStream charStream = CharStreams.fromString(drlxSource);
@@ -124,7 +116,7 @@ public class DrlxRuleBuilder {
      */
     public KieBase build(String drlxSource, Path metadataFile) throws IOException {
         DrlxLambdaMetadata metadata = DrlxLambdaMetadata.load(metadataFile);
-        return build(drlxSource, metadata, DrlxParseTreeSnapshot.snapshotFilePath(metadataFile.getParent()));
+        return build(drlxSource, metadata, metadataFile.getParent());
     }
 
     /**
@@ -151,5 +143,46 @@ public class DrlxRuleBuilder {
         visitor.compileBatch(Thread.currentThread().getContextClassLoader());
 
         return kiePackages;
+    }
+
+    private void persistBuildCache(String drlxSource,
+                                   DrlxParser.DrlxCompilationUnitContext ctx,
+                                   CommonTokenStream tokens,
+                                   Path outputDir) throws IOException {
+        switch (DrlxBuildCacheStrategy.current()) {
+            case NONE -> {
+            }
+            case PARSE_TREE -> DrlxParseTreeSnapshot.save(drlxSource, ctx, tokens, outputDir);
+            case RULE_AST -> DrlxRuleAstSnapshot.save(drlxSource, ctx, tokens, outputDir);
+        }
+    }
+
+    private KieBase buildFromCache(String drlxSource, DrlxLambdaMetadata metadata, Path cacheDir) {
+        if (cacheDir == null) {
+            return null;
+        }
+
+        try {
+            return switch (DrlxBuildCacheStrategy.current()) {
+                case NONE -> null;
+                case PARSE_TREE -> {
+                    DrlxParseTreeSnapshot.Rehydrated rehydrated =
+                            DrlxParseTreeSnapshot.load(drlxSource, DrlxParseTreeSnapshot.snapshotFilePath(cacheDir));
+                    yield rehydrated == null ? null : build(rehydrated.context(), rehydrated.tokens(), metadata);
+                }
+                case RULE_AST -> {
+                    DrlxRuleAstSnapshot.CompilationUnitData snapshot =
+                            DrlxRuleAstSnapshot.load(drlxSource, DrlxRuleAstSnapshot.snapshotFilePath(cacheDir));
+                    if (snapshot == null) {
+                        yield null;
+                    }
+                    DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder();
+                    builder.setPreBuildMetadata(metadata);
+                    yield createKieBase(builder.build(snapshot));
+                }
+            };
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load DRLX build cache from " + cacheDir, e);
+        }
     }
 }
