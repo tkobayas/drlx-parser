@@ -584,6 +584,50 @@ direction because it can avoid:
 2. protobuf decode into full ANTLR context objects
 3. reflection-heavy ANTLR context reconstruction
 
+### Allocation Comparison (`UsingPreBuild`, `multiJoin`, `-prof gc`)
+
+The `UsingPreBuild` benchmark was also run with `-prof gc` across all runtime
+build modes for `ruleCount=100`, `ruleType=multiJoin`, and three measurement
+iterations.
+
+For memory comparison, the most useful metric is **`gc.alloc.rate.norm`**
+because it reports normalized allocation in bytes per benchmark operation.
+
+#### Normalized allocation per `build()` call
+
+| runConfig | Time (ms/op) | `gc.alloc.rate.norm` (B/op) | Approx. MB/op |
+|---|---:|---:|---:|
+| `none` | 15.908 | 33,614,120 | 33.6 |
+| `parsetree` | 11.756 | 16,353,108 | 16.4 |
+| `ruleast` | 3.781 | 3,484,944 | 3.5 |
+| `exec-model` | 8.263 | 5,338,041 | 5.3 |
+
+#### Allocation takeaways
+
+- `ruleast` has the best allocation profile in this run at **~3.5 MB/op**
+- versus `none`, `ruleast` reduces allocation by about **90%**
+- versus `parsetree`, `ruleast` reduces allocation by about **79%**
+- `ruleast` also allocates about **35% less** than `exec-model`
+
+This reinforces the CPU profile story: `ruleast` is not only faster than the
+other DRLX cache strategies here, it also dramatically reduces transient object
+creation. That is exactly what we would expect from removing both reparsing and
+ANTLR tree rehydration.
+
+#### Important caveat on GC time/count
+
+The `gc.count` and `gc.time` values in this short run are still useful, but
+they should not be treated as the primary memory metric:
+
+- `gc.alloc.rate.norm` is the cleanest cross-mode memory comparison
+- `gc.alloc.rate` depends on throughput and wall-clock behavior
+- `gc.count` and `gc.time` are process-level effects and can be noisy in short
+  runs, especially with only three measurement iterations
+
+In this dataset, `ruleast` shows the lowest normalized allocation even though
+its aggregate `gc.time` is high. That is not a contradiction; it is a reminder
+that GC timing in short runs is sensitive to when collections happen to land.
+
 ### GC Variance Analysis (`-prof gc`)
 
 An earlier run with `-prof gc` revealed the root cause of DRLX's higher variance:

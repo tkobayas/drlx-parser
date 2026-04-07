@@ -24,9 +24,6 @@ import org.mvel3.lambdaextractor.LambdaRegistry;
  */
 public class DrlxRuleBuilder {
 
-    public static final boolean BATCH_ENABLED =
-            Boolean.parseBoolean(System.getProperty("drlx.compiler.batch", "true"));
-
     public DrlxRuleBuilder() {
     }
 
@@ -62,10 +59,8 @@ public class DrlxRuleBuilder {
         DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
         visitor.setOutputDir(outputDir);
 
-        if (BATCH_ENABLED) {
-            MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), outputDir);
-            visitor.enableBatchMode(batchCompiler);
-        }
+        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), outputDir);
+        visitor.enableBatchMode(batchCompiler);
 
         visitor.visitDrlxCompilationUnit(ctx);
 
@@ -131,11 +126,9 @@ public class DrlxRuleBuilder {
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
 
-        if (BATCH_ENABLED) {
-            Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
-            MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
-            visitor.enableBatchMode(batchCompiler);
-        }
+        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
+        visitor.enableBatchMode(batchCompiler);
 
         List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
 
