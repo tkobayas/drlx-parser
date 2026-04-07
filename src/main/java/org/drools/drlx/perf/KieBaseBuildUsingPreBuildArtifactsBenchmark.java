@@ -73,7 +73,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     @Param({"alpha", "multiAlpha", "join", "multiJoin"})
     private String ruleType;
 
-    @Param({"none", "parsetree", "ruleast", "exec-model"})
+    @Param({"none", "ruleast", "exec-model"})
     private String runConfig;
 
     private String drlxSource;
@@ -163,7 +163,6 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
     private String cacheStrategyForRunConfig() {
         return switch (runConfig) {
             case "none" -> "none";
-            case "parsetree" -> "parsetree";
             case "ruleast" -> "ruleast";
             case "exec-model" -> "none";
             default -> throw new IllegalArgumentException("Unknown runConfig: " + runConfig);

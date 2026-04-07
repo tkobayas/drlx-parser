@@ -145,7 +145,6 @@ public class DrlxRuleBuilder {
         switch (DrlxBuildCacheStrategy.current()) {
             case NONE -> {
             }
-            case PARSE_TREE -> DrlxParseTreeSnapshot.save(drlxSource, ctx, tokens, outputDir);
             case RULE_AST -> DrlxRuleAstSnapshot.save(drlxSource, ctx, tokens, outputDir);
         }
     }
@@ -158,11 +157,6 @@ public class DrlxRuleBuilder {
         try {
             return switch (DrlxBuildCacheStrategy.current()) {
                 case NONE -> null;
-                case PARSE_TREE -> {
-                    DrlxParseTreeSnapshot.Rehydrated rehydrated =
-                            DrlxParseTreeSnapshot.load(drlxSource, DrlxParseTreeSnapshot.snapshotFilePath(cacheDir));
-                    yield rehydrated == null ? null : build(rehydrated.context(), rehydrated.tokens(), metadata);
-                }
                 case RULE_AST -> {
                     DrlxRuleAstSnapshot.CompilationUnitData snapshot =
                             DrlxRuleAstSnapshot.load(drlxSource, DrlxRuleAstSnapshot.snapshotFilePath(cacheDir));
