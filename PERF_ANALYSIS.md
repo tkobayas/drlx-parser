@@ -455,7 +455,7 @@ java -jar target/drlx-benchmarks.jar \
 | 1000 | 147.945 ± 3.816 | 118.029 ± 3.170 | **38.831 ± 3.427** | 71.734 ± 2.840 |
 
 The protobuf parse-tree snapshot improves `multiJoin`, but its benefit is much
-smaller than the RuleAST snapshot. `ruleast` avoids both reparsing and ANTLR
+smaller than the RuleAST parse-result. `ruleast` avoids both reparsing and ANTLR
 context rehydration, which is why it scales much better.
 
 ### CPU Profile Analysis (multiJoin, async-profiler)
@@ -501,9 +501,9 @@ Total benchmark samples in the measured path: 4216.
 
 | Component | Samples | % of measured path | Notes |
 |---|---|---|---|
-| **`DrlxParseTreeSnapshot.load`** | 2366 | **56%** | New dominant cost after removing reparsing |
-| `DrlxParseTreeProto.ParseTreeSnapshot.parseFrom` | 436 | 10% | Raw protobuf decode |
-| **`DrlxParseTreeSnapshot.fromProtoNode`** | 1879 | **45%** | Recursive ANTLR context rehydration |
+| **`DrlxParseTreeParseResult.load`** | 2366 | **56%** | New dominant cost after removing reparsing |
+| `DrlxParseTreeProto.ParseTreeParseResult.parseFrom` | 436 | 10% | Raw protobuf decode |
+| **`DrlxParseTreeParseResult.fromProtoNode`** | 1879 | **45%** | Recursive ANTLR context rehydration |
 | **`DrlxToRuleImplVisitor.visitDrlxCompilationUnit`** | 1635 | **39%** | Rule visit/build still substantial |
 | `DrlxRuleBuilder.createKieBase` | 192 | 5% | KieBase assembly |
 
@@ -555,8 +555,8 @@ Total benchmark samples in the measured path: 3632.
 | `createBetaLambdaConstraint` | 195 | 5% | Beta constraint path |
 | `createLambdaConsequence` | 58 | 2% | Consequence path |
 | `findReferencedBindings` | 203 | 6% | AST-specific binding detection |
-| **`DrlxRuleAstSnapshot.load`** | 84 | **2%** | Cache load is now small |
-| `DrlxRuleAstProto.CompilationUnitSnapshot.parseFrom` | 49 | 1% | Raw protobuf decode |
+| **`DrlxRuleAstParseResult.load`** | 84 | **2%** | Cache load is now small |
+| `DrlxRuleAstProto.CompilationUnitParseResult.parseFrom` | 49 | 1% | Raw protobuf decode |
 
 #### Hidden-class loading is now the dominant remaining cost
 

@@ -145,7 +145,7 @@ public class DrlxRuleBuilder {
         switch (DrlxBuildCacheStrategy.current()) {
             case NONE -> {
             }
-            case RULE_AST -> DrlxRuleAstSnapshot.save(drlxSource, ctx, tokens, outputDir);
+            case RULE_AST -> DrlxRuleAstParseResult.save(drlxSource, ctx, tokens, outputDir);
         }
     }
 
@@ -158,14 +158,14 @@ public class DrlxRuleBuilder {
             return switch (DrlxBuildCacheStrategy.current()) {
                 case NONE -> null;
                 case RULE_AST -> {
-                    DrlxRuleAstSnapshot.CompilationUnitData snapshot =
-                            DrlxRuleAstSnapshot.load(drlxSource, DrlxRuleAstSnapshot.snapshotFilePath(cacheDir));
-                    if (snapshot == null) {
+                    DrlxRuleAstParseResult.CompilationUnitData parseResult =
+                            DrlxRuleAstParseResult.load(drlxSource, DrlxRuleAstParseResult.parseResultFilePath(cacheDir));
+                    if (parseResult == null) {
                         yield null;
                     }
                     DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder();
                     builder.setPreBuildMetadata(metadata);
-                    yield createKieBase(builder.build(snapshot));
+                    yield createKieBase(builder.build(parseResult));
                 }
             };
         } catch (IOException e) {

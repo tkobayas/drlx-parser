@@ -144,13 +144,13 @@ KieBase
 | `DrlxRuleBuilder` | 188 | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
 | `DrlxToRuleImplVisitor` | 486 | Core visitor. Walks ANTLR tree -> RuleImpl, Pattern, constraints, consequences. |
 | `DrlxPreBuildVisitor` | 134 | Extends `DrlxToRuleImplVisitor`. Records lambda metadata during pre-build. |
-| `DrlxRuleAstRuntimeBuilder` | 125 | Extends `DrlxToRuleImplVisitor`. Rebuilds KiePackages from RuleAST snapshot data records. |
+| `DrlxRuleAstRuntimeBuilder` | 125 | Extends `DrlxToRuleImplVisitor`. Rebuilds KiePackages from RuleAST parse-result data records. |
 | `DrlxLambdaConstraint` | 128 | Alpha constraint. Wraps `Evaluator<Object, Void, Boolean>`. |
 | `DrlxLambdaBetaConstraint` | 259 | Beta (join) constraint. Wraps `Evaluator<Map<String,Object>, Void, Boolean>`. Uses reflection-based property extraction. |
 | `DrlxLambdaConsequence` | 67 | Consequence action. Wraps `Evaluator<Map<String,Object>, Void, String>`. |
 | `DrlxLambdaMetadata` | 85 | Pipe-delimited properties file for lambda mapping (`rule.counter=fqn\|physicalId\|expression`). |
-| `DrlxParseTreeSnapshot` | 221 | Full ANTLR parse tree serialization via protobuf. Rehydrates via reflection. |
-| `DrlxRuleAstSnapshot` | 204 | Compact domain-specific AST serialization via protobuf. No reflection needed. |
+| `DrlxParseTreeParseResult` | 221 | Full ANTLR parse tree serialization via protobuf. Rehydrates via reflection. |
+| `DrlxRuleAstParseResult` | 204 | Compact domain-specific AST serialization via protobuf. No reflection needed. |
 | `DrlxBuildCacheStrategy` | 32 | Enum: `NONE`, `PARSE_TREE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
 | `DrlxRuleUnit` | 24 | Wraps unit declaration. |
 
@@ -224,12 +224,12 @@ records and the metadata properties file.
 DrlxParserBaseVisitor<List<KiePackage>>
   +-- DrlxToRuleImplVisitor          (normal build: tree -> RuleImpl)
         +-- DrlxPreBuildVisitor      (pre-build: records metadata)
-        +-- DrlxRuleAstRuntimeBuilder (load from RuleAST snapshot)
+        +-- DrlxRuleAstRuntimeBuilder (load from RuleAST parse-result)
 ```
 
 `DrlxPreBuildVisitor` intercepts constraint/consequence creation to record
 metadata. `DrlxRuleAstRuntimeBuilder` drives the same lambda-loading logic
-from snapshot data records instead of ANTLR tree walking.
+from parse-result data records instead of ANTLR tree walking.
 
 ## Configuration
 

@@ -20,14 +20,14 @@ import org.drools.drlx.parser.DrlxParser;
 /**
  * Persists a compact DRLX-specific rule AST for runtime rebuilds.
  */
-public final class DrlxRuleAstSnapshot {
+public final class DrlxRuleAstParseResult {
 
     private static final String FILE_NAME = "drlx-rule-ast.pb";
 
-    private DrlxRuleAstSnapshot() {
+    private DrlxRuleAstParseResult() {
     }
 
-    public static Path snapshotFilePath(Path dir) {
+    public static Path parseResultFilePath(Path dir) {
         return dir.resolve(FILE_NAME);
     }
 
@@ -37,8 +37,8 @@ public final class DrlxRuleAstSnapshot {
                             Path outputDir) throws IOException {
         tokens.fill();
 
-        DrlxRuleAstProto.CompilationUnitSnapshot.Builder builder =
-                DrlxRuleAstProto.CompilationUnitSnapshot.newBuilder()
+        DrlxRuleAstProto.CompilationUnitParseResult.Builder builder =
+                DrlxRuleAstProto.CompilationUnitParseResult.newBuilder()
                         .setSourceHash(hashSource(drlxSource))
                         .setPackageName(packageName(ctx));
 
@@ -57,46 +57,46 @@ public final class DrlxRuleAstSnapshot {
         }
 
         Files.createDirectories(outputDir);
-        try (OutputStream out = Files.newOutputStream(snapshotFilePath(outputDir))) {
+        try (OutputStream out = Files.newOutputStream(parseResultFilePath(outputDir))) {
             builder.build().writeTo(out);
         }
     }
 
-    public static CompilationUnitData load(String drlxSource, Path snapshotFile) throws IOException {
-        if (!Files.exists(snapshotFile)) {
+    public static CompilationUnitData load(String drlxSource, Path parseResultFile) throws IOException {
+        if (!Files.exists(parseResultFile)) {
             return null;
         }
 
-        DrlxRuleAstProto.CompilationUnitSnapshot snapshot;
-        try (InputStream in = Files.newInputStream(snapshotFile)) {
-            snapshot = DrlxRuleAstProto.CompilationUnitSnapshot.parseFrom(in);
+        DrlxRuleAstProto.CompilationUnitParseResult parseResult;
+        try (InputStream in = Files.newInputStream(parseResultFile)) {
+            parseResult = DrlxRuleAstProto.CompilationUnitParseResult.parseFrom(in);
         }
 
-        if (!snapshot.getSourceHash().equals(hashSource(drlxSource))) {
+        if (!parseResult.getSourceHash().equals(hashSource(drlxSource))) {
             return null;
         }
 
-        List<RuleData> rules = new ArrayList<>(snapshot.getRulesCount());
-        for (DrlxRuleAstProto.RuleSnapshot ruleSnapshot : snapshot.getRulesList()) {
-            List<RuleItemData> items = new ArrayList<>(ruleSnapshot.getItemsCount());
-            for (DrlxRuleAstProto.RuleItemSnapshot itemSnapshot : ruleSnapshot.getItemsList()) {
-                switch (itemSnapshot.getItemCase()) {
+        List<RuleData> rules = new ArrayList<>(parseResult.getRulesCount());
+        for (DrlxRuleAstProto.RuleParseResult ruleParseResult : parseResult.getRulesList()) {
+            List<RuleItemData> items = new ArrayList<>(ruleParseResult.getItemsCount());
+            for (DrlxRuleAstProto.RuleItemParseResult itemParseResult : ruleParseResult.getItemsList()) {
+                switch (itemParseResult.getItemCase()) {
                     case PATTERN -> {
-                        DrlxRuleAstProto.PatternSnapshot pattern = itemSnapshot.getPattern();
+                        DrlxRuleAstProto.PatternParseResult pattern = itemParseResult.getPattern();
                         items.add(new PatternData(
                                 pattern.getTypeName(),
                                 pattern.getBindName(),
                                 pattern.getEntryPoint(),
                                 List.copyOf(pattern.getConditionsList())));
                     }
-                    case CONSEQUENCE -> items.add(new ConsequenceData(itemSnapshot.getConsequence().getBlock()));
-                    case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + snapshotFile);
+                    case CONSEQUENCE -> items.add(new ConsequenceData(itemParseResult.getConsequence().getBlock()));
+                    case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
                 }
             }
-            rules.add(new RuleData(ruleSnapshot.getName(), List.copyOf(items)));
+            rules.add(new RuleData(ruleParseResult.getName(), List.copyOf(items)));
         }
 
-        return new CompilationUnitData(snapshot.getPackageName(), List.copyOf(snapshot.getImportsList()), List.copyOf(rules));
+        return new CompilationUnitData(parseResult.getPackageName(), List.copyOf(parseResult.getImportsList()), List.copyOf(rules));
     }
 
     public record CompilationUnitData(String packageName, List<String> imports, List<RuleData> rules) {
@@ -114,8 +114,8 @@ public final class DrlxRuleAstSnapshot {
     public record ConsequenceData(String block) implements RuleItemData {
     }
 
-    private static DrlxRuleAstProto.RuleSnapshot toProtoRule(DrlxParser.RuleDeclarationContext ctx, CommonTokenStream tokens) {
-        DrlxRuleAstProto.RuleSnapshot.Builder builder = DrlxRuleAstProto.RuleSnapshot.newBuilder()
+    private static DrlxRuleAstProto.RuleParseResult toProtoRule(DrlxParser.RuleDeclarationContext ctx, CommonTokenStream tokens) {
+        DrlxRuleAstProto.RuleParseResult.Builder builder = DrlxRuleAstProto.RuleParseResult.newBuilder()
                 .setName(ctx.identifier().getText());
 
         if (ctx.ruleBody() != null) {
@@ -124,12 +124,12 @@ public final class DrlxRuleAstSnapshot {
         return builder.build();
     }
 
-    private static DrlxRuleAstProto.RuleItemSnapshot toProtoRuleItem(DrlxParser.RuleItemContext ctx, CommonTokenStream tokens) {
-        DrlxRuleAstProto.RuleItemSnapshot.Builder builder = DrlxRuleAstProto.RuleItemSnapshot.newBuilder();
+    private static DrlxRuleAstProto.RuleItemParseResult toProtoRuleItem(DrlxParser.RuleItemContext ctx, CommonTokenStream tokens) {
+        DrlxRuleAstProto.RuleItemParseResult.Builder builder = DrlxRuleAstProto.RuleItemParseResult.newBuilder();
         if (ctx.rulePattern() != null) {
             builder.setPattern(toProtoPattern(ctx.rulePattern(), tokens));
         } else if (ctx.ruleConsequence() != null) {
-            builder.setConsequence(DrlxRuleAstProto.ConsequenceSnapshot.newBuilder()
+            builder.setConsequence(DrlxRuleAstProto.ConsequenceParseResult.newBuilder()
                     .setBlock(trimBraces(getText(tokens, ctx.ruleConsequence().statement())))
                     .build());
         } else {
@@ -138,8 +138,8 @@ public final class DrlxRuleAstSnapshot {
         return builder.build();
     }
 
-    private static DrlxRuleAstProto.PatternSnapshot toProtoPattern(DrlxParser.RulePatternContext ctx, CommonTokenStream tokens) {
-        DrlxRuleAstProto.PatternSnapshot.Builder builder = DrlxRuleAstProto.PatternSnapshot.newBuilder()
+    private static DrlxRuleAstProto.PatternParseResult toProtoPattern(DrlxParser.RulePatternContext ctx, CommonTokenStream tokens) {
+        DrlxRuleAstProto.PatternParseResult.Builder builder = DrlxRuleAstProto.PatternParseResult.newBuilder()
                 .setTypeName(ctx.identifier(0).getText())
                 .setBindName(ctx.identifier(1).getText())
                 .setEntryPoint(extractEntryPointFromOopath(getText(tokens, ctx.oopathExpression())));

@@ -21,33 +21,33 @@ import org.kie.api.definition.KiePackage;
 import org.mvel3.Type;
 
 /**
- * Rebuilds KiePackages from a compact DRLX-specific rule AST snapshot while
+ * Rebuilds KiePackages from a compact DRLX-specific rule AST parse result while
  * reusing the evaluator-loading logic from {@link DrlxToRuleImplVisitor}.
  */
 public class DrlxRuleAstRuntimeBuilder extends DrlxToRuleImplVisitor {
 
-    public List<KiePackage> build(DrlxRuleAstSnapshot.CompilationUnitData snapshot) {
-        KnowledgePackageImpl pkg = new KnowledgePackageImpl(snapshot.packageName());
+    public List<KiePackage> build(DrlxRuleAstParseResult.CompilationUnitData parseResult) {
+        KnowledgePackageImpl pkg = new KnowledgePackageImpl(parseResult.packageName());
         pkg.setClassLoader(Thread.currentThread().getContextClassLoader());
 
-        snapshot.imports().forEach(importName -> pkg.addImport(new ImportDeclaration(importName)));
-        snapshot.rules().forEach(rule -> pkg.addRule(buildRule(rule, pkg.getTypeResolver())));
+        parseResult.imports().forEach(importName -> pkg.addImport(new ImportDeclaration(importName)));
+        parseResult.rules().forEach(rule -> pkg.addRule(buildRule(rule, pkg.getTypeResolver())));
 
         return List.of(pkg);
     }
 
-    private RuleImpl buildRule(DrlxRuleAstSnapshot.RuleData snapshot, TypeResolver typeResolver) {
-        currentRuleName = snapshot.name();
+    private RuleImpl buildRule(DrlxRuleAstParseResult.RuleData parseResult, TypeResolver typeResolver) {
+        currentRuleName = parseResult.name();
         lambdaCounter = 0;
 
-        RuleImpl rule = new RuleImpl(snapshot.name());
+        RuleImpl rule = new RuleImpl(parseResult.name());
         rule.setResource(rule.getResource());
 
         GroupElement ge = GroupElementFactory.newAndInstance();
         Map<String, DrlxToRuleImplVisitor.BoundVariable> boundVariables = new LinkedHashMap<>();
 
-        for (DrlxRuleAstSnapshot.RuleItemData item : snapshot.items()) {
-            if (item instanceof DrlxRuleAstSnapshot.PatternData patternData) {
+        for (DrlxRuleAstParseResult.RuleItemData item : parseResult.items()) {
+            if (item instanceof DrlxRuleAstParseResult.PatternData patternData) {
                 Pattern pattern = buildPattern(patternData, typeResolver, boundVariables);
                 ge.addChild(pattern);
 
@@ -57,7 +57,7 @@ public class DrlxRuleAstRuntimeBuilder extends DrlxToRuleImplVisitor {
                     boundVariables.put(declaration.getIdentifier(),
                             new DrlxToRuleImplVisitor.BoundVariable(declaration.getIdentifier(), patternClass, pattern));
                 }
-            } else if (item instanceof DrlxRuleAstSnapshot.ConsequenceData consequenceData) {
+            } else if (item instanceof DrlxRuleAstParseResult.ConsequenceData consequenceData) {
                 Map<String, Type<?>> types = getTypeMap(ge);
                 rule.setConsequence(createLambdaConsequence(consequenceData.block(), types));
             } else {
@@ -69,23 +69,23 @@ public class DrlxRuleAstRuntimeBuilder extends DrlxToRuleImplVisitor {
         return rule;
     }
 
-    private Pattern buildPattern(DrlxRuleAstSnapshot.PatternData snapshot,
+    private Pattern buildPattern(DrlxRuleAstParseResult.PatternData parseResult,
                                  TypeResolver typeResolver,
                                  Map<String, DrlxToRuleImplVisitor.BoundVariable> boundVariables) {
         ObjectType objectType;
         try {
-            Class<?> type = typeResolver.resolveType(snapshot.typeName());
+            Class<?> type = typeResolver.resolveType(parseResult.typeName());
             objectType = new ClassObjectType(type, false);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
         }
 
-        Pattern pattern = new Pattern(patternId++, 0, 0, objectType, snapshot.bindName(), false);
-        pattern.setSource(new EntryPointId(snapshot.entryPoint()));
+        Pattern pattern = new Pattern(patternId++, 0, 0, objectType, parseResult.bindName(), false);
+        pattern.setSource(new EntryPointId(parseResult.entryPoint()));
 
         Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
         org.mvel3.transpiler.context.Declaration<?>[] declarations = extractDeclarations(patternClass);
-        for (String expression : snapshot.conditions()) {
+        for (String expression : parseResult.conditions()) {
             List<DrlxToRuleImplVisitor.BoundVariable> referencedBindings = findReferencedBindings(expression, boundVariables);
             Constraint constraint = referencedBindings.isEmpty()
                     ? createLambdaConstraint(expression, patternClass, declarations)

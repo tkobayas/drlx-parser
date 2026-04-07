@@ -15,8 +15,8 @@ public final class DrlxRuleAstProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
-  public interface CompilationUnitSnapshotOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.CompilationUnitSnapshot)
+  public interface CompilationUnitParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.CompilationUnitParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -69,42 +69,42 @@ public final class DrlxRuleAstProto {
         getImportsBytes(int index);
 
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
-    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> 
+    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> 
         getRulesList();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getRules(int index);
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getRules(int index);
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     int getRulesCount();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
-    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder> 
+    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder> 
         getRulesOrBuilderList();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder getRulesOrBuilder(
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder getRulesOrBuilder(
         int index);
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.CompilationUnitSnapshot}
+   * Protobuf type {@code org.drools.drlx.builder.proto.CompilationUnitParseResult}
    */
-  public static final class CompilationUnitSnapshot extends
+  public static final class CompilationUnitParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.CompilationUnitSnapshot)
-      CompilationUnitSnapshotOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.CompilationUnitParseResult)
+      CompilationUnitParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use CompilationUnitSnapshot.newBuilder() to construct.
-    private CompilationUnitSnapshot(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use CompilationUnitParseResult.newBuilder() to construct.
+    private CompilationUnitParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private CompilationUnitSnapshot() {
+    private CompilationUnitParseResult() {
       sourceHash_ = "";
       packageName_ = "";
       imports_ =
@@ -116,20 +116,20 @@ public final class DrlxRuleAstProto {
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new CompilationUnitSnapshot();
+      return new CompilationUnitParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.Builder.class);
     }
 
     public static final int SOURCE_HASH_FIELD_NUMBER = 1;
@@ -249,41 +249,41 @@ public final class DrlxRuleAstProto {
 
     public static final int RULES_FIELD_NUMBER = 4;
     @SuppressWarnings("serial")
-    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> rules_;
+    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> rules_;
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     @java.lang.Override
-    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> getRulesList() {
+    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> getRulesList() {
       return rules_;
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder> 
+    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder> 
         getRulesOrBuilderList() {
       return rules_;
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     @java.lang.Override
     public int getRulesCount() {
       return rules_.size();
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getRules(int index) {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getRules(int index) {
       return rules_.get(index);
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder getRulesOrBuilder(
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder getRulesOrBuilder(
         int index) {
       return rules_.get(index);
     }
@@ -351,10 +351,10 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult) obj;
 
       if (!getSourceHash()
           .equals(other.getSourceHash())) return false;
@@ -392,44 +392,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -437,26 +437,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -469,7 +469,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -485,26 +485,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.CompilationUnitSnapshot}
+     * Protobuf type {@code org.drools.drlx.builder.proto.CompilationUnitParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.CompilationUnitSnapshot)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshotOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.CompilationUnitParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.newBuilder()
       private Builder() {
 
       }
@@ -535,17 +535,17 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -553,15 +553,15 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult(this);
         buildPartialRepeatedFields(result);
         if (bitField0_ != 0) { buildPartial0(result); }
         onBuilt();
         return result;
       }
 
-      private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot result) {
+      private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult result) {
         if (rulesBuilder_ == null) {
           if (((bitField0_ & 0x00000008) != 0)) {
             rules_ = java.util.Collections.unmodifiableList(rules_);
@@ -573,7 +573,7 @@ public final class DrlxRuleAstProto {
         }
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult result) {
         int from_bitField0_ = bitField0_;
         if (((from_bitField0_ & 0x00000001) != 0)) {
           result.sourceHash_ = sourceHash_;
@@ -621,16 +621,16 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult.getDefaultInstance()) return this;
         if (!other.getSourceHash().isEmpty()) {
           sourceHash_ = other.sourceHash_;
           bitField0_ |= 0x00000001;
@@ -720,9 +720,9 @@ public final class DrlxRuleAstProto {
                 break;
               } // case 26
               case 34: {
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot m =
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult m =
                     input.readMessage(
-                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.parser(),
+                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.parser(),
                         extensionRegistry);
                 if (rulesBuilder_ == null) {
                   ensureRulesIsMutable();
@@ -1004,22 +1004,22 @@ public final class DrlxRuleAstProto {
         return this;
       }
 
-      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> rules_ =
+      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> rules_ =
         java.util.Collections.emptyList();
       private void ensureRulesIsMutable() {
         if (!((bitField0_ & 0x00000008) != 0)) {
-          rules_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot>(rules_);
+          rules_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult>(rules_);
           bitField0_ |= 0x00000008;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder> rulesBuilder_;
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder> rulesBuilder_;
 
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> getRulesList() {
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> getRulesList() {
         if (rulesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(rules_);
         } else {
@@ -1027,7 +1027,7 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public int getRulesCount() {
         if (rulesBuilder_ == null) {
@@ -1037,9 +1037,9 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getRules(int index) {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getRules(int index) {
         if (rulesBuilder_ == null) {
           return rules_.get(index);
         } else {
@@ -1047,10 +1047,10 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder setRules(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot value) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult value) {
         if (rulesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1064,10 +1064,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder setRules(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder builderForValue) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder builderForValue) {
         if (rulesBuilder_ == null) {
           ensureRulesIsMutable();
           rules_.set(index, builderForValue.build());
@@ -1078,9 +1078,9 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public Builder addRules(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot value) {
+      public Builder addRules(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult value) {
         if (rulesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1094,10 +1094,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder addRules(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot value) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult value) {
         if (rulesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1111,10 +1111,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder addRules(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder builderForValue) {
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder builderForValue) {
         if (rulesBuilder_ == null) {
           ensureRulesIsMutable();
           rules_.add(builderForValue.build());
@@ -1125,10 +1125,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder addRules(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder builderForValue) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder builderForValue) {
         if (rulesBuilder_ == null) {
           ensureRulesIsMutable();
           rules_.add(index, builderForValue.build());
@@ -1139,10 +1139,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder addAllRules(
-          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot> values) {
+          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult> values) {
         if (rulesBuilder_ == null) {
           ensureRulesIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -1154,7 +1154,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder clearRules() {
         if (rulesBuilder_ == null) {
@@ -1167,7 +1167,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
       public Builder removeRules(int index) {
         if (rulesBuilder_ == null) {
@@ -1180,16 +1180,16 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder getRulesBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder getRulesBuilder(
           int index) {
         return getRulesFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder getRulesOrBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder getRulesOrBuilder(
           int index) {
         if (rulesBuilder_ == null) {
           return rules_.get(index);  } else {
@@ -1197,9 +1197,9 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder> 
+      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder> 
            getRulesOrBuilderList() {
         if (rulesBuilder_ != null) {
           return rulesBuilder_.getMessageOrBuilderList();
@@ -1208,33 +1208,33 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder addRulesBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder addRulesBuilder() {
         return getRulesFieldBuilder().addBuilder(
-            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.getDefaultInstance());
+            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.getDefaultInstance());
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder addRulesBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder addRulesBuilder(
           int index) {
         return getRulesFieldBuilder().addBuilder(
-            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.getDefaultInstance());
+            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.getDefaultInstance());
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleSnapshot rules = 4;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleParseResult rules = 4;</code>
        */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder> 
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder> 
            getRulesBuilderList() {
         return getRulesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder> 
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder> 
           getRulesFieldBuilder() {
         if (rulesBuilder_ == null) {
           rulesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder>(
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder>(
                   rules_,
                   ((bitField0_ & 0x00000008) != 0),
                   getParentForChildren(),
@@ -1256,23 +1256,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.CompilationUnitSnapshot)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.CompilationUnitParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.CompilationUnitSnapshot)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.CompilationUnitParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<CompilationUnitSnapshot>
-        PARSER = new com.google.protobuf.AbstractParser<CompilationUnitSnapshot>() {
+    private static final com.google.protobuf.Parser<CompilationUnitParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<CompilationUnitParseResult>() {
       @java.lang.Override
-      public CompilationUnitSnapshot parsePartialFrom(
+      public CompilationUnitParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1291,24 +1291,24 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<CompilationUnitSnapshot> parser() {
+    public static com.google.protobuf.Parser<CompilationUnitParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<CompilationUnitSnapshot> getParserForType() {
+    public com.google.protobuf.Parser<CompilationUnitParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitSnapshot getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.CompilationUnitParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface RuleSnapshotOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleSnapshot)
+  public interface RuleParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -1324,42 +1324,42 @@ public final class DrlxRuleAstProto {
         getNameBytes();
 
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
-    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> 
+    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> 
         getItemsList();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getItems(int index);
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index);
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     int getItemsCount();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
-    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder> 
+    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
         getItemsOrBuilderList();
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder getItemsOrBuilder(
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
         int index);
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.RuleSnapshot}
+   * Protobuf type {@code org.drools.drlx.builder.proto.RuleParseResult}
    */
-  public static final class RuleSnapshot extends
+  public static final class RuleParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleSnapshot)
-      RuleSnapshotOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleParseResult)
+      RuleParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use RuleSnapshot.newBuilder() to construct.
-    private RuleSnapshot(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use RuleParseResult.newBuilder() to construct.
+    private RuleParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private RuleSnapshot() {
+    private RuleParseResult() {
       name_ = "";
       items_ = java.util.Collections.emptyList();
     }
@@ -1368,20 +1368,20 @@ public final class DrlxRuleAstProto {
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new RuleSnapshot();
+      return new RuleParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleSnapshot_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder.class);
     }
 
     public static final int NAME_FIELD_NUMBER = 1;
@@ -1425,41 +1425,41 @@ public final class DrlxRuleAstProto {
 
     public static final int ITEMS_FIELD_NUMBER = 2;
     @SuppressWarnings("serial")
-    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> items_;
+    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> items_;
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> getItemsList() {
+    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> getItemsList() {
       return items_;
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     @java.lang.Override
-    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder> 
+    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
         getItemsOrBuilderList() {
       return items_;
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     @java.lang.Override
     public int getItemsCount() {
       return items_.size();
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getItems(int index) {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index) {
       return items_.get(index);
     }
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder getItemsOrBuilder(
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
         int index) {
       return items_.get(index);
     }
@@ -1510,10 +1510,10 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult) obj;
 
       if (!getName()
           .equals(other.getName())) return false;
@@ -1541,44 +1541,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1586,26 +1586,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -1618,7 +1618,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -1634,26 +1634,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.RuleSnapshot}
+     * Protobuf type {@code org.drools.drlx.builder.proto.RuleParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleSnapshot)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshotOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleSnapshot_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.newBuilder()
       private Builder() {
 
       }
@@ -1681,17 +1681,17 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -1699,15 +1699,15 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult(this);
         buildPartialRepeatedFields(result);
         if (bitField0_ != 0) { buildPartial0(result); }
         onBuilt();
         return result;
       }
 
-      private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot result) {
+      private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult result) {
         if (itemsBuilder_ == null) {
           if (((bitField0_ & 0x00000002) != 0)) {
             items_ = java.util.Collections.unmodifiableList(items_);
@@ -1719,7 +1719,7 @@ public final class DrlxRuleAstProto {
         }
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult result) {
         int from_bitField0_ = bitField0_;
         if (((from_bitField0_ & 0x00000001) != 0)) {
           result.name_ = name_;
@@ -1760,16 +1760,16 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.getDefaultInstance()) return this;
         if (!other.getName().isEmpty()) {
           name_ = other.name_;
           bitField0_ |= 0x00000001;
@@ -1833,9 +1833,9 @@ public final class DrlxRuleAstProto {
                 break;
               } // case 10
               case 18: {
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot m =
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult m =
                     input.readMessage(
-                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.parser(),
+                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.parser(),
                         extensionRegistry);
                 if (itemsBuilder_ == null) {
                   ensureItemsIsMutable();
@@ -1934,22 +1934,22 @@ public final class DrlxRuleAstProto {
         return this;
       }
 
-      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> items_ =
+      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> items_ =
         java.util.Collections.emptyList();
       private void ensureItemsIsMutable() {
         if (!((bitField0_ & 0x00000002) != 0)) {
-          items_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot>(items_);
+          items_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult>(items_);
           bitField0_ |= 0x00000002;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder> itemsBuilder_;
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> itemsBuilder_;
 
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> getItemsList() {
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> getItemsList() {
         if (itemsBuilder_ == null) {
           return java.util.Collections.unmodifiableList(items_);
         } else {
@@ -1957,7 +1957,7 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public int getItemsCount() {
         if (itemsBuilder_ == null) {
@@ -1967,9 +1967,9 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getItems(int index) {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index) {
         if (itemsBuilder_ == null) {
           return items_.get(index);
         } else {
@@ -1977,10 +1977,10 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder setItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot value) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
         if (itemsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -1994,10 +1994,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder setItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder builderForValue) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
         if (itemsBuilder_ == null) {
           ensureItemsIsMutable();
           items_.set(index, builderForValue.build());
@@ -2008,9 +2008,9 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public Builder addItems(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot value) {
+      public Builder addItems(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
         if (itemsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2024,10 +2024,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder addItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot value) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
         if (itemsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2041,10 +2041,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder addItems(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder builderForValue) {
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
         if (itemsBuilder_ == null) {
           ensureItemsIsMutable();
           items_.add(builderForValue.build());
@@ -2055,10 +2055,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder addItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder builderForValue) {
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
         if (itemsBuilder_ == null) {
           ensureItemsIsMutable();
           items_.add(index, builderForValue.build());
@@ -2069,10 +2069,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder addAllItems(
-          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot> values) {
+          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> values) {
         if (itemsBuilder_ == null) {
           ensureItemsIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -2084,7 +2084,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder clearItems() {
         if (itemsBuilder_ == null) {
@@ -2097,7 +2097,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
       public Builder removeItems(int index) {
         if (itemsBuilder_ == null) {
@@ -2110,16 +2110,16 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder getItemsBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder getItemsBuilder(
           int index) {
         return getItemsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder getItemsOrBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
           int index) {
         if (itemsBuilder_ == null) {
           return items_.get(index);  } else {
@@ -2127,9 +2127,9 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder> 
+      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
            getItemsOrBuilderList() {
         if (itemsBuilder_ != null) {
           return itemsBuilder_.getMessageOrBuilderList();
@@ -2138,33 +2138,33 @@ public final class DrlxRuleAstProto {
         }
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder addItemsBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder addItemsBuilder() {
         return getItemsFieldBuilder().addBuilder(
-            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.getDefaultInstance());
+            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance());
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder addItemsBuilder(
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder addItemsBuilder(
           int index) {
         return getItemsFieldBuilder().addBuilder(
-            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.getDefaultInstance());
+            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance());
       }
       /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemSnapshot items = 2;</code>
+       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
        */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder> 
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder> 
            getItemsBuilderList() {
         return getItemsFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder> 
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
           getItemsFieldBuilder() {
         if (itemsBuilder_ == null) {
           itemsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder>(
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder>(
                   items_,
                   ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
@@ -2186,23 +2186,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleSnapshot)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleSnapshot)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<RuleSnapshot>
-        PARSER = new com.google.protobuf.AbstractParser<RuleSnapshot>() {
+    private static final com.google.protobuf.Parser<RuleParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<RuleParseResult>() {
       @java.lang.Override
-      public RuleSnapshot parsePartialFrom(
+      public RuleParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2221,91 +2221,91 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<RuleSnapshot> parser() {
+    public static com.google.protobuf.Parser<RuleParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<RuleSnapshot> getParserForType() {
+    public com.google.protobuf.Parser<RuleParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleSnapshot getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface RuleItemSnapshotOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleItemSnapshot)
+  public interface RuleItemParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleItemParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      * @return Whether the pattern field is set.
      */
     boolean hasPattern();
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      * @return The pattern.
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getPattern();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getPattern();
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder getPatternOrBuilder();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder();
 
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      * @return Whether the consequence field is set.
      */
     boolean hasConsequence();
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      * @return The consequence.
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getConsequence();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence();
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder getConsequenceOrBuilder();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder();
 
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.ItemCase getItemCase();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.ItemCase getItemCase();
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemSnapshot}
+   * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemParseResult}
    */
-  public static final class RuleItemSnapshot extends
+  public static final class RuleItemParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleItemSnapshot)
-      RuleItemSnapshotOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleItemParseResult)
+      RuleItemParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use RuleItemSnapshot.newBuilder() to construct.
-    private RuleItemSnapshot(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use RuleItemParseResult.newBuilder() to construct.
+    private RuleItemParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private RuleItemSnapshot() {
+    private RuleItemParseResult() {
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new RuleItemSnapshot();
+      return new RuleItemParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder.class);
     }
 
     private int itemCase_ = 0;
@@ -2352,7 +2352,7 @@ public final class DrlxRuleAstProto {
 
     public static final int PATTERN_FIELD_NUMBER = 1;
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      * @return Whether the pattern field is set.
      */
     @java.lang.Override
@@ -2360,30 +2360,30 @@ public final class DrlxRuleAstProto {
       return itemCase_ == 1;
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      * @return The pattern.
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getPattern() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getPattern() {
       if (itemCase_ == 1) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_;
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+     * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder getPatternOrBuilder() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder() {
       if (itemCase_ == 1) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_;
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
     }
 
     public static final int CONSEQUENCE_FIELD_NUMBER = 2;
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      * @return Whether the consequence field is set.
      */
     @java.lang.Override
@@ -2391,25 +2391,25 @@ public final class DrlxRuleAstProto {
       return itemCase_ == 2;
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      * @return The consequence.
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getConsequence() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence() {
       if (itemCase_ == 2) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_;
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder getConsequenceOrBuilder() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder() {
       if (itemCase_ == 2) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_;
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2427,10 +2427,10 @@ public final class DrlxRuleAstProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (itemCase_ == 1) {
-        output.writeMessage(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_);
+        output.writeMessage(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_);
       }
       if (itemCase_ == 2) {
-        output.writeMessage(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_);
+        output.writeMessage(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2443,11 +2443,11 @@ public final class DrlxRuleAstProto {
       size = 0;
       if (itemCase_ == 1) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_);
+          .computeMessageSize(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_);
       }
       if (itemCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_);
+          .computeMessageSize(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -2459,10 +2459,10 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult) obj;
 
       if (!getItemCase().equals(other.getItemCase())) return false;
       switch (itemCase_) {
@@ -2505,44 +2505,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2550,26 +2550,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -2582,7 +2582,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -2598,26 +2598,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemSnapshot}
+     * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleItemSnapshot)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshotOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleItemParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.newBuilder()
       private Builder() {
 
       }
@@ -2645,17 +2645,17 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -2663,19 +2663,19 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult(this);
         if (bitField0_ != 0) { buildPartial0(result); }
         buildPartialOneofs(result);
         onBuilt();
         return result;
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result) {
         int from_bitField0_ = bitField0_;
       }
 
-      private void buildPartialOneofs(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot result) {
+      private void buildPartialOneofs(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result) {
         result.itemCase_ = itemCase_;
         result.item_ = this.item_;
         if (itemCase_ == 1 &&
@@ -2722,16 +2722,16 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance()) return this;
         switch (other.getItemCase()) {
           case PATTERN: {
             mergePattern(other.getPattern());
@@ -2818,9 +2818,9 @@ public final class DrlxRuleAstProto {
       private int bitField0_;
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder> patternBuilder_;
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder> patternBuilder_;
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        * @return Whether the pattern field is set.
        */
       @java.lang.Override
@@ -2828,27 +2828,27 @@ public final class DrlxRuleAstProto {
         return itemCase_ == 1;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        * @return The pattern.
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getPattern() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getPattern() {
         if (patternBuilder_ == null) {
           if (itemCase_ == 1) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_;
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
         } else {
           if (itemCase_ == 1) {
             return patternBuilder_.getMessage();
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
-      public Builder setPattern(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot value) {
+      public Builder setPattern(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult value) {
         if (patternBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -2862,10 +2862,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
       public Builder setPattern(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder builderForValue) {
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder builderForValue) {
         if (patternBuilder_ == null) {
           item_ = builderForValue.build();
           onChanged();
@@ -2876,13 +2876,13 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
-      public Builder mergePattern(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot value) {
+      public Builder mergePattern(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult value) {
         if (patternBuilder_ == null) {
           if (itemCase_ == 1 &&
-              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance()) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_)
+              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance()) {
+            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_)
                 .mergeFrom(value).buildPartial();
           } else {
             item_ = value;
@@ -2899,7 +2899,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
       public Builder clearPattern() {
         if (patternBuilder_ == null) {
@@ -2918,38 +2918,38 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder getPatternBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder getPatternBuilder() {
         return getPatternFieldBuilder().getBuilder();
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder getPatternOrBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder() {
         if ((itemCase_ == 1) && (patternBuilder_ != null)) {
           return patternBuilder_.getMessageOrBuilder();
         } else {
           if (itemCase_ == 1) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_;
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.PatternSnapshot pattern = 1;</code>
+       * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder> 
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder> 
           getPatternFieldBuilder() {
         if (patternBuilder_ == null) {
           if (!(itemCase_ == 1)) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
           }
           patternBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder>(
-                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) item_,
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder>(
+                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_,
                   getParentForChildren(),
                   isClean());
           item_ = null;
@@ -2960,9 +2960,9 @@ public final class DrlxRuleAstProto {
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder> consequenceBuilder_;
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> consequenceBuilder_;
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        * @return Whether the consequence field is set.
        */
       @java.lang.Override
@@ -2970,27 +2970,27 @@ public final class DrlxRuleAstProto {
         return itemCase_ == 2;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        * @return The consequence.
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getConsequence() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence() {
         if (consequenceBuilder_ == null) {
           if (itemCase_ == 2) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_;
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
         } else {
           if (itemCase_ == 2) {
             return consequenceBuilder_.getMessage();
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
-      public Builder setConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot value) {
+      public Builder setConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
         if (consequenceBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -3004,10 +3004,10 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
       public Builder setConsequence(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder builderForValue) {
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder builderForValue) {
         if (consequenceBuilder_ == null) {
           item_ = builderForValue.build();
           onChanged();
@@ -3018,13 +3018,13 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
-      public Builder mergeConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot value) {
+      public Builder mergeConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
         if (consequenceBuilder_ == null) {
           if (itemCase_ == 2 &&
-              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance()) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_)
+              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance()) {
+            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_)
                 .mergeFrom(value).buildPartial();
           } else {
             item_ = value;
@@ -3041,7 +3041,7 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
       public Builder clearConsequence() {
         if (consequenceBuilder_ == null) {
@@ -3060,38 +3060,38 @@ public final class DrlxRuleAstProto {
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder getConsequenceBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder getConsequenceBuilder() {
         return getConsequenceFieldBuilder().getBuilder();
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder getConsequenceOrBuilder() {
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder() {
         if ((itemCase_ == 2) && (consequenceBuilder_ != null)) {
           return consequenceBuilder_.getMessageOrBuilder();
         } else {
           if (itemCase_ == 2) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_;
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceSnapshot consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder> 
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> 
           getConsequenceFieldBuilder() {
         if (consequenceBuilder_ == null) {
           if (!(itemCase_ == 2)) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
           }
           consequenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder>(
-                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) item_,
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder>(
+                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_,
                   getParentForChildren(),
                   isClean());
           item_ = null;
@@ -3113,23 +3113,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleItemSnapshot)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleItemParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleItemSnapshot)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleItemParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<RuleItemSnapshot>
-        PARSER = new com.google.protobuf.AbstractParser<RuleItemSnapshot>() {
+    private static final com.google.protobuf.Parser<RuleItemParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<RuleItemParseResult>() {
       @java.lang.Override
-      public RuleItemSnapshot parsePartialFrom(
+      public RuleItemParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3148,24 +3148,24 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<RuleItemSnapshot> parser() {
+    public static com.google.protobuf.Parser<RuleItemParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<RuleItemSnapshot> getParserForType() {
+    public com.google.protobuf.Parser<RuleItemParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemSnapshot getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface PatternSnapshotOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.PatternSnapshot)
+  public interface PatternParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.PatternParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -3230,18 +3230,18 @@ public final class DrlxRuleAstProto {
         getConditionsBytes(int index);
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.PatternSnapshot}
+   * Protobuf type {@code org.drools.drlx.builder.proto.PatternParseResult}
    */
-  public static final class PatternSnapshot extends
+  public static final class PatternParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.PatternSnapshot)
-      PatternSnapshotOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.PatternParseResult)
+      PatternParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use PatternSnapshot.newBuilder() to construct.
-    private PatternSnapshot(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use PatternParseResult.newBuilder() to construct.
+    private PatternParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private PatternSnapshot() {
+    private PatternParseResult() {
       typeName_ = "";
       bindName_ = "";
       entryPoint_ = "";
@@ -3253,20 +3253,20 @@ public final class DrlxRuleAstProto {
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new PatternSnapshot();
+      return new PatternParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternSnapshot_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder.class);
     }
 
     public static final int TYPE_NAME_FIELD_NUMBER = 1;
@@ -3485,10 +3485,10 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) obj;
 
       if (!getTypeName()
           .equals(other.getTypeName())) return false;
@@ -3524,44 +3524,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3569,26 +3569,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3601,7 +3601,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -3617,26 +3617,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.PatternSnapshot}
+     * Protobuf type {@code org.drools.drlx.builder.proto.PatternParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.PatternSnapshot)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshotOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.PatternParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternSnapshot_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.newBuilder()
       private Builder() {
 
       }
@@ -3661,17 +3661,17 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -3679,14 +3679,14 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult(this);
         if (bitField0_ != 0) { buildPartial0(result); }
         onBuilt();
         return result;
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult result) {
         int from_bitField0_ = bitField0_;
         if (((from_bitField0_ & 0x00000001) != 0)) {
           result.typeName_ = typeName_;
@@ -3737,16 +3737,16 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance()) return this;
         if (!other.getTypeName().isEmpty()) {
           typeName_ = other.typeName_;
           bitField0_ |= 0x00000001;
@@ -4175,23 +4175,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.PatternSnapshot)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.PatternParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.PatternSnapshot)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.PatternParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<PatternSnapshot>
-        PARSER = new com.google.protobuf.AbstractParser<PatternSnapshot>() {
+    private static final com.google.protobuf.Parser<PatternParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<PatternParseResult>() {
       @java.lang.Override
-      public PatternSnapshot parsePartialFrom(
+      public PatternParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -4210,24 +4210,24 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<PatternSnapshot> parser() {
+    public static com.google.protobuf.Parser<PatternParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<PatternSnapshot> getParserForType() {
+    public com.google.protobuf.Parser<PatternParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternSnapshot getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
-  public interface ConsequenceSnapshotOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.ConsequenceSnapshot)
+  public interface ConsequenceParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.ConsequenceParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -4243,18 +4243,18 @@ public final class DrlxRuleAstProto {
         getBlockBytes();
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.ConsequenceSnapshot}
+   * Protobuf type {@code org.drools.drlx.builder.proto.ConsequenceParseResult}
    */
-  public static final class ConsequenceSnapshot extends
+  public static final class ConsequenceParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.ConsequenceSnapshot)
-      ConsequenceSnapshotOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.ConsequenceParseResult)
+      ConsequenceParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use ConsequenceSnapshot.newBuilder() to construct.
-    private ConsequenceSnapshot(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use ConsequenceParseResult.newBuilder() to construct.
+    private ConsequenceParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private ConsequenceSnapshot() {
+    private ConsequenceParseResult() {
       block_ = "";
     }
 
@@ -4262,20 +4262,20 @@ public final class DrlxRuleAstProto {
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new ConsequenceSnapshot();
+      return new ConsequenceParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder.class);
     }
 
     public static final int BLOCK_FIELD_NUMBER = 1;
@@ -4356,10 +4356,10 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) obj;
 
       if (!getBlock()
           .equals(other.getBlock())) return false;
@@ -4381,44 +4381,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -4426,26 +4426,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -4458,7 +4458,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -4474,26 +4474,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.ConsequenceSnapshot}
+     * Protobuf type {@code org.drools.drlx.builder.proto.ConsequenceParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.ConsequenceSnapshot)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshotOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.ConsequenceParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.newBuilder()
       private Builder() {
 
       }
@@ -4514,17 +4514,17 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -4532,14 +4532,14 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult(this);
         if (bitField0_ != 0) { buildPartial0(result); }
         onBuilt();
         return result;
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult result) {
         int from_bitField0_ = bitField0_;
         if (((from_bitField0_ & 0x00000001) != 0)) {
           result.block_ = block_;
@@ -4580,16 +4580,16 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot.getDefaultInstance()) return this;
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance()) return this;
         if (!other.getBlock().isEmpty()) {
           block_ = other.block_;
           bitField0_ |= 0x00000001;
@@ -4727,23 +4727,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.ConsequenceSnapshot)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.ConsequenceParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.ConsequenceSnapshot)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.ConsequenceParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<ConsequenceSnapshot>
-        PARSER = new com.google.protobuf.AbstractParser<ConsequenceSnapshot>() {
+    private static final com.google.protobuf.Parser<ConsequenceParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<ConsequenceParseResult>() {
       @java.lang.Override
-      public ConsequenceSnapshot parsePartialFrom(
+      public ConsequenceParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -4762,47 +4762,47 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<ConsequenceSnapshot> parser() {
+    public static com.google.protobuf.Parser<ConsequenceParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<ConsequenceSnapshot> getParserForType() {
+    public com.google.protobuf.Parser<ConsequenceParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceSnapshot getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor;
+    internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor;
+    internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_RuleSnapshot_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor;
+    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor;
+    internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_PatternSnapshot_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor;
+    internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4813,20 +4813,20 @@ public final class DrlxRuleAstProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\023drlx_rule_ast.proto\022\035org.drools.drlx.b" +
-      "uilder.proto\"\221\001\n\027CompilationUnitSnapshot" +
+      "uilder.proto\"\221\001\n\027CompilationUnitParseResult" +
       "\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name\030\002 " +
       "\001(\t\022\017\n\007imports\030\003 \003(\t\022:\n\005rules\030\004 \003(\0132+.or" +
-      "g.drools.drlx.builder.proto.RuleSnapshot" +
-      "\"\\\n\014RuleSnapshot\022\014\n\004name\030\001 \001(\t\022>\n\005items\030" +
+      "g.drools.drlx.builder.proto.RuleParseResult" +
+      "\"\\\n\014RuleParseResult\022\014\n\004name\030\001 \001(\t\022>\n\005items\030" +
       "\002 \003(\0132/.org.drools.drlx.builder.proto.Ru" +
-      "leItemSnapshot\"\250\001\n\020RuleItemSnapshot\022A\n\007p" +
+      "leItemParseResult\"\250\001\n\020RuleItemParseResult\022A\n\007p" +
       "attern\030\001 \001(\0132..org.drools.drlx.builder.p" +
-      "roto.PatternSnapshotH\000\022I\n\013consequence\030\002 " +
+      "roto.PatternParseResultH\000\022I\n\013consequence\030\002 " +
       "\001(\01322.org.drools.drlx.builder.proto.Cons" +
-      "equenceSnapshotH\000B\006\n\004item\"`\n\017PatternSnap" +
-      "shot\022\021\n\ttype_name\030\001 \001(\t\022\021\n\tbind_name\030\002 \001" +
+      "equenceParseResultH\000B\006\n\004item\"`\n\017PatternParseRe" +
+      "sult\022\021\n\ttype_name\030\001 \001(\t\022\021\n\tbind_name\030\002 \001" +
       "(\t\022\023\n\013entry_point\030\003 \001(\t\022\022\n\nconditions\030\004 " +
-      "\003(\t\"$\n\023ConsequenceSnapshot\022\r\n\005block\030\001 \001(" +
+      "\003(\t\"$\n\023ConsequenceParseResult\022\r\n\005block\030\001 \001(" +
       "\tB1\n\035org.drools.drlx.builder.protoB\020Drlx" +
       "RuleAstProtob\006proto3"
     };
@@ -4834,35 +4834,35 @@ public final class DrlxRuleAstProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         });
-    internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor =
+    internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_CompilationUnitSnapshot_descriptor,
+        internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor,
         new java.lang.String[] { "SourceHash", "PackageName", "Imports", "Rules", });
-    internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor =
+    internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_org_drools_drlx_builder_proto_RuleSnapshot_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_RuleSnapshot_descriptor,
+        internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor,
         new java.lang.String[] { "Name", "Items", });
-    internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor =
+    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_RuleItemSnapshot_descriptor,
+        internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor,
         new java.lang.String[] { "Pattern", "Consequence", "Item", });
-    internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor =
+    internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor =
       getDescriptor().getMessageTypes().get(3);
-    internal_static_org_drools_drlx_builder_proto_PatternSnapshot_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_PatternSnapshot_descriptor,
+        internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor,
         new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", });
-    internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor =
+    internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_ConsequenceSnapshot_descriptor,
+        internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor,
         new java.lang.String[] { "Block", });
   }
 

@@ -6,7 +6,7 @@ import java.nio.file.Path;
 
 import org.drools.drlx.builder.DrlxBuildCacheStrategy;
 import org.drools.drlx.builder.DrlxLambdaMetadata;
-import org.drools.drlx.builder.DrlxRuleAstSnapshot;
+import org.drools.drlx.builder.DrlxRuleAstParseResult;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class DrlxCompilerTest {
 
     @Test
-    void testTwoStepBuildWithRuleAstSnapshot() throws IOException {
+    void testTwoStepBuildWithRuleAstParseResult() throws IOException {
         String previousStrategy = System.getProperty(DrlxBuildCacheStrategy.PROPERTY);
         System.setProperty(DrlxBuildCacheStrategy.PROPERTY, "ruleAst");
 
@@ -48,9 +48,9 @@ class DrlxCompilerTest {
             compiler.preBuild(rule);
 
             Path metadataFile = DrlxLambdaMetadata.metadataFilePath(outputDir);
-            Path snapshotFile = DrlxRuleAstSnapshot.snapshotFilePath(outputDir);
+            Path parseResultFile = DrlxRuleAstParseResult.parseResultFilePath(outputDir);
             assertThat(Files.exists(metadataFile)).isTrue();
-            assertThat(Files.exists(snapshotFile)).isTrue();
+            assertThat(Files.exists(parseResultFile)).isTrue();
 
             KieBase kieBase = compiler.build(rule);
             KieSession kieSession = kieBase.newKieSession();
