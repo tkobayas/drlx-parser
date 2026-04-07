@@ -15,6 +15,7 @@ import org.drools.core.reteoo.ReteDumper;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.EntryPoint;
@@ -23,6 +24,7 @@ import org.mvel3.lambdaextractor.LambdaRegistry;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mvel3.lambdaextractor.LambdaRegistry.DEFAULT_PERSISTENCE_PATH;
 
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxRuleBuilderTest {
 
     @Test

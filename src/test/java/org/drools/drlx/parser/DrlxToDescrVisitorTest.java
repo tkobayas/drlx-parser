@@ -27,9 +27,11 @@ import org.drools.drl.ast.descr.PatternDescr;
 import org.drools.drl.ast.descr.RuleDescr;
 import org.drools.drlx.util.DrlxHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxToDescrVisitorTest {
 
     @Test

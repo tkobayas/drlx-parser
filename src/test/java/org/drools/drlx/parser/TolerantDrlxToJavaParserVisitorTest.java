@@ -35,6 +35,7 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.drools.drlx.util.DrlxHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.mvel3.parser.ast.expr.BigDecimalLiteralExpr;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
@@ -45,6 +46,7 @@ import org.mvel3.parser.ast.expr.RulePattern;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
 
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class TolerantDrlxToJavaParserVisitorTest {
 
     @Test

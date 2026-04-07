@@ -20,6 +20,7 @@
 package org.drools.drlx.parser;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsAntlrAST;
@@ -29,6 +30,7 @@ import static org.drools.drlx.util.DrlxHelper.parseExpressionAsAntlrAST;
 /**
  * Parse DRLX expressions and rules using the DrlxParser and verify the resulting antlr AST structure.
  */
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxParserTest {
 
     @Test

@@ -11,12 +11,14 @@ import org.drools.drlx.builder.DrlxRuleAstSnapshot;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxCompilerTest {
 
     @Test

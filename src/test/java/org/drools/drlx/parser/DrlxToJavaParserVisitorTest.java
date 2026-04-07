@@ -34,6 +34,7 @@ import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.mvel3.parser.ast.expr.DrlxExpression;
 import org.mvel3.parser.ast.expr.InlineCastExpr;
 import org.mvel3.parser.ast.expr.OOPathChunk;
@@ -52,6 +53,7 @@ import static org.drools.drlx.util.DrlxHelper.parseDrlxCompilationUnitAsJavaPars
  * Parse DRLX expressions and rules using the DrlxParser and convert the resulting antlr AST tree into JavaParser AST using the DRLXToJavaParserVisitor.
  * Verify the resulting JavaParser AST structure.
  */
+@DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxToJavaParserVisitorTest {
 
     @Test

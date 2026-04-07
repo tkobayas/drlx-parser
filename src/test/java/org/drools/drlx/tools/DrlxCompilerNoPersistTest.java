@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.mvel3.lambdaextractor.LambdaRegistry;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * The Maven surefire plugin is configured to run this class in a separate execution
  * with the required system property.
  */
+@EnabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxCompilerNoPersistTest {
 
     private static final String SINGLE_RULE = """
