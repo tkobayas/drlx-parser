@@ -8,20 +8,26 @@ Drools. It achieves fast startup through a 2-step build strategy: pre-compile
 lambda expressions once (at build time), then reuse them on every subsequent
 startup.
 
-**Coordinates:** `org.drools:drlx-parser:1.0.0-SNAPSHOT`
+**Coordinates:** `org.drools:drlx-parser:1.0.0-SNAPSHOT` (parent)
 **Java:** 17+
 **Key dependencies:** MVEL3 3.0.0-SNAPSHOT, ANTLR4 4.13.1, Drools 10.1.0, Protobuf 3.25.5
 
-## Package Structure
+## Module Structure
 
 ```
-org.drools.drlx
- +-- builder/      Core: rule building, constraints, serialization, pre-build
- +-- parser/       ANTLR grammars + visitors (Descr, JavaParser)
- +-- tools/        Public API (DrlxCompiler)
- +-- perf/         JMH benchmarks
- +-- util/         Helpers (DrlxHelper)
- +-- domain/       Test POJOs (Person, Address) -- should move to src/test
+drlx-parser/                        (parent POM)
+├── drlx-parser-core/               (core library)
+│   ├── src/main: org.drools.drlx
+│   │    +-- builder/    Rule building, constraints, serialization, pre-build
+│   │    +-- parser/     ANTLR grammars + visitors (Descr, JavaParser)
+│   │    +-- tools/      Public API (DrlxCompiler)
+│   │    +-- util/       Helpers (DrlxHelper)
+│   └── src/test: org.drools.drlx
+│        +-- domain/     Test POJOs (Person, Address)
+└── drlx-parser-benchmark/          (JMH benchmarks)
+    └── src/main: org.drools.drlx
+         +-- perf/       JMH benchmarks + PreBuildRunner
+         +-- domain/     Domain POJOs (Person, Address) -- duplicated from core test
 ```
 
 ## DRLX Language
@@ -99,7 +105,7 @@ DRLX source
   v
 DrlxRuleBuilder.preBuild(source, outputDir)
   |-- Parse ANTLR tree
-  |-- persistBuildCache()  -> serialize parse tree or rule AST to protobuf
+  |-- persistBuildCache()  -> serialize rule AST to protobuf
   |-- DrlxPreBuildVisitor
   |     |-- walk tree, compile lambdas
   |     |-- record metadata (rule.counter -> className|physicalId|expression)
@@ -107,8 +113,8 @@ DrlxRuleBuilder.preBuild(source, outputDir)
   v
 Output:
   drlx-lambda-metadata.properties    (lambda mapping)
-  drlx-parse-tree.pb  OR  drlx-rule-ast.pb   (optional cache)
-  *.class files                       (compiled evaluators)
+  drlx-rule-ast.pb                   (compact rule AST cache)
+  *.class files                      (compiled evaluators)
 ```
 
 **Step 2 -- Runtime build (on every startup):**
@@ -119,7 +125,7 @@ DRLX source + pre-built artifacts
   v
 DrlxRuleBuilder.build(source, metadata, cacheDir)
   |-- Try buildFromCache():
-  |     Load protobuf snapshot -> hash check -> rebuild from snapshot
+  |     Load drlx-rule-ast.pb -> hash check -> rebuild from parse-result records
   |-- Fallback: normal parse
   |-- For each constraint/consequence:
   |     Try loadPreCompiledEvaluator() (hash match -> use cached .class)
@@ -139,35 +145,34 @@ KieBase
 
 ### Builder Package
 
-| Class | Lines | Role |
-|-------|-------|------|
-| `DrlxRuleBuilder` | 188 | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
-| `DrlxToRuleImplVisitor` | 486 | Core visitor. Walks ANTLR tree -> RuleImpl, Pattern, constraints, consequences. |
-| `DrlxPreBuildVisitor` | 134 | Extends `DrlxToRuleImplVisitor`. Records lambda metadata during pre-build. |
-| `DrlxRuleAstRuntimeBuilder` | 125 | Extends `DrlxToRuleImplVisitor`. Rebuilds KiePackages from RuleAST parse-result data records. |
-| `DrlxLambdaConstraint` | 128 | Alpha constraint. Wraps `Evaluator<Object, Void, Boolean>`. |
-| `DrlxLambdaBetaConstraint` | 259 | Beta (join) constraint. Wraps `Evaluator<Map<String,Object>, Void, Boolean>`. Uses reflection-based property extraction. |
-| `DrlxLambdaConsequence` | 67 | Consequence action. Wraps `Evaluator<Map<String,Object>, Void, String>`. |
-| `DrlxLambdaMetadata` | 85 | Pipe-delimited properties file for lambda mapping (`rule.counter=fqn\|physicalId\|expression`). |
-| `DrlxParseTreeParseResult` | 221 | Full ANTLR parse tree serialization via protobuf. Rehydrates via reflection. |
-| `DrlxRuleAstParseResult` | 204 | Compact domain-specific AST serialization via protobuf. No reflection needed. |
-| `DrlxBuildCacheStrategy` | 32 | Enum: `NONE`, `PARSE_TREE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
-| `DrlxRuleUnit` | 24 | Wraps unit declaration. |
+| Class | Role |
+|-------|------|
+| `DrlxRuleBuilder` | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
+| `DrlxToRuleImplVisitor` | Core visitor. Walks ANTLR tree -> RuleImpl, Pattern, constraints, consequences. |
+| `DrlxPreBuildVisitor` | Extends `DrlxToRuleImplVisitor`. Records lambda metadata during pre-build. |
+| `DrlxRuleAstRuntimeBuilder` | Extends `DrlxToRuleImplVisitor`. Rebuilds KiePackages from RuleAST parse-result data records. |
+| `DrlxLambdaConstraint` | Alpha constraint. Wraps `Evaluator<Object, Void, Boolean>`. |
+| `DrlxLambdaBetaConstraint` | Beta (join) constraint. Wraps `Evaluator<Map<String,Object>, Void, Boolean>`. Uses reflection-based property extraction. |
+| `DrlxLambdaConsequence` | Consequence action. Wraps `Evaluator<Map<String,Object>, Void, String>`. |
+| `DrlxLambdaMetadata` | Pipe-delimited properties file for lambda mapping (`rule.counter=fqn\|physicalId\|expression`). |
+| `DrlxRuleAstParseResult` | Compact domain-specific AST serialization via protobuf. No reflection needed. |
+| `DrlxBuildCacheStrategy` | Enum: `NONE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
+| `DrlxRuleUnit` | Wraps unit declaration. |
 
 ### Parser Package
 
-| Class | Lines | Role |
-|-------|-------|------|
-| `DrlxToDescrVisitor` | 180 | Legacy: produces `drools-drl-ast` Descriptor objects. |
-| `DrlxToJavaParserVisitor` | 1990 | Converts ANTLR tree to JavaParser AST. Used by tooling (IDE support, formatting). |
-| `TolerantDrlxParser` | 26 | Error-tolerant parsing entry point. |
-| `TolerantDrlxToJavaParserVisitor` | 302 | Error-tolerant variant of `DrlxToJavaParserVisitor`. |
+| Class | Role |
+|-------|------|
+| `DrlxToDescrVisitor` | Legacy: produces `drools-drl-ast` Descriptor objects. |
+| `DrlxToJavaParserVisitor` | Converts ANTLR tree to JavaParser AST. Used by tooling (IDE support, formatting). |
+| `TolerantDrlxParser` | Error-tolerant parsing entry point. |
+| `TolerantDrlxToJavaParserVisitor` | Error-tolerant variant of `DrlxToJavaParserVisitor`. |
 
 ### Utility
 
-| Class | Lines | Role |
-|-------|-------|------|
-| `DrlxHelper` | 164 | Parsing helpers, type resolution, expression extraction. |
+| Class | Role |
+|-------|------|
+| `DrlxHelper` | Parsing helpers, type resolution, expression extraction. |
 
 ## Constraint Types
 
@@ -181,32 +186,31 @@ Alpha and beta constraints differ in how they receive fact data:
 | Example | `age > 18` | `age < $p1.age` |
 | Property access | Direct field access | `Method.invoke()` via cached `PropertyExtractor` |
 
-## Build Cache Strategies
+## Build Cache Strategy: RuleAST
 
-Two protobuf-based serialization strategies, unified under `DrlxBuildCacheStrategy`:
+The `RULE_AST` cache strategy serializes a compact, domain-specific AST to
+protobuf (`drlx-rule-ast.pb`). At load time, `DrlxRuleAstRuntimeBuilder`
+reconstructs `RuleImpl`/`KiePackage` directly from parse-result data records
+-- no ANTLR reflection needed.
 
-| Aspect | `PARSE_TREE` | `RULE_AST` |
-|--------|-------------|-----------|
-| Proto file | `drlx_parse_tree.proto` | `drlx_rule_ast.proto` |
-| Output file | `drlx-parse-tree.pb` | `drlx-rule-ast.pb` |
-| What it saves | Full ANTLR tree + tokens | Domain-specific AST (rules, patterns, conditions as strings) |
-| Loads into | Rehydrated `DrlxCompilationUnitContext` | Java records (`CompilationUnitData`, `RuleData`, `PatternData`, `ConsequenceData`) |
-| Runtime builder | Existing `DrlxToRuleImplVisitor` | `DrlxRuleAstRuntimeBuilder` |
-| Reflection needed | Yes (ANTLR context class instantiation) | No |
-| Skips at load time | ANTLR parsing | ANTLR parsing + tree walking |
+| Aspect | Details |
+|--------|---------|
+| Proto file | `drlx_rule_ast.proto` |
+| Output file | `drlx-rule-ast.pb` |
+| What it saves | Domain-specific AST (rules, patterns, conditions as strings) |
+| Loads into | Java records (`CompilationUnitData`, `RuleData`, `PatternData`, `ConsequenceData`) |
+| Runtime builder | `DrlxRuleAstRuntimeBuilder` |
+| Reflection needed | No |
+| Skips at load time | ANTLR parsing + tree walking |
 
-`RULE_AST` is the preferred strategy -- smaller output, no reflection, skips
-more work. `PARSE_TREE` preserves full fidelity for debugging.
-
-Hash-based invalidation: both strategies store a hash of the source. On load,
-if the hash mismatches, the cache is discarded and normal parsing runs.
+Hash-based invalidation: the strategy stores a SHA-256 hash of the source. On
+load, if the hash mismatches, the cache is discarded and normal parsing runs.
 
 ## Batch Compilation
 
-When `drlx.compiler.batch=true` (default), all lambda sources are collected
-in `pendingLambdas` during tree walking. A single `MVELBatchCompiler.compile()`
-call compiles them all via one javac invocation. This eliminates per-lambda
-compiler startup overhead.
+All lambda sources are collected in `pendingLambdas` during tree walking. A
+single `MVELBatchCompiler.compile()` call compiles them all via one javac
+invocation. This eliminates per-lambda compiler startup overhead.
 
 **Impact:** 2.95x faster for no-persist builds, 8.74x faster for pre-build
 phase (see `PERF_ANALYSIS.md`).
@@ -235,26 +239,21 @@ from parse-result data records instead of ANTLR tree walking.
 
 | Property | Default | Purpose |
 |----------|---------|---------|
-| `drlx.compiler.batch` | `true` | Batch lambda compilation (single javac call) |
-| `drlx.compiler.cacheStrategy` | `none` | Build cache: `none`, `parseTree`, `ruleAst` |
-| `drlx.compiler.serializedParseTree` | `false` | Legacy boolean (backward compat for `PARSE_TREE`) |
+| `drlx.compiler.cacheStrategy` | `none` | Build cache: `none`, `ruleAst` |
 | `mvel3.compiler.lambda.persistence` | `true` | Enable disk I/O for compiled .class files |
 | `mvel3.compiler.lambda.persistence.path` | `target/generated-classes/mvel` | Output directory for pre-built artifacts |
 | `mvel3.compiler.lambda.resetOnTestStartup` | `false` | Clear persisted classes on JVM startup |
 
 ## Performance Characteristics
 
-See `PERF_ANALYSIS.md` for detailed benchmarks. Summary (100 rules, `multiJoin`):
+See `PERF_ANALYSIS.md` for detailed benchmarks. The RuleAST cache strategy
+resolved the multiJoin slowdown that was previously observed (DRLX was 1.84x
+slower than exec-model for multiJoin without caching).
 
-| Scenario | DRLX | Exec-Model | Ratio |
-|----------|------|-----------|-------|
-| NoPersist (cold) | 2,036 ms | 1,247 ms | 1.63x |
-| PreBuild phase | 499 ms | 164 ms | 3.04x |
-| UsingPreBuild (warm) | 2,397 ms | 147 ms | 16.3x |
-
-The `UsingPreBuild` gap is dominated by `defineHiddenClass()` cost per lambda
-at class-loading time. ANTLR parsing cost is eliminated but class definition
-overhead remains.
+Key findings:
+- Batch compilation provides 2.95x speedup for cold builds
+- RuleAST eliminates ANTLR parsing cost at load time
+- Remaining dominant cost: `defineHiddenClass()` per lambda at class-loading time
 
 ## Known Limitations
 
@@ -272,13 +271,13 @@ overhead remains.
    with no escaping. Expressions containing `|` would corrupt the format
    (unlikely in practice since MVEL uses `||`).
 
-5. **`BATCH_ENABLED` flag** -- always true, dead code path for `false` remains.
-
 ## Testing
+
+All tests live in `drlx-parser-core`:
 
 | Test Class | Focus |
 |-----------|-------|
-| `DrlxCompilerTest` | 2-step build, both serialization strategies, lambda deduplication |
+| `DrlxCompilerTest` | 2-step build, RuleAST serialization, lambda deduplication |
 | `DrlxCompilerNoPersistTest` | In-memory build (no disk I/O) |
 | `DrlxRuleBuilderTest` | Direct rule building, alpha/beta/multi-join constraints |
 | `DrlxParserTest` | Low-level ANTLR parser verification |
@@ -288,3 +287,17 @@ overhead remains.
 
 **Framework:** JUnit 5 + AssertJ
 **Domain objects:** `Person` (age, name), `Address` (city)
+
+## Benchmarks
+
+JMH benchmarks live in `drlx-parser-benchmark` (separate module to keep JMH
+dependencies out of the core artifact):
+
+| Class | Purpose |
+|-------|---------|
+| `KieBaseBuildNoPersistenceBenchmark` | Cold-start build (no pre-built artifacts) |
+| `KieBasePreBuildPersistenceBenchmark` | Pre-build phase timing |
+| `KieBaseBuildUsingPreBuildArtifactsBenchmark` | Warm build using pre-built artifacts |
+| `PreBuildRunner` | Separate-JVM pre-compilation for UsingPreBuild benchmark |
+
+Build the benchmark fat jar: `mvn package -DskipTests -Pbenchmark -pl drlx-parser-benchmark -am`

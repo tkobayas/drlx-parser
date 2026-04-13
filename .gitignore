@@ -1,5 +1,5 @@
 # Ignored files deleted by mvn clean
-/target
+target/
 # Ignored files not deleted by mvn clean
 /local
 
@@ -22,9 +22,9 @@
 dependency-reduced-pom.xml
 
 # Antlr related
-src/main/antlr4/org/mvel3/parser/antlr4/gen/
+**/src/main/antlr4/org/mvel3/parser/antlr4/gen/
 gen/
-src/main/antlr4/org/mvel3/parser/antlr4/*.tokens
-src/main/antlr4/org/drools/drlx/parser/*.tokens
+**/src/main/antlr4/org/mvel3/parser/antlr4/*.tokens
+**/src/main/antlr4/org/drools/drlx/parser/*.tokens
 
 /bak

@@ -1,0 +1,20 @@
+# build benchmark
+cd drlx-parser-benchmark/
+mvn clean install
+
+# standard commands for running benchmarks (takes 20mins)
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -gc true -f 1 -wi 10 -i 10 -bm avgt -p ruleCount=100 org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+
+# quick test
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -gc true -f 1 -wi 0 -i 1 -bm ss -p ruleCount=3 -p ruleType=multiJoin org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+
+# async profiler
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -f 1 -bm avgt -wi 5 -i 5 -p ruleCount=100 -p ruleType=join -foe true -prof "async:output=flamegraph;event=cpu;simple=true;dir=/tmp/profile-cpu;libPath=/home/tkobayas/usr/local/devtools/async-profiler-2.9-linux-x64/build/libasyncProfiler.so" "org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark"
+
+# JFR
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -prof gc -gc true -f 1 -wi 3 -i 3 -bm avgt -p ruleCount=100 -p ruleType=multiJoin org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
+
+# check logging
+mvn clean install -DskipTests -Pbenchmarklog
+
+java -jar target/drlx-benchmarks.jar -jvmArgs "-Xms4g -Xmx4g" -gc true -f 1 -wi 0 -i 1 -bm ss -p ruleCount=3 -p ruleType=multiJoin org.drools.drlx.perf.KieBaseBuildUsingPreBuildArtifactsBenchmark
