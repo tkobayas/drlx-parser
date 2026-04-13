@@ -72,9 +72,11 @@ public class DrlxRuleAstRuntimeBuilder extends DrlxToRuleImplVisitor {
     private Pattern buildPattern(DrlxRuleAstParseResult.PatternData parseResult,
                                  TypeResolver typeResolver,
                                  Map<String, DrlxToRuleImplVisitor.BoundVariable> boundVariables) {
+        // Use cast type if present, otherwise use declared type
+        String effectiveTypeName = parseResult.castTypeName() != null ? parseResult.castTypeName() : parseResult.typeName();
         ObjectType objectType;
         try {
-            Class<?> type = typeResolver.resolveType(parseResult.typeName());
+            Class<?> type = typeResolver.resolveType(effectiveTypeName);
             objectType = new ClassObjectType(type, false);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);

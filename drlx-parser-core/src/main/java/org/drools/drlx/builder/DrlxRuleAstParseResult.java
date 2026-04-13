@@ -83,11 +83,13 @@ public final class DrlxRuleAstParseResult {
                 switch (itemParseResult.getItemCase()) {
                     case PATTERN -> {
                         DrlxRuleAstProto.PatternParseResult pattern = itemParseResult.getPattern();
+                        String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
                         items.add(new PatternData(
                                 pattern.getTypeName(),
                                 pattern.getBindName(),
                                 pattern.getEntryPoint(),
-                                List.copyOf(pattern.getConditionsList())));
+                                List.copyOf(pattern.getConditionsList()),
+                                castTypeName));
                     }
                     case CONSEQUENCE -> items.add(new ConsequenceData(itemParseResult.getConsequence().getBlock()));
                     case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
@@ -108,7 +110,7 @@ public final class DrlxRuleAstParseResult {
     public sealed interface RuleItemData permits PatternData, ConsequenceData {
     }
 
-    public record PatternData(String typeName, String bindName, String entryPoint, List<String> conditions) implements RuleItemData {
+    public record PatternData(String typeName, String bindName, String entryPoint, List<String> conditions, String castTypeName) implements RuleItemData {
     }
 
     public record ConsequenceData(String block) implements RuleItemData {
@@ -139,12 +141,19 @@ public final class DrlxRuleAstParseResult {
     }
 
     private static DrlxRuleAstProto.PatternParseResult toProtoPattern(DrlxParser.RulePatternContext ctx, CommonTokenStream tokens) {
+        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
         DrlxRuleAstProto.PatternParseResult.Builder builder = DrlxRuleAstProto.PatternParseResult.newBuilder()
                 .setTypeName(ctx.identifier(0).getText())
                 .setBindName(ctx.identifier(1).getText())
-                .setEntryPoint(extractEntryPointFromOopath(getText(tokens, ctx.oopathExpression())));
+                .setEntryPoint(extractEntryPointFromOopathCtx(oopathCtx));
 
-        extractConditions(ctx.oopathExpression(), tokens).forEach(builder::addConditions);
+        // Extract inline cast type (#Type) if present
+        String castType = extractCastType(oopathCtx);
+        if (castType != null) {
+            builder.setCastTypeName(castType);
+        }
+
+        extractConditions(oopathCtx, tokens).forEach(builder::addConditions);
         return builder.build();
     }
 
@@ -159,16 +168,24 @@ public final class DrlxRuleAstParseResult {
                 .toList();
     }
 
-    private static String extractEntryPointFromOopath(String oopath) {
-        String result = oopath;
-        if (result.startsWith("/")) {
-            result = result.substring(1);
+    private static String extractEntryPointFromOopathCtx(DrlxParser.OopathExpressionContext ctx) {
+        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
+        if (chunks.isEmpty()) {
+            return "";
         }
-        int bracketIndex = result.indexOf('[');
-        if (bracketIndex >= 0) {
-            result = result.substring(0, bracketIndex);
+        return chunks.get(0).identifier(0).getText();
+    }
+
+    private static String extractCastType(DrlxParser.OopathExpressionContext ctx) {
+        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
+        if (chunks.isEmpty()) {
+            return null;
         }
-        return result;
+        DrlxParser.OopathChunkContext firstChunk = chunks.get(0);
+        if (firstChunk.identifier().size() > 1) {
+            return firstChunk.identifier(1).getText();
+        }
+        return null;
     }
 
     private static String trimBraces(String text) {

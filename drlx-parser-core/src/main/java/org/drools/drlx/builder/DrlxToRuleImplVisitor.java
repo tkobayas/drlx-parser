@@ -214,10 +214,14 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         String typeName = ctx.identifier(0).getText();
         String bindName = ctx.identifier(1).getText();
 
+        // Check for inline cast (#Type) in the first oopathChunk
+        String castTypeName = extractCastType(ctx.oopathExpression());
+        String effectiveTypeName = castTypeName != null ? castTypeName : typeName;
+
         // resolve type
         ObjectType objectType;
         try {
-            Class<?> type = typeResolver.resolveType(typeName);
+            Class<?> type = typeResolver.resolveType(effectiveTypeName);
             objectType = new ClassObjectType(type, false);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
@@ -226,7 +230,7 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         Pattern pattern = new Pattern(patternId++, 0, 0, objectType, bindName, false);
 
         // entry point from oopath
-        String entryPointText = extractEntryPointFromOopath(getText(ctx.oopathExpression()));
+        String entryPointText = extractEntryPointFromOopath(ctx.oopathExpression());
         pattern.setSource(new EntryPointId(entryPointText));
 
         // constraints from oopath
@@ -435,16 +439,30 @@ public class DrlxToRuleImplVisitor extends DrlxParserBaseVisitor<Object> {
         return trimBraces(statementText);
     }
 
-    private String extractEntryPointFromOopath(String oopath) {
-        String result = oopath;
-        if (result.startsWith("/")) {
-            result = result.substring(1);
+    private String extractEntryPointFromOopath(DrlxParser.OopathExpressionContext ctx) {
+        // Entry point is the first identifier of the first oopathChunk (before any #CastType or [conditions])
+        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
+        if (chunks.isEmpty()) {
+            return "";
         }
-        int bracketIndex = result.indexOf('[');
-        if (bracketIndex >= 0) {
-            result = result.substring(0, bracketIndex);
+        return chunks.get(0).identifier(0).getText();
+    }
+
+    /**
+     * Extract inline cast type from the first oopathChunk, if present.
+     * e.g., /objects#Car[speed > 80] → "Car"
+     */
+    private String extractCastType(DrlxParser.OopathExpressionContext ctx) {
+        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
+        if (chunks.isEmpty()) {
+            return null;
         }
-        return result;
+        DrlxParser.OopathChunkContext firstChunk = chunks.get(0);
+        // Grammar: identifier (HASH identifier)? — second identifier is the cast type
+        if (firstChunk.identifier().size() > 1) {
+            return firstChunk.identifier(1).getText();
+        }
+        return null;
     }
 
     private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {

@@ -3228,6 +3228,18 @@ public final class DrlxRuleAstProto {
      */
     com.google.protobuf.ByteString
         getConditionsBytes(int index);
+
+    /**
+     * <code>string cast_type_name = 5;</code>
+     * @return The castTypeName.
+     */
+    java.lang.String getCastTypeName();
+    /**
+     * <code>string cast_type_name = 5;</code>
+     * @return The bytes for castTypeName.
+     */
+    com.google.protobuf.ByteString
+        getCastTypeNameBytes();
   }
   /**
    * Protobuf type {@code org.drools.drlx.builder.proto.PatternParseResult}
@@ -3247,6 +3259,7 @@ public final class DrlxRuleAstProto {
       entryPoint_ = "";
       conditions_ =
           com.google.protobuf.LazyStringArrayList.emptyList();
+      castTypeName_ = "";
     }
 
     @java.lang.Override
@@ -3423,6 +3436,45 @@ public final class DrlxRuleAstProto {
       return conditions_.getByteString(index);
     }
 
+    public static final int CAST_TYPE_NAME_FIELD_NUMBER = 5;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object castTypeName_ = "";
+    /**
+     * <code>string cast_type_name = 5;</code>
+     * @return The castTypeName.
+     */
+    @java.lang.Override
+    public java.lang.String getCastTypeName() {
+      java.lang.Object ref = castTypeName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        castTypeName_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string cast_type_name = 5;</code>
+     * @return The bytes for castTypeName.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getCastTypeNameBytes() {
+      java.lang.Object ref = castTypeName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        castTypeName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3448,6 +3500,9 @@ public final class DrlxRuleAstProto {
       }
       for (int i = 0; i < conditions_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, conditions_.getRaw(i));
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(castTypeName_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, castTypeName_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -3475,6 +3530,9 @@ public final class DrlxRuleAstProto {
         size += dataSize;
         size += 1 * getConditionsList().size();
       }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(castTypeName_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, castTypeName_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3498,6 +3556,8 @@ public final class DrlxRuleAstProto {
           .equals(other.getEntryPoint())) return false;
       if (!getConditionsList()
           .equals(other.getConditionsList())) return false;
+      if (!getCastTypeName()
+          .equals(other.getCastTypeName())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -3519,6 +3579,8 @@ public final class DrlxRuleAstProto {
         hash = (37 * hash) + CONDITIONS_FIELD_NUMBER;
         hash = (53 * hash) + getConditionsList().hashCode();
       }
+      hash = (37 * hash) + CAST_TYPE_NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getCastTypeName().hashCode();
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3655,6 +3717,7 @@ public final class DrlxRuleAstProto {
         entryPoint_ = "";
         conditions_ =
             com.google.protobuf.LazyStringArrayList.emptyList();
+        castTypeName_ = "";
         return this;
       }
 
@@ -3700,6 +3763,9 @@ public final class DrlxRuleAstProto {
         if (((from_bitField0_ & 0x00000008) != 0)) {
           conditions_.makeImmutable();
           result.conditions_ = conditions_;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.castTypeName_ = castTypeName_;
         }
       }
 
@@ -3772,6 +3838,11 @@ public final class DrlxRuleAstProto {
           }
           onChanged();
         }
+        if (!other.getCastTypeName().isEmpty()) {
+          castTypeName_ = other.castTypeName_;
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -3819,6 +3890,11 @@ public final class DrlxRuleAstProto {
                 conditions_.add(s);
                 break;
               } // case 34
+              case 42: {
+                castTypeName_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -4159,6 +4235,78 @@ public final class DrlxRuleAstProto {
         ensureConditionsIsMutable();
         conditions_.add(value);
         bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object castTypeName_ = "";
+      /**
+       * <code>string cast_type_name = 5;</code>
+       * @return The castTypeName.
+       */
+      public java.lang.String getCastTypeName() {
+        java.lang.Object ref = castTypeName_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          castTypeName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string cast_type_name = 5;</code>
+       * @return The bytes for castTypeName.
+       */
+      public com.google.protobuf.ByteString
+          getCastTypeNameBytes() {
+        java.lang.Object ref = castTypeName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          castTypeName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string cast_type_name = 5;</code>
+       * @param value The castTypeName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCastTypeName(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        castTypeName_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string cast_type_name = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearCastTypeName() {
+        castTypeName_ = getDefaultInstance().getCastTypeName();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string cast_type_name = 5;</code>
+       * @param value The bytes for castTypeName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setCastTypeNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        castTypeName_ = value;
+        bitField0_ |= 0x00000010;
         onChanged();
         return this;
       }
@@ -4813,22 +4961,23 @@ public final class DrlxRuleAstProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\023drlx_rule_ast.proto\022\035org.drools.drlx.b" +
-      "uilder.proto\"\221\001\n\027CompilationUnitParseResult" +
-      "\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name\030\002 " +
-      "\001(\t\022\017\n\007imports\030\003 \003(\t\022:\n\005rules\030\004 \003(\0132+.or" +
-      "g.drools.drlx.builder.proto.RuleParseResult" +
-      "\"\\\n\014RuleParseResult\022\014\n\004name\030\001 \001(\t\022>\n\005items\030" +
-      "\002 \003(\0132/.org.drools.drlx.builder.proto.Ru" +
-      "leItemParseResult\"\250\001\n\020RuleItemParseResult\022A\n\007p" +
-      "attern\030\001 \001(\0132..org.drools.drlx.builder.p" +
-      "roto.PatternParseResultH\000\022I\n\013consequence\030\002 " +
-      "\001(\01322.org.drools.drlx.builder.proto.Cons" +
-      "equenceParseResultH\000B\006\n\004item\"`\n\017PatternParseRe" +
-      "sult\022\021\n\ttype_name\030\001 \001(\t\022\021\n\tbind_name\030\002 \001" +
-      "(\t\022\023\n\013entry_point\030\003 \001(\t\022\022\n\nconditions\030\004 " +
-      "\003(\t\"$\n\023ConsequenceParseResult\022\r\n\005block\030\001 \001(" +
-      "\tB1\n\035org.drools.drlx.builder.protoB\020Drlx" +
-      "RuleAstProtob\006proto3"
+      "uilder.proto\"\227\001\n\032CompilationUnitParseRes" +
+      "ult\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name" +
+      "\030\002 \001(\t\022\017\n\007imports\030\003 \003(\t\022=\n\005rules\030\004 \003(\0132." +
+      ".org.drools.drlx.builder.proto.RuleParse" +
+      "Result\"b\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t\022" +
+      "A\n\005items\030\002 \003(\01322.org.drools.drlx.builder" +
+      ".proto.RuleItemParseResult\"\261\001\n\023RuleItemP" +
+      "arseResult\022D\n\007pattern\030\001 \001(\01321.org.drools" +
+      ".drlx.builder.proto.PatternParseResultH\000" +
+      "\022L\n\013consequence\030\002 \001(\01325.org.drools.drlx." +
+      "builder.proto.ConsequenceParseResultH\000B\006" +
+      "\n\004item\"{\n\022PatternParseResult\022\021\n\ttype_nam" +
+      "e\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry_poin" +
+      "t\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast_type" +
+      "_name\030\005 \001(\t\"\'\n\026ConsequenceParseResult\022\r\n" +
+      "\005block\030\001 \001(\tB1\n\035org.drools.drlx.builder." +
+      "protoB\020DrlxRuleAstProtob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -4857,7 +5006,7 @@ public final class DrlxRuleAstProto {
     internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor,
-        new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", });
+        new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", "CastTypeName", });
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable = new
