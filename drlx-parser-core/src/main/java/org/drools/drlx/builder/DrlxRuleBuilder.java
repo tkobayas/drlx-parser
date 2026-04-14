@@ -58,9 +58,8 @@ public class DrlxRuleBuilder {
         CompilationUnitIR ast = parseToRuleAst(drlxSource);
         persistBuildCache(drlxSource, ast, outputDir);
 
-        DrlxPreBuildLambdaCompiler preBuildCompiler = new DrlxPreBuildLambdaCompiler();
         MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), outputDir);
-        preBuildCompiler.enableBatchMode(batchCompiler);
+        DrlxPreBuildLambdaCompiler preBuildCompiler = new DrlxPreBuildLambdaCompiler(batchCompiler);
 
         DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(preBuildCompiler);
         builder.build(ast);
@@ -89,10 +88,12 @@ public class DrlxRuleBuilder {
         }
 
         CompilationUnitIR ast = parseToRuleAst(drlxSource);
-        DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
+        DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
         lambdaCompiler.setPreBuildMetadata(metadata);
         DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
-        return createKieBase(builder.build(ast));
+        List<KiePackage> kiePackages = builder.build(ast);
+        lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
+        return createKieBase(kiePackages);
     }
 
     /**
@@ -109,16 +110,18 @@ public class DrlxRuleBuilder {
     public List<KiePackage> parse(String drlxSource) {
         CompilationUnitIR ast = parseToRuleAst(drlxSource);
 
-        DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
-        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
-        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
-        lambdaCompiler.enableBatchMode(batchCompiler);
-
+        DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
         DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
         List<KiePackage> kiePackages = builder.build(ast);
 
         lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
         return kiePackages;
+    }
+
+    private static DrlxLambdaCompiler newLambdaCompiler() {
+        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
+        return new DrlxLambdaCompiler(batchCompiler);
     }
 
     private static CompilationUnitIR parseToRuleAst(String drlxSource) {
@@ -152,10 +155,12 @@ public class DrlxRuleBuilder {
                     if (parseResult == null) {
                         yield null;
                     }
-                    DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
+                    DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
                     lambdaCompiler.setPreBuildMetadata(metadata);
                     DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
-                    yield createKieBase(builder.build(parseResult));
+                    List<KiePackage> packages = builder.build(parseResult);
+                    lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
+                    yield createKieBase(packages);
                 }
             };
         } catch (IOException e) {

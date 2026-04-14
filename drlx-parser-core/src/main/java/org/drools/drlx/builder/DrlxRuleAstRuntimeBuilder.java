@@ -23,7 +23,6 @@ import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.util.TypeResolver;
 import org.kie.api.definition.KiePackage;
-import org.mvel3.MVELBatchCompiler;
 import org.mvel3.Type;
 
 /**
@@ -35,24 +34,8 @@ public class DrlxRuleAstRuntimeBuilder {
 
     private final DrlxLambdaCompiler lambdaCompiler;
 
-    public DrlxRuleAstRuntimeBuilder() {
-        this(new DrlxLambdaCompiler());
-    }
-
     public DrlxRuleAstRuntimeBuilder(DrlxLambdaCompiler lambdaCompiler) {
         this.lambdaCompiler = lambdaCompiler;
-    }
-
-    public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
-        lambdaCompiler.setPreBuildMetadata(preBuildMetadata);
-    }
-
-    public void enableBatchMode(MVELBatchCompiler batchCompiler) {
-        lambdaCompiler.enableBatchMode(batchCompiler);
-    }
-
-    public void compileBatch(ClassLoader classLoader) {
-        lambdaCompiler.compileBatch(classLoader);
     }
 
     public List<KiePackage> build(CompilationUnitIR parseResult) {

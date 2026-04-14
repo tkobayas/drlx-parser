@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.drools.base.rule.constraint.Constraint;
-import org.mvel3.Evaluator;
+import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.mvel3.MVELBatchCompiler;
 import org.mvel3.Type;
 import org.slf4j.Logger;
@@ -13,8 +13,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Pre-build lambda compiler that extends {@link DrlxLambdaCompiler}.
- * Compiles lambdas normally (via super) and records metadata mapping
- * for later reuse in runtime builds.
+ * Compiles lambdas via super and records metadata mapping for later
+ * reuse in runtime builds.
  */
 public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
 
@@ -26,6 +26,10 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
 
     record PendingPreBuildInfo(String ruleName, int counterId, String expression, MVELBatchCompiler.LambdaHandle handle) {}
 
+    public DrlxPreBuildLambdaCompiler(MVELBatchCompiler batchCompiler) {
+        super(batchCompiler);
+    }
+
     public DrlxLambdaMetadata getMetadata() {
         return metadata;
     }
@@ -34,13 +38,7 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
     public DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType, declarations);
-
-        if (batchMode) {
-            MVELBatchCompiler.LambdaHandle handle = pendingLambdas.get(pendingLambdas.size() - 1).handle();
-            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, handle));
-        } else {
-            recordMetadata(currentRuleName, capturedCounter, constraint.getEvaluator(), expression);
-        }
+        recordPending(capturedCounter, expression);
         return constraint;
     }
 
@@ -50,14 +48,7 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
                                                  List<BoundVariable> referencedBindings) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         Constraint constraint = super.createBetaLambdaConstraint(expression, patternType, patternDeclarations, referencedBindings);
-
-        if (batchMode) {
-            MVELBatchCompiler.LambdaHandle handle = pendingLambdas.get(pendingLambdas.size() - 1).handle();
-            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, handle));
-        } else {
-            DrlxLambdaBetaConstraint betaConstraint = (DrlxLambdaBetaConstraint) constraint;
-            recordMetadata(currentRuleName, capturedCounter, betaConstraint.getEvaluator(), expression);
-        }
+        recordPending(capturedCounter, expression);
         return constraint;
     }
 
@@ -65,14 +56,13 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConsequence consequence = super.createLambdaConsequence(consequenceBlock, declarationTypes);
-
-        if (batchMode) {
-            MVELBatchCompiler.LambdaHandle handle = pendingLambdas.get(pendingLambdas.size() - 1).handle();
-            pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, consequenceBlock, handle));
-        } else {
-            recordMetadata(currentRuleName, capturedCounter, consequence.getEvaluator(), consequenceBlock);
-        }
+        recordPending(capturedCounter, consequenceBlock);
         return consequence;
+    }
+
+    private void recordPending(int capturedCounter, String expression) {
+        MVELBatchCompiler.LambdaHandle handle = pendingLambdas.get(pendingLambdas.size() - 1).handle();
+        pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, handle));
     }
 
     @Override
@@ -92,27 +82,5 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
         }
 
         pendingPreBuildInfos.clear();
-    }
-
-    private void recordMetadata(String ruleName, int counterId, Evaluator<?, ?, ?> evaluator, String expression) {
-        String className = evaluator.getClass().getName();
-        String fqn = className.split("/0x")[0]; // strip hidden class suffix
-
-        int lastUnderscore = fqn.lastIndexOf('_');
-        if (lastUnderscore < 0) {
-            LOG.warn("Cannot extract physicalId from FQN {}, skipping metadata for {}.{}", fqn, ruleName, counterId);
-            return;
-        }
-        String physicalIdStr = fqn.substring(lastUnderscore + 1);
-        int physicalId;
-        try {
-            physicalId = Integer.parseInt(physicalIdStr);
-        } catch (NumberFormatException e) {
-            LOG.warn("Cannot parse physicalId from FQN {}, skipping metadata for {}.{}", fqn, ruleName, counterId);
-            return;
-        }
-
-        metadata.put(ruleName, counterId, fqn, physicalId, expression);
-        LOG.info("Recorded pre-build metadata: {}.{} -> {} (physicalId={})", ruleName, counterId, fqn, physicalId);
     }
 }

@@ -69,37 +69,22 @@ public class DrlxLambdaCompiler {
     protected int patternId = 0;
 
     protected DrlxLambdaMetadata preBuildMetadata; // null = normal build
-    protected Path outputDir; // directory containing pre-compiled .class files
 
     protected String currentRuleName;
     protected int lambdaCounter;
 
-    protected boolean batchMode = false;
-    protected MVELBatchCompiler batchCompiler;
+    protected final MVELBatchCompiler batchCompiler;
     protected final List<PendingLambda> pendingLambdas = new ArrayList<>();
 
     private ClassManager preBuildClassManager;
     private final Map<String, Class<?>> loadedClassCache = new HashMap<>();
 
-    public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
-        this.preBuildMetadata = preBuildMetadata;
-    }
-
-    public void setOutputDir(Path outputDir) {
-        this.outputDir = outputDir;
-    }
-
-    public void enableBatchMode(MVELBatchCompiler batchCompiler) {
-        this.batchMode = true;
+    public DrlxLambdaCompiler(MVELBatchCompiler batchCompiler) {
         this.batchCompiler = batchCompiler;
     }
 
-    public MVELBatchCompiler getBatchCompiler() {
-        return batchCompiler;
-    }
-
-    public boolean isBatchMode() {
-        return batchMode;
+    public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
+        this.preBuildMetadata = preBuildMetadata;
     }
 
     public int nextPatternId() {
@@ -110,10 +95,6 @@ public class DrlxLambdaCompiler {
     public void beginRule(String ruleName) {
         this.currentRuleName = ruleName;
         this.lambdaCounter = 0;
-    }
-
-    public String getCurrentRuleName() {
-        return currentRuleName;
     }
 
     public DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
@@ -136,10 +117,7 @@ public class DrlxLambdaCompiler {
                         currentRuleName, capturedCounter, expression, entry.expression());
             }
         }
-        if (batchMode) {
-            return createBatchConstraint(expression, patternType, declarations);
-        }
-        return new DrlxLambdaConstraint(expression, patternType, declarations);
+        return createBatchConstraint(expression, patternType, declarations);
     }
 
     public Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
@@ -177,10 +155,7 @@ public class DrlxLambdaCompiler {
             }
         }
 
-        if (batchMode) {
-            return createBatchBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
-        }
-        return new DrlxLambdaBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
+        return createBatchBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
     }
 
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
@@ -203,10 +178,7 @@ public class DrlxLambdaCompiler {
                         currentRuleName, capturedCounter, consequenceBlock, entry.expression());
             }
         }
-        if (batchMode) {
-            return createBatchConsequence(consequenceBlock, declarationTypes);
-        }
-        return new DrlxLambdaConsequence(consequenceBlock, declarationTypes);
+        return createBatchConsequence(consequenceBlock, declarationTypes);
     }
 
     public void compileBatch(ClassLoader classLoader) {
