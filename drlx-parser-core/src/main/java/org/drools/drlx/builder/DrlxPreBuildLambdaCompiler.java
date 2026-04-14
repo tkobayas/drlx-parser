@@ -1,11 +1,9 @@
 package org.drools.drlx.builder;
 
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.antlr.v4.runtime.TokenStream;
 import org.drools.base.rule.constraint.Constraint;
 import org.mvel3.Evaluator;
 import org.mvel3.MVELBatchCompiler;
@@ -14,37 +12,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Pre-build visitor that extends DrlxToRuleImplVisitor.
+ * Pre-build lambda compiler that extends {@link DrlxLambdaCompiler}.
  * Compiles lambdas normally (via super) and records metadata mapping
  * for later reuse in runtime builds.
  */
-public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
+public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DrlxPreBuildVisitor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DrlxPreBuildLambdaCompiler.class);
 
     private final DrlxLambdaMetadata metadata = new DrlxLambdaMetadata();
 
-    // Deferred metadata recording for batch mode
     private final List<PendingPreBuildInfo> pendingPreBuildInfos = new ArrayList<>();
 
     record PendingPreBuildInfo(String ruleName, int counterId, String expression, MVELBatchCompiler.LambdaHandle handle) {}
-
-    private Path outputDir;
-
-    public DrlxPreBuildVisitor(TokenStream tokens) {
-        super(tokens);
-    }
-
-    public void setOutputDir(Path outputDir) {
-        this.outputDir = outputDir;
-    }
 
     public DrlxLambdaMetadata getMetadata() {
         return metadata;
     }
 
     @Override
-    protected DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
+    public DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType, declarations);
 
@@ -58,9 +45,9 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
     }
 
     @Override
-    protected Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
-                                                       org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
-                                                       java.util.List<BoundVariable> referencedBindings) {
+    public Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
+                                                 org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
+                                                 List<BoundVariable> referencedBindings) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         Constraint constraint = super.createBetaLambdaConstraint(expression, patternType, patternDeclarations, referencedBindings);
 
@@ -75,7 +62,7 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
     }
 
     @Override
-    protected DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+    public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
         int capturedCounter = lambdaCounter; // capture before super increments it
         DrlxLambdaConsequence consequence = super.createLambdaConsequence(consequenceBlock, declarationTypes);
 
@@ -94,10 +81,8 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
             return;
         }
 
-        // Delegate compilation to parent (MVELBatchCompiler handles compile + persist + LambdaRegistry)
         super.compileBatch(classLoader);
 
-        // Record metadata from pending pre-build infos
         for (PendingPreBuildInfo info : pendingPreBuildInfos) {
             MVELBatchCompiler.LambdaHandle handle = info.handle();
             String fqn = batchCompiler.getFqn(handle);
@@ -113,7 +98,6 @@ public class DrlxPreBuildVisitor extends DrlxToRuleImplVisitor {
         String className = evaluator.getClass().getName();
         String fqn = className.split("/0x")[0]; // strip hidden class suffix
 
-        // extract physicalId from FQN suffix: "GeneratorEvaluator___<physicalId>"
         int lastUnderscore = fqn.lastIndexOf('_');
         if (lastUnderscore < 0) {
             LOG.warn("Cannot extract physicalId from FQN {}, skipping metadata for {}.{}", fqn, ruleName, counterId);

@@ -9,6 +9,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.drools.base.RuleBase;
 import org.drools.core.impl.RuleBaseFactory;
+import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.parser.DrlxLexer;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
@@ -19,8 +20,12 @@ import org.mvel3.MVELBatchCompiler;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 
 /**
- * Builder that creates KieBase from DRLX source, skipping Descr generation.
- * It uses DrlxDirectVisitor to walk the ANTLR parse tree directly into RuleImpl/KiePackage.
+ * Builder that creates KieBase from DRLX source through a single pipeline:
+ * ANTLR → {@link DrlxToRuleAstVisitor} → {@link DrlxRuleAstModel} records
+ * → {@link DrlxRuleAstRuntimeBuilder} → RuleImpl.
+ *
+ * Proto persistence (via {@link DrlxRuleAstParseResult}) is an optional output
+ * of the pre-build step; it is not part of the normal runtime build.
  */
 public class DrlxRuleBuilder {
 
@@ -37,7 +42,7 @@ public class DrlxRuleBuilder {
     }
 
     /**
-     * Parses DRLX source and creates a KieBase end-to-end, skipping Descr generation.
+     * Parses DRLX source and creates a KieBase end-to-end.
      */
     public KieBase build(String drlxSource) {
         List<KiePackage> kiePackages = parse(drlxSource);
@@ -46,28 +51,23 @@ public class DrlxRuleBuilder {
 
     /**
      * Pre-builds DRLX source: compiles all lambdas and records metadata for later reuse.
-     * Saves metadata to the given output directory.
+     * Saves metadata to the given output directory; may additionally persist a proto
+     * cache of the RuleAST depending on the active cache strategy.
      */
     public DrlxLambdaMetadata preBuild(String drlxSource, Path outputDir) throws IOException {
-        CharStream charStream = CharStreams.fromString(drlxSource);
-        DrlxLexer lexer = new DrlxLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        DrlxParser parser = new DrlxParser(tokens);
+        CompilationUnitIR ast = parseToRuleAst(drlxSource);
+        persistBuildCache(drlxSource, ast, outputDir);
 
-        DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
-        persistBuildCache(drlxSource, ctx, tokens, outputDir);
-        DrlxPreBuildVisitor visitor = new DrlxPreBuildVisitor(tokens);
-        visitor.setOutputDir(outputDir);
-
+        DrlxPreBuildLambdaCompiler preBuildCompiler = new DrlxPreBuildLambdaCompiler();
         MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), outputDir);
-        visitor.enableBatchMode(batchCompiler);
+        preBuildCompiler.enableBatchMode(batchCompiler);
 
-        visitor.visitDrlxCompilationUnit(ctx);
+        DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(preBuildCompiler);
+        builder.build(ast);
 
-        // Batch compile + persist all collected lambda sources in a single javac call
-        visitor.compileBatch(Thread.currentThread().getContextClassLoader());
+        preBuildCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
 
-        DrlxLambdaMetadata metadata = visitor.getMetadata();
+        DrlxLambdaMetadata metadata = preBuildCompiler.getMetadata();
         metadata.save(outputDir);
         return metadata;
     }
@@ -88,22 +88,11 @@ public class DrlxRuleBuilder {
             return cachedBuild;
         }
 
-        CharStream charStream = CharStreams.fromString(drlxSource);
-        DrlxLexer lexer = new DrlxLexer(charStream);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        DrlxParser parser = new DrlxParser(tokens);
-
-        DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
-        return build(ctx, tokens, metadata);
-    }
-
-    private KieBase build(DrlxParser.DrlxCompilationUnitContext ctx,
-                          CommonTokenStream tokens,
-                          DrlxLambdaMetadata metadata) {
-        DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
-        visitor.setPreBuildMetadata(metadata);
-        List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
-        return createKieBase(kiePackages);
+        CompilationUnitIR ast = parseToRuleAst(drlxSource);
+        DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
+        lambdaCompiler.setPreBuildMetadata(metadata);
+        DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
+        return createKieBase(builder.build(ast));
     }
 
     /**
@@ -115,37 +104,37 @@ public class DrlxRuleBuilder {
     }
 
     /**
-     * Parses DRLX source into List&lt;KiePackage&gt; using the direct visitor with batch compilation.
+     * Parses DRLX source into List&lt;KiePackage&gt; with batch lambda compilation.
      */
     public List<KiePackage> parse(String drlxSource) {
+        CompilationUnitIR ast = parseToRuleAst(drlxSource);
+
+        DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
+        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
+        lambdaCompiler.enableBatchMode(batchCompiler);
+
+        DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
+        List<KiePackage> kiePackages = builder.build(ast);
+
+        lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
+        return kiePackages;
+    }
+
+    private static CompilationUnitIR parseToRuleAst(String drlxSource) {
         CharStream charStream = CharStreams.fromString(drlxSource);
         DrlxLexer lexer = new DrlxLexer(charStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         DrlxParser parser = new DrlxParser(tokens);
-
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
-        DrlxToRuleImplVisitor visitor = new DrlxToRuleImplVisitor(tokens);
-
-        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
-        MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
-        visitor.enableBatchMode(batchCompiler);
-
-        List<KiePackage> kiePackages = visitor.visitDrlxCompilationUnit(ctx);
-
-        // Batch compile all collected lambda sources in a single javac call
-        visitor.compileBatch(Thread.currentThread().getContextClassLoader());
-
-        return kiePackages;
+        return new DrlxToRuleAstVisitor(tokens).visitDrlxCompilationUnit(ctx);
     }
 
-    private void persistBuildCache(String drlxSource,
-                                   DrlxParser.DrlxCompilationUnitContext ctx,
-                                   CommonTokenStream tokens,
-                                   Path outputDir) throws IOException {
+    private void persistBuildCache(String drlxSource, CompilationUnitIR ast, Path outputDir) throws IOException {
         switch (DrlxBuildCacheStrategy.current()) {
             case NONE -> {
             }
-            case RULE_AST -> DrlxRuleAstParseResult.save(drlxSource, ctx, tokens, outputDir);
+            case RULE_AST -> DrlxRuleAstParseResult.save(drlxSource, ast, outputDir);
         }
     }
 
@@ -158,13 +147,14 @@ public class DrlxRuleBuilder {
             return switch (DrlxBuildCacheStrategy.current()) {
                 case NONE -> null;
                 case RULE_AST -> {
-                    DrlxRuleAstParseResult.CompilationUnitData parseResult =
+                    CompilationUnitIR parseResult =
                             DrlxRuleAstParseResult.load(drlxSource, DrlxRuleAstParseResult.parseResultFilePath(cacheDir));
                     if (parseResult == null) {
                         yield null;
                     }
-                    DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder();
-                    builder.setPreBuildMetadata(metadata);
+                    DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler();
+                    lambdaCompiler.setPreBuildMetadata(metadata);
+                    DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
                     yield createKieBase(builder.build(parseResult));
                 }
             };

@@ -77,13 +77,20 @@ ANTLR Lexer/Parser
 DrlxCompilationUnitContext (parse tree)
   |
   v
-DrlxToRuleImplVisitor
-  |-- buildRule()       -> RuleImpl
-  |-- buildPattern()    -> Pattern + constraints
-  |-- createLambda*()   -> pending lambda sources
+DrlxToRuleAstVisitor           (only ANTLR-aware step)
   |
   v
-MVELBatchCompiler.compile()   (single javac call for all lambdas)
+DrlxRuleAstModel IR records    (CompilationUnitIR, RuleIR, ...)
+  |
+  v
+DrlxRuleAstRuntimeBuilder      (holds a DrlxLambdaCompiler)
+  |-- buildRule()              -> RuleImpl
+  |-- buildPattern()           -> Pattern + constraints
+  |-- DrlxLambdaCompiler
+  |     +-- createLambda*()    -> pending lambda sources
+  |
+  v
+MVELBatchCompiler.compile()    (single javac call for all lambdas)
   |
   v
 List<KiePackage>
@@ -104,10 +111,10 @@ DRLX source
   |
   v
 DrlxRuleBuilder.preBuild(source, outputDir)
-  |-- Parse ANTLR tree
-  |-- persistBuildCache()  -> serialize rule AST to protobuf
-  |-- DrlxPreBuildVisitor
-  |     |-- walk tree, compile lambdas
+  |-- ANTLR parse -> DrlxToRuleAstVisitor -> DrlxRuleAstModel IR
+  |-- persistBuildCache()               -> serialize IR to protobuf
+  |-- DrlxRuleAstRuntimeBuilder(DrlxPreBuildLambdaCompiler)
+  |     |-- build(IR), compiling lambdas through the pre-build compiler
   |     |-- record metadata (rule.counter -> className|physicalId|expression)
   |
   v
@@ -125,10 +132,10 @@ DRLX source + pre-built artifacts
   v
 DrlxRuleBuilder.build(source, metadata, cacheDir)
   |-- Try buildFromCache():
-  |     Load drlx-rule-ast.pb -> hash check -> rebuild from parse-result records
-  |-- Fallback: normal parse
+  |     Load drlx-rule-ast.pb -> hash check -> rebuild from IR records
+  |-- Fallback: normal parse (ANTLR -> DrlxToRuleAstVisitor -> IR)
   |-- For each constraint/consequence:
-  |     Try loadPreCompiledEvaluator() (hash match -> use cached .class)
+  |     Try loadPreCompiledEvaluator() (metadata match -> use cached .class)
   |     Fallback: compile from source
   |
   v
@@ -148,14 +155,16 @@ KieBase
 | Class | Role |
 |-------|------|
 | `DrlxRuleBuilder` | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
-| `DrlxToRuleImplVisitor` | Core visitor. Walks ANTLR tree -> RuleImpl, Pattern, constraints, consequences. |
-| `DrlxPreBuildVisitor` | Extends `DrlxToRuleImplVisitor`. Records lambda metadata during pre-build. |
-| `DrlxRuleAstRuntimeBuilder` | Extends `DrlxToRuleImplVisitor`. Rebuilds KiePackages from RuleAST parse-result data records. |
+| `DrlxToRuleAstVisitor` | Walks the ANTLR parse tree and produces `DrlxRuleAstModel` IR records. The only ANTLR-aware step in the pipeline. |
+| `DrlxRuleAstModel` | In-memory IR: `CompilationUnitIR`, `RuleIR`, `PatternIR`, `ConsequenceIR`. Shared by runtime build and proto serialization. |
+| `DrlxRuleAstRuntimeBuilder` | Builds `KiePackages` from `DrlxRuleAstModel` IR. Uses `DrlxLambdaCompiler` via composition. |
+| `DrlxLambdaCompiler` | Owns lambda compilation: constraints, beta constraints, consequences, batch mode, pre-built metadata reuse. |
+| `DrlxPreBuildLambdaCompiler` | Extends `DrlxLambdaCompiler`. Records lambda metadata during pre-build. |
 | `DrlxLambdaConstraint` | Alpha constraint. Wraps `Evaluator<Object, Void, Boolean>`. |
 | `DrlxLambdaBetaConstraint` | Beta (join) constraint. Wraps `Evaluator<Map<String,Object>, Void, Boolean>`. Uses reflection-based property extraction. |
 | `DrlxLambdaConsequence` | Consequence action. Wraps `Evaluator<Map<String,Object>, Void, String>`. |
 | `DrlxLambdaMetadata` | Pipe-delimited properties file for lambda mapping (`rule.counter=fqn\|physicalId\|expression`). |
-| `DrlxRuleAstParseResult` | Compact domain-specific AST serialization via protobuf. No reflection needed. |
+| `DrlxRuleAstParseResult` | Protobuf serialization of `DrlxRuleAstModel` IR (save/load). No ANTLR dependency. |
 | `DrlxBuildCacheStrategy` | Enum: `NONE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
 | `DrlxRuleUnit` | Wraps unit declaration. |
 
@@ -188,17 +197,17 @@ Alpha and beta constraints differ in how they receive fact data:
 
 ## Build Cache Strategy: RuleAST
 
-The `RULE_AST` cache strategy serializes a compact, domain-specific AST to
+The `RULE_AST` cache strategy serializes the `DrlxRuleAstModel` IR to
 protobuf (`drlx-rule-ast.pb`). At load time, `DrlxRuleAstRuntimeBuilder`
-reconstructs `RuleImpl`/`KiePackage` directly from parse-result data records
--- no ANTLR reflection needed.
+reconstructs `RuleImpl`/`KiePackage` directly from the IR records --
+no ANTLR reparse needed.
 
 | Aspect | Details |
 |--------|---------|
 | Proto file | `drlx_rule_ast.proto` |
 | Output file | `drlx-rule-ast.pb` |
-| What it saves | Domain-specific AST (rules, patterns, conditions as strings) |
-| Loads into | Java records (`CompilationUnitData`, `RuleData`, `PatternData`, `ConsequenceData`) |
+| What it saves | `DrlxRuleAstModel` IR (rules, patterns, conditions as strings) |
+| Loads into | Java records (`CompilationUnitIR`, `RuleIR`, `PatternIR`, `ConsequenceIR`) |
 | Runtime builder | `DrlxRuleAstRuntimeBuilder` |
 | Reflection needed | No |
 | Skips at load time | ANTLR parsing + tree walking |
@@ -219,21 +228,31 @@ phase (see `PERF_ANALYSIS.md`).
 
 During pre-build, expressions are compared for deduplication. Multiple rules
 with identical constraint expressions (e.g. `age > 18`) reuse the same compiled
-evaluator class. `DrlxPreBuildVisitor` tracks this via `PendingPreBuildInfo`
-records and the metadata properties file.
+evaluator class. `DrlxPreBuildLambdaCompiler` tracks this via
+`PendingPreBuildInfo` records and the metadata properties file.
 
-## Inheritance Hierarchy
+## Class Hierarchy
+
+The build pipeline separates three concerns, each in its own hierarchy:
 
 ```
-DrlxParserBaseVisitor<List<KiePackage>>
-  +-- DrlxToRuleImplVisitor          (normal build: tree -> RuleImpl)
-        +-- DrlxPreBuildVisitor      (pre-build: records metadata)
-        +-- DrlxRuleAstRuntimeBuilder (load from RuleAST parse-result)
+ANTLR walking:
+  DrlxParserBaseVisitor<Object>
+    +-- DrlxToRuleAstVisitor              (only ANTLR-aware class)
+
+Lambda compilation:
+  DrlxLambdaCompiler
+    +-- DrlxPreBuildLambdaCompiler        (records metadata during pre-build)
+
+RuleImpl building:
+  DrlxRuleAstRuntimeBuilder               (composition: holds a DrlxLambdaCompiler)
 ```
 
-`DrlxPreBuildVisitor` intercepts constraint/consequence creation to record
-metadata. `DrlxRuleAstRuntimeBuilder` drives the same lambda-loading logic
-from parse-result data records instead of ANTLR tree walking.
+`DrlxToRuleAstVisitor` is the single ANTLR-aware step; everything downstream
+works against the `DrlxRuleAstModel` IR records. `DrlxPreBuildLambdaCompiler`
+intercepts constraint/consequence creation at the lambda-compilation layer
+(no ANTLR walking). `DrlxRuleAstRuntimeBuilder` drives the IR → RuleImpl
+translation and delegates lambda creation to its injected `DrlxLambdaCompiler`.
 
 ## Configuration
 
