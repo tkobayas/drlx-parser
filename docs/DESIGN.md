@@ -166,6 +166,8 @@ KieBase
 | `DrlxLambdaMetadata` | Pipe-delimited properties file for lambda mapping (`rule.counter=fqn\|physicalId\|expression`). |
 | `DrlxRuleAstParseResult` | Protobuf serialization of `DrlxRuleAstModel` IR (save/load). No ANTLR dependency. |
 | `DrlxBuildCacheStrategy` | Enum: `NONE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
+| `DrlxMetadataMismatchMode` | Enum: `FAIL_FAST` (default), `FALLBACK`. Configured via `drlx.compiler.metadataMismatch`. Controls behavior when pre-built lambda metadata is stale or missing. |
+| `EvaluatorSink` | Package-private interface implemented by the three lambda classes so `DrlxLambdaCompiler.compileBatch()` can bind compiled evaluators uniformly. |
 | `DrlxRuleUnit` | Wraps unit declaration. |
 
 ### Parser Package
@@ -242,7 +244,8 @@ ANTLR walking:
 
 Lambda compilation:
   DrlxLambdaCompiler
-    +-- DrlxPreBuildLambdaCompiler        (records metadata during pre-build)
+    +-- DrlxPreBuildLambdaCompiler        (overrides onLambdaCreated hook
+                                           to record metadata during pre-build)
 
 RuleImpl building:
   DrlxRuleAstRuntimeBuilder               (composition: holds a DrlxLambdaCompiler)
@@ -259,6 +262,7 @@ translation and delegates lambda creation to its injected `DrlxLambdaCompiler`.
 | Property | Default | Purpose |
 |----------|---------|---------|
 | `drlx.compiler.cacheStrategy` | `none` | Build cache: `none`, `ruleAst` |
+| `drlx.compiler.metadataMismatch` | `failFast` | Behavior on missing/stale pre-built lambda metadata: `failFast` or `fallback` |
 | `mvel3.compiler.lambda.persistence` | `true` | Enable disk I/O for compiled .class files |
 | `mvel3.compiler.lambda.persistence.path` | `target/generated-classes/mvel` | Output directory for pre-built artifacts |
 | `mvel3.compiler.lambda.resetOnTestStartup` | `false` | Clear persisted classes on JVM startup |

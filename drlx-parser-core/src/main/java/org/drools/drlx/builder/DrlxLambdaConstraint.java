@@ -15,7 +15,7 @@ import org.mvel3.CompilerParameters;
 import org.mvel3.Evaluator;
 import org.mvel3.MVEL;
 
-public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> {
+public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> implements EvaluatorSink {
 
     private String expression;
 
@@ -52,6 +52,12 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     public void setEvaluator(Evaluator<Object, Void, Boolean> evaluator) {
         this.evaluator = evaluator;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public void bindEvaluator(Evaluator<?, ?, ?> evaluator) {
+        setEvaluator((Evaluator) evaluator);
     }
 
     private void initializeLambdaConstraint() {

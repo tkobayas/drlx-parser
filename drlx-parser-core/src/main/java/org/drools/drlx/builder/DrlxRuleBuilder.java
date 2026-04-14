@@ -3,6 +3,7 @@ package org.drools.drlx.builder;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -79,21 +80,14 @@ public class DrlxRuleBuilder {
     }
 
     /**
-     * Builds a KieBase using pre-compiled lambda metadata and an optional cached build artifact directory.
+     * Builds a KieBase using pre-compiled lambda metadata and an optional cached
+     * build artifact directory. When a RuleAST proto cache is available the ANTLR
+     * parse step is skipped; otherwise the source is parsed freshly.
      */
     public KieBase build(String drlxSource, DrlxLambdaMetadata metadata, Path cacheDir) {
-        KieBase cachedBuild = buildFromCache(drlxSource, metadata, cacheDir);
-        if (cachedBuild != null) {
-            return cachedBuild;
-        }
-
-        CompilationUnitIR ast = parseToRuleAst(drlxSource);
-        DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
-        lambdaCompiler.setPreBuildMetadata(metadata);
-        DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
-        List<KiePackage> kiePackages = builder.build(ast);
-        lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
-        return createKieBase(kiePackages);
+        CompilationUnitIR ast = loadAstFromCache(drlxSource, cacheDir)
+                .orElseGet(() -> parseToRuleAst(drlxSource));
+        return buildKieBaseWithMetadata(ast, metadata);
     }
 
     /**
@@ -116,6 +110,15 @@ public class DrlxRuleBuilder {
 
         lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
         return kiePackages;
+    }
+
+    private KieBase buildKieBaseWithMetadata(CompilationUnitIR ast, DrlxLambdaMetadata metadata) {
+        DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
+        lambdaCompiler.setPreBuildMetadata(metadata);
+        DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
+        List<KiePackage> packages = builder.build(ast);
+        lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
+        return createKieBase(packages);
     }
 
     private static DrlxLambdaCompiler newLambdaCompiler() {
@@ -141,27 +144,15 @@ public class DrlxRuleBuilder {
         }
     }
 
-    private KieBase buildFromCache(String drlxSource, DrlxLambdaMetadata metadata, Path cacheDir) {
+    private Optional<CompilationUnitIR> loadAstFromCache(String drlxSource, Path cacheDir) {
         if (cacheDir == null) {
-            return null;
+            return Optional.empty();
         }
-
         try {
             return switch (DrlxBuildCacheStrategy.current()) {
-                case NONE -> null;
-                case RULE_AST -> {
-                    CompilationUnitIR parseResult =
-                            DrlxRuleAstParseResult.load(drlxSource, DrlxRuleAstParseResult.parseResultFilePath(cacheDir));
-                    if (parseResult == null) {
-                        yield null;
-                    }
-                    DrlxLambdaCompiler lambdaCompiler = newLambdaCompiler();
-                    lambdaCompiler.setPreBuildMetadata(metadata);
-                    DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);
-                    List<KiePackage> packages = builder.build(parseResult);
-                    lambdaCompiler.compileBatch(Thread.currentThread().getContextClassLoader());
-                    yield createKieBase(packages);
-                }
+                case NONE -> Optional.empty();
+                case RULE_AST -> Optional.ofNullable(
+                        DrlxRuleAstParseResult.load(drlxSource, DrlxRuleAstParseResult.parseResultFilePath(cacheDir)));
             };
         } catch (IOException e) {
             throw new RuntimeException("Failed to load DRLX build cache from " + cacheDir, e);

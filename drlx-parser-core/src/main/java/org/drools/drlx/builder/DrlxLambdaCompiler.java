@@ -35,6 +35,10 @@ import org.slf4j.LoggerFactory;
  * Builds {@link DrlxLambdaConstraint}, {@link DrlxLambdaBetaConstraint},
  * and {@link DrlxLambdaConsequence} instances, with support for batch
  * compilation and pre-built metadata reuse.
+ *
+ * <p>When pre-built metadata is provided but an entry is missing, stale, or
+ * the class file can't be loaded, behavior is controlled by
+ * {@link DrlxMetadataMismatchMode} — fail-fast by default.
  */
 public class DrlxLambdaCompiler {
 
@@ -64,7 +68,7 @@ public class DrlxLambdaCompiler {
 
     public record BoundVariable(String name, Class<?> type, Pattern pattern) {}
 
-    public record PendingLambda(MVELBatchCompiler.LambdaHandle handle, Object target) {}
+    public record PendingLambda(MVELBatchCompiler.LambdaHandle handle, EvaluatorSink target) {}
 
     protected int patternId = 0;
 
@@ -98,32 +102,21 @@ public class DrlxLambdaCompiler {
     }
 
     public DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
-        int capturedCounter = lambdaCounter++;
-        if (preBuildMetadata != null) {
-            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
-            if (entry != null && entry.expression().equals(expression)) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Evaluator<Object, Void, Boolean> evaluator = (Evaluator<Object, Void, Boolean>) loadPreCompiledEvaluator(entry.fqn(), entry.physicalId());
-                    LOG.info("Loaded pre-compiled constraint evaluator for {}.{}", currentRuleName, capturedCounter);
-                    return new DrlxLambdaConstraint(expression, patternType, evaluator);
-                } catch (Exception e) {
-                    LOG.warn("Failed to load pre-compiled constraint for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
-                }
-            } else if (entry == null) {
-                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
-            } else {
-                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
-                        currentRuleName, capturedCounter, expression, entry.expression());
-            }
+        int counter = lambdaCounter++;
+        @SuppressWarnings("unchecked")
+        Evaluator<Object, Void, Boolean> preCompiled = (Evaluator<Object, Void, Boolean>) tryLoadPreCompiled(counter, expression, "constraint");
+        if (preCompiled != null) {
+            return new DrlxLambdaConstraint(expression, patternType, preCompiled);
         }
-        return createBatchConstraint(expression, patternType, declarations);
+        DrlxLambdaConstraint constraint = createBatchConstraint(expression, patternType, declarations);
+        onLambdaCreated(counter, expression);
+        return constraint;
     }
 
     public Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
                                                  org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
                                                  List<BoundVariable> referencedBindings) {
-        int capturedCounter = lambdaCounter++;
+        int counter = lambdaCounter++;
 
         List<org.mvel3.transpiler.context.Declaration<?>> allDecls = new ArrayList<>(Arrays.asList(patternDeclarations));
         for (BoundVariable bv : referencedBindings) {
@@ -135,50 +128,28 @@ public class DrlxLambdaCompiler {
                 .map(bv -> bv.pattern().getDeclaration())
                 .toArray(Declaration[]::new);
 
-        if (preBuildMetadata != null) {
-            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
-            if (entry != null && entry.expression().equals(expression)) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Evaluator<Map<String, Object>, Void, Boolean> evaluator =
-                            (Evaluator<Map<String, Object>, Void, Boolean>) loadPreCompiledEvaluator(entry.fqn(), entry.physicalId());
-                    LOG.info("Loaded pre-compiled beta constraint evaluator for {}.{}", currentRuleName, capturedCounter);
-                    return new DrlxLambdaBetaConstraint(expression, patternType, evaluator, requiredDeclarations);
-                } catch (Exception e) {
-                    LOG.warn("Failed to load pre-compiled beta constraint for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
-                }
-            } else if (entry == null) {
-                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
-            } else {
-                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
-                        currentRuleName, capturedCounter, expression, entry.expression());
-            }
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, Boolean> preCompiled =
+                (Evaluator<Map<String, Object>, Void, Boolean>) tryLoadPreCompiled(counter, expression, "beta constraint");
+        if (preCompiled != null) {
+            return new DrlxLambdaBetaConstraint(expression, patternType, preCompiled, requiredDeclarations);
         }
-
-        return createBatchBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
+        DrlxLambdaBetaConstraint constraint = createBatchBetaConstraint(expression, patternType, mvelDeclarations, requiredDeclarations);
+        onLambdaCreated(counter, expression);
+        return constraint;
     }
 
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
-        int capturedCounter = lambdaCounter++;
-        if (preBuildMetadata != null) {
-            DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, capturedCounter);
-            if (entry != null && entry.expression().equals(consequenceBlock)) {
-                try {
-                    @SuppressWarnings("unchecked")
-                    Evaluator<Map<String, Object>, Void, String> evaluator = (Evaluator<Map<String, Object>, Void, String>) loadPreCompiledEvaluator(entry.fqn(), entry.physicalId());
-                    LOG.info("Loaded pre-compiled consequence evaluator for {}.{}", currentRuleName, capturedCounter);
-                    return new DrlxLambdaConsequence(consequenceBlock, declarationTypes, evaluator);
-                } catch (Exception e) {
-                    LOG.warn("Failed to load pre-compiled consequence for {}.{}, falling back to compilation", currentRuleName, capturedCounter, e);
-                }
-            } else if (entry == null) {
-                LOG.warn("No pre-built metadata for {}.{}, falling back to compilation", currentRuleName, capturedCounter);
-            } else {
-                LOG.warn("Expression mismatch for {}.{}: expected '{}' but found '{}', falling back to compilation",
-                        currentRuleName, capturedCounter, consequenceBlock, entry.expression());
-            }
+        int counter = lambdaCounter++;
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, String> preCompiled =
+                (Evaluator<Map<String, Object>, Void, String>) tryLoadPreCompiled(counter, consequenceBlock, "consequence");
+        if (preCompiled != null) {
+            return new DrlxLambdaConsequence(consequenceBlock, declarationTypes, preCompiled);
         }
-        return createBatchConsequence(consequenceBlock, declarationTypes);
+        DrlxLambdaConsequence consequence = createBatchConsequence(consequenceBlock, declarationTypes);
+        onLambdaCreated(counter, consequenceBlock);
+        return consequence;
     }
 
     public void compileBatch(ClassLoader classLoader) {
@@ -187,15 +158,64 @@ public class DrlxLambdaCompiler {
         }
         batchCompiler.compile(classLoader);
         for (PendingLambda pl : pendingLambdas) {
-            if (pl.target() instanceof DrlxLambdaConstraint c) {
-                c.setEvaluator(batchCompiler.resolve(pl.handle()));
-            } else if (pl.target() instanceof DrlxLambdaBetaConstraint c) {
-                c.setEvaluator(batchCompiler.resolve(pl.handle()));
-            } else if (pl.target() instanceof DrlxLambdaConsequence c) {
-                c.setEvaluator(batchCompiler.resolve(pl.handle()));
-            }
+            pl.target().bindEvaluator(batchCompiler.resolve(pl.handle()));
         }
         pendingLambdas.clear();
+    }
+
+    /**
+     * Hook called after a new lambda has been added to {@link #pendingLambdas}
+     * on the batch-compilation path. Subclasses ({@link DrlxPreBuildLambdaCompiler})
+     * override this to record metadata; the default is a no-op.
+     */
+    protected void onLambdaCreated(int counter, String expression) {
+    }
+
+    /**
+     * Try to resolve a pre-compiled evaluator from {@link #preBuildMetadata}.
+     * Returns {@code null} when no metadata is attached, or when the lookup misses
+     * and {@link DrlxMetadataMismatchMode#current()} is {@link DrlxMetadataMismatchMode#FALLBACK}.
+     * Throws {@link IllegalStateException} on miss/mismatch/load-failure when the
+     * mode is {@link DrlxMetadataMismatchMode#FAIL_FAST} (the default).
+     */
+    private Object tryLoadPreCompiled(int counter, String expression, String kind) {
+        if (preBuildMetadata == null) {
+            return null;
+        }
+        DrlxLambdaMetadata.LambdaEntry entry = preBuildMetadata.get(currentRuleName, counter);
+        if (entry == null) {
+            return handleMetadataMismatch(counter, kind,
+                    "No pre-built metadata for " + currentRuleName + "." + counter, null);
+        }
+        if (!entry.expression().equals(expression)) {
+            return handleMetadataMismatch(counter, kind,
+                    "Expression mismatch for " + currentRuleName + "." + counter
+                            + ": expected '" + expression + "' but found '" + entry.expression() + "'",
+                    null);
+        }
+        try {
+            Object evaluator = loadPreCompiledEvaluator(entry.fqn(), entry.physicalId());
+            LOG.info("Loaded pre-compiled {} evaluator for {}.{}", kind, currentRuleName, counter);
+            return evaluator;
+        } catch (Exception e) {
+            return handleMetadataMismatch(counter, kind,
+                    "Failed to load pre-compiled " + kind + " for " + currentRuleName + "." + counter, e);
+        }
+    }
+
+    private Object handleMetadataMismatch(int counter, String kind, String message, Exception cause) {
+        switch (DrlxMetadataMismatchMode.current()) {
+            case FAIL_FAST -> throw new IllegalStateException(message, cause);
+            case FALLBACK -> {
+                if (cause != null) {
+                    LOG.warn("{}, falling back to compilation", message, cause);
+                } else {
+                    LOG.warn("{}, falling back to compilation", message);
+                }
+                return null;
+            }
+        }
+        throw new IllegalStateException("Unhandled DrlxMetadataMismatchMode"); // unreachable
     }
 
     private DrlxLambdaConstraint createBatchConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {

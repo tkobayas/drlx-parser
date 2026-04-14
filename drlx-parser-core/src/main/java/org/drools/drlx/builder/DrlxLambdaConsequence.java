@@ -13,7 +13,7 @@ import org.mvel3.Evaluator;
 import org.mvel3.MVEL;
 import org.mvel3.Type;
 
-public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper> {
+public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper>, EvaluatorSink {
 
     private static final String RETURN_NULL = "\n return null;";
 
@@ -42,6 +42,12 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper> {
 
     public void setEvaluator(Evaluator<Map<String, Object>, Void, String> evaluator) {
         this.evaluator = evaluator;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public void bindEvaluator(Evaluator<?, ?, ?> evaluator) {
+        setEvaluator((Evaluator) evaluator);
     }
 
     private void initializeLambdaConsequence() {

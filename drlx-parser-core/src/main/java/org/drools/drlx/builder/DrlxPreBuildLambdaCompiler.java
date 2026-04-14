@@ -2,19 +2,15 @@ package org.drools.drlx.builder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import org.drools.base.rule.constraint.Constraint;
-import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.mvel3.MVELBatchCompiler;
-import org.mvel3.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Pre-build lambda compiler that extends {@link DrlxLambdaCompiler}.
- * Compiles lambdas via super and records metadata mapping for later
- * reuse in runtime builds.
+ * Records metadata for each compiled lambda via the {@link #onLambdaCreated}
+ * hook so that runtime builds can bypass MVEL compilation.
  */
 public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
 
@@ -35,34 +31,9 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
     }
 
     @Override
-    public DrlxLambdaConstraint createLambdaConstraint(String expression, Class<?> patternType, org.mvel3.transpiler.context.Declaration<?>[] declarations) {
-        int capturedCounter = lambdaCounter; // capture before super increments it
-        DrlxLambdaConstraint constraint = super.createLambdaConstraint(expression, patternType, declarations);
-        recordPending(capturedCounter, expression);
-        return constraint;
-    }
-
-    @Override
-    public Constraint createBetaLambdaConstraint(String expression, Class<?> patternType,
-                                                 org.mvel3.transpiler.context.Declaration<?>[] patternDeclarations,
-                                                 List<BoundVariable> referencedBindings) {
-        int capturedCounter = lambdaCounter; // capture before super increments it
-        Constraint constraint = super.createBetaLambdaConstraint(expression, patternType, patternDeclarations, referencedBindings);
-        recordPending(capturedCounter, expression);
-        return constraint;
-    }
-
-    @Override
-    public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
-        int capturedCounter = lambdaCounter; // capture before super increments it
-        DrlxLambdaConsequence consequence = super.createLambdaConsequence(consequenceBlock, declarationTypes);
-        recordPending(capturedCounter, consequenceBlock);
-        return consequence;
-    }
-
-    private void recordPending(int capturedCounter, String expression) {
+    protected void onLambdaCreated(int counter, String expression) {
         MVELBatchCompiler.LambdaHandle handle = pendingLambdas.get(pendingLambdas.size() - 1).handle();
-        pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, capturedCounter, expression, handle));
+        pendingPreBuildInfos.add(new PendingPreBuildInfo(currentRuleName, counter, expression, handle));
     }
 
     @Override

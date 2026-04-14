@@ -23,6 +23,7 @@ import org.kie.api.runtime.rule.EntryPoint;
 import org.mvel3.lambdaextractor.LambdaRegistry;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mvel3.lambdaextractor.LambdaRegistry.DEFAULT_PERSISTENCE_PATH;
 
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
@@ -249,20 +250,28 @@ class DrlxRuleBuilderTest {
                 """;
 
         DrlxRuleBuilder builder = new DrlxRuleBuilder();
-
-        // Build with empty metadata — should fall back to normal compilation
         DrlxLambdaMetadata emptyMetadata = new DrlxLambdaMetadata();
-        KieBase kieBase = builder.build(rule, emptyMetadata);
 
-        KieSession kieSession = kieBase.newKieSession();
+        // Default is FAIL_FAST — empty metadata should raise an explicit error.
+        assertThatThrownBy(() -> builder.build(rule, emptyMetadata))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No pre-built metadata");
 
-        EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-        entryPoint.insert(new Person("John", 25));
-        int fired = kieSession.fireAllRules();
+        // FALLBACK mode recompiles silently — opt-in behavior.
+        System.setProperty(DrlxMetadataMismatchMode.PROPERTY, "fallback");
+        try {
+            KieBase kieBase = builder.build(rule, emptyMetadata);
+            KieSession kieSession = kieBase.newKieSession();
 
-        assertThat(fired).isEqualTo(1);
+            EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("John", 25));
+            int fired = kieSession.fireAllRules();
 
-        kieSession.dispose();
+            assertThat(fired).isEqualTo(1);
+            kieSession.dispose();
+        } finally {
+            System.clearProperty(DrlxMetadataMismatchMode.PROPERTY);
+        }
     }
 
     @Test

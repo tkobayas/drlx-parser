@@ -29,7 +29,7 @@ import org.mvel3.MVEL;
  * Uses MAP context MVEL evaluator so both current fact properties and external bindings
  * are accessible.
  */
-public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry> {
+public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry> implements EvaluatorSink {
 
     private String expression;
     private Class<?> patternType;
@@ -88,6 +88,12 @@ public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry
     @SuppressWarnings("unchecked")
     public void setEvaluator(Evaluator<?, ?, Boolean> evaluator) {
         this.evaluator = (Evaluator<Map<String, Object>, Void, Boolean>) evaluator;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Override
+    public void bindEvaluator(Evaluator<?, ?, ?> evaluator) {
+        setEvaluator((Evaluator) evaluator);
     }
 
     private static PropertyExtractor[] buildPropertyExtractors(Class<?> patternType) {
