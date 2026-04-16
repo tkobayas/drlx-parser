@@ -174,9 +174,9 @@ KieBase
 
 | Class | Role |
 |-------|------|
-| `DrlxToJavaParserVisitor` | Converts ANTLR tree to JavaParser AST. Used by tooling (IDE support, formatting). |
+| `DrlxToJavaParserVisitor` | Converts ANTLR tree to JavaParser AST. **Frozen** — retained only as the base class for `TolerantDrlxToJavaParserVisitor` (drlx-lsp completion). New DRLX syntax features are not propagated here. |
 | `TolerantDrlxParser` | Error-tolerant parsing entry point. |
-| `TolerantDrlxToJavaParserVisitor` | Error-tolerant variant of `DrlxToJavaParserVisitor`. |
+| `TolerantDrlxToJavaParserVisitor` | Error-tolerant variant of `DrlxToJavaParserVisitor`, used by drlx-lsp. LSP completion relies on the token→AST-node map, so semantic completeness of the AST is not required. |
 
 ### Utility
 

@@ -120,6 +120,16 @@ import org.mvel3.parser.ast.expr.TemporalLiteralExpr;
 /**
  * Visitor that converts DRLX ANTLR4 parse tree to JavaParser AST nodes.
  * This implementation can return various types of nodes (Expression, Statement, etc.).
+ *
+ * <p><b>Frozen for ongoing DRLX syntax enhancements.</b> This visitor is retained only
+ * because {@link TolerantDrlxToJavaParserVisitor} extends it to power drlx-lsp code
+ * completion, which relies on the token-to-AST-node map rather than on semantic
+ * completeness of the produced AST. New DRLX syntax features (e.g. positional syntax,
+ * rule annotations) are NOT propagated here; they are implemented only in
+ * {@code DrlxToRuleAstVisitor} and the RuleAST pipeline. If a new syntax element
+ * reaches this visitor, it is intentionally ignored or dropped — do not extend this
+ * visitor to support new syntax without first revisiting whether the JavaParser AST
+ * path still has a consumer beyond the LSP.
  */
 public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
