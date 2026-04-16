@@ -174,7 +174,6 @@ KieBase
 
 | Class | Role |
 |-------|------|
-| `DrlxToDescrVisitor` | Legacy: produces `drools-drl-ast` Descriptor objects. |
 | `DrlxToJavaParserVisitor` | Converts ANTLR tree to JavaParser AST. Used by tooling (IDE support, formatting). |
 | `TolerantDrlxParser` | Error-tolerant parsing entry point. |
 | `TolerantDrlxToJavaParserVisitor` | Error-tolerant variant of `DrlxToJavaParserVisitor`. |
@@ -304,7 +303,6 @@ All tests live in `drlx-parser-core`:
 | `DrlxCompilerNoPersistTest` | In-memory build (no disk I/O) |
 | `DrlxRuleBuilderTest` | Direct rule building, alpha/beta/multi-join constraints |
 | `DrlxParserTest` | Low-level ANTLR parser verification |
-| `DrlxToDescrVisitorTest` | Legacy Descriptor generation |
 | `DrlxToJavaParserVisitorTest` | JavaParser AST conversion |
 | `TolerantDrlxToJavaParserVisitorTest` | Error-tolerant parsing edge cases |
 

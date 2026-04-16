@@ -39,12 +39,6 @@
             <artifactId>javaparser-symbol-solver-core</artifactId>
         </dependency>
 
-        <!-- for DrlxToDescrVisitor -->
-        <dependency>
-            <groupId>org.drools</groupId>
-            <artifactId>drools-drl-ast</artifactId>
-        </dependency>
-
         <!-- for DrlxRuleBuilder -->
         <dependency>
             <groupId>org.drools</groupId>

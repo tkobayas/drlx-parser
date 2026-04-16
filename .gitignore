@@ -28,3 +28,5 @@ gen/
 **/src/main/antlr4/org/drools/drlx/parser/*.tokens
 
 /bak
+
+CLAUDE.local.md
