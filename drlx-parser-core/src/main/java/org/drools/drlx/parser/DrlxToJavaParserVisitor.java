@@ -447,9 +447,12 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
     @Override
     public Node visitOopathRoot(DrlxParser.OopathRootContext ctx) {
-        // Temporary: delegate to chunk-style construction. Task 13 will replace
-        // this with a throw-on-positional version after refactoring the chunk
-        // builder into a shared helper.
+        if (ctx.expression() != null && !ctx.expression().isEmpty()) {
+            throw new UnsupportedOperationException(
+                    "Positional syntax is not supported in DrlxToJavaParserVisitor — "
+                    + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                    + "Note: this visitor is frozen for new DRLX syntax.");
+        }
         SimpleName field = new SimpleName(ctx.identifier(0).getText());
         SimpleName inlineCast = ctx.identifier().size() > 1 ? new SimpleName(ctx.identifier(1).getText()) : null;
 
@@ -461,17 +464,7 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
             }
         }
 
-        OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, conditions);
-
-        field.setParentNode(chunk);
-        if (inlineCast != null) {
-            inlineCast.setParentNode(chunk);
-        }
-        for (DrlxExpression condition : conditions) {
-            condition.setParentNode(chunk);
-        }
-
-        return chunk;
+        return buildOOPathChunk(field, inlineCast, conditions);
     }
 
     @Override
@@ -487,6 +480,17 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
             }
         }
 
+        return buildOOPathChunk(field, inlineCast, conditions);
+    }
+
+    /**
+     * Construct an {@link OOPathChunk} with parent-relationship wiring.
+     * Shared helper for both {@code visitOopathRoot} (when no positional args
+     * are present) and {@code visitOopathChunk}.
+     */
+    protected OOPathChunk buildOOPathChunk(SimpleName field,
+                                           SimpleName inlineCast,
+                                           NodeList<DrlxExpression> conditions) {
         OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, conditions);
 
         field.setParentNode(chunk);
