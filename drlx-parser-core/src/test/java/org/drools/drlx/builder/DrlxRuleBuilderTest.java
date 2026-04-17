@@ -448,6 +448,43 @@ class DrlxRuleBuilderTest {
     }
 
     @Test
+    void testPositionalWithComplexExpression() {
+        // Positional arg references a previously bound variable (beta path) AND
+        // contains a binary operator (string concat) that exercises defensive parens.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Location;
+
+                unit MyUnit;
+
+                rule MatchByPersonName {
+                    Person p : /persons[ name == "paris" ],
+                    Location l : /locations(p.name),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint persons = kieSession.getEntryPoint("persons");
+        EntryPoint locations = kieSession.getEntryPoint("locations");
+        persons.insert(new Person("paris", 30));
+        locations.insert(new Location("paris", "Belleville"));
+        locations.insert(new Location("london", "Soho"));
+
+        int fired = kieSession.fireAllRules();
+
+        // Person p with name="paris" exists; Location with city == p.name fires once for "paris" Location.
+        assertThat(fired).isEqualTo(1);
+
+        kieSession.dispose();
+    }
+
+    @Test
     void testPositionalInheritedCollisionFails() {
         // ChildPositioned and its parent BasePositioned both declare @Position(0) —
         // resolver must reject the inherited collision.
