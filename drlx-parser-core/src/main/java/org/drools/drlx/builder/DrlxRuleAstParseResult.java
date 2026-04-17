@@ -77,7 +77,8 @@ public final class DrlxRuleAstParseResult {
                                 pattern.getBindName(),
                                 pattern.getEntryPoint(),
                                 List.copyOf(pattern.getConditionsList()),
-                                castTypeName));
+                                castTypeName,
+                                List.of()));
                     }
                     case CONSEQUENCE -> items.add(new ConsequenceIR(itemParseResult.getConsequence().getBlock()));
                     case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);

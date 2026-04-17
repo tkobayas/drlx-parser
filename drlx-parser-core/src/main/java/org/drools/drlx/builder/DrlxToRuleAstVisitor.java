@@ -81,7 +81,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
         String castTypeName = extractCastType(oopathCtx);
         List<String> conditions = extractConditions(oopathCtx);
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName);
+        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, List.of());
     }
 
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {

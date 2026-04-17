@@ -25,7 +25,8 @@ public final class DrlxRuleAstModel {
                             String bindName,
                             String entryPoint,
                             List<String> conditions,
-                            String castTypeName) implements RuleItemIR {
+                            String castTypeName,
+                            List<String> positionalArgs) implements RuleItemIR {
     }
 
     public record ConsequenceIR(String block) implements RuleItemIR {
