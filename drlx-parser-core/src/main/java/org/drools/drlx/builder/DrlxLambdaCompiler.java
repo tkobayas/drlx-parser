@@ -3,6 +3,7 @@ package org.drools.drlx.builder;
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
+import java.lang.reflect.Field;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import org.drools.base.rule.Declaration;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.Constraint;
+import org.kie.api.definition.type.Position;
 import org.mvel3.ClassManager;
 import org.mvel3.CompilerParameters;
 import org.mvel3.Evaluator;
@@ -64,6 +66,50 @@ public class DrlxLambdaCompiler {
                 throw new RuntimeException("Failed to introspect " + clz.getName(), e);
             }
         });
+    }
+
+    private static final ConcurrentHashMap<Class<?>, Map<Integer, String>> POSITION_CACHE = new ConcurrentHashMap<>();
+
+    /**
+     * Resolves a positional argument index to the corresponding field name on the given class,
+     * walking the class hierarchy and consulting {@link Position @Position} annotations.
+     * Fails loudly on duplicate or inherited-collision annotations.
+     *
+     * @throws RuntimeException if no field is annotated with {@code @Position(index)},
+     *                          or if multiple fields share the same position.
+     */
+    public static String resolvePositionalField(Class<?> patternType, int index) {
+        Map<Integer, String> map = POSITION_CACHE.computeIfAbsent(patternType,
+                DrlxLambdaCompiler::buildPositionMap);
+        String name = map.get(index);
+        if (name == null) {
+            throw new RuntimeException(
+                    "Unable to find @Position(" + index + ") field for class " + patternType.getName());
+        }
+        return name;
+    }
+
+    private static Map<Integer, String> buildPositionMap(Class<?> clz) {
+        Map<Integer, String> map = new HashMap<>();
+        Map<Integer, String> ownerByPosition = new HashMap<>();
+        for (Class<?> c = clz; c != null && c != Object.class; c = c.getSuperclass()) {
+            for (Field f : c.getDeclaredFields()) {
+                Position pos = f.getAnnotation(Position.class);
+                if (pos == null) {
+                    continue;
+                }
+                int n = pos.value();
+                if (map.containsKey(n)) {
+                    throw new RuntimeException(
+                            "Duplicate @Position(" + n + ") on " + clz.getName()
+                            + ": " + ownerByPosition.get(n) + "#" + map.get(n)
+                            + " and " + c.getName() + "#" + f.getName());
+                }
+                map.put(n, f.getName());
+                ownerByPosition.put(n, c.getName());
+            }
+        }
+        return map;
     }
 
     public record BoundVariable(String name, Class<?> type, Pattern pattern) {}

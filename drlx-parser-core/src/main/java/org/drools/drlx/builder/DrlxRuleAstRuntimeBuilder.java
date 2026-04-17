@@ -97,6 +97,18 @@ public class DrlxRuleAstRuntimeBuilder {
 
         Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
         org.mvel3.transpiler.context.Declaration<?>[] declarations = DrlxLambdaCompiler.extractDeclarations(patternClass);
+
+        for (int i = 0; i < parseResult.positionalArgs().size(); i++) {
+            String argExpr = parseResult.positionalArgs().get(i);
+            String fieldName = DrlxLambdaCompiler.resolvePositionalField(patternClass, i);
+            String synthesized = fieldName + " == (" + argExpr + ")";
+            List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(synthesized, boundVariables);
+            Constraint constraint = referencedBindings.isEmpty()
+                    ? lambdaCompiler.createLambdaConstraint(synthesized, patternClass, declarations)
+                    : lambdaCompiler.createBetaLambdaConstraint(synthesized, patternClass, declarations, referencedBindings);
+            pattern.addConstraint(constraint);
+        }
+
         for (String expression : parseResult.conditions()) {
             List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(expression, boundVariables);
             Constraint constraint = referencedBindings.isEmpty()
