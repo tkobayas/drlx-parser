@@ -65,13 +65,21 @@ ruleConsequence
     : DO statement
     ;
 
-// OOPath expression - starts with / and can have multiple chunks
+// OOPath expression - starts with / followed by a root chunk that may carry
+// positional args; subsequent chunks are navigation-only and cannot carry positional.
 // Aligns with: OOPathExpr(NodeList<OOPathChunk> chunks)
 oopathExpression
-    : '/' oopathChunk ('/' oopathChunk)*
+    : '/' oopathRoot ('/' oopathChunk)*
     ;
 
-// OOPath chunk
+// OOPath root chunk - the only place positional (...) is grammatically valid
+oopathRoot
+    : identifier (HASH identifier)?
+      ('(' expression (',' expression)* ')')?
+      ('[' drlxExpression (',' drlxExpression)* ']')?
+    ;
+
+// OOPath chunk - navigation segments after the root; no positional
 oopathChunk
     : identifier (HASH identifier)? ('[' drlxExpression (',' drlxExpression)* ']')?
     ;

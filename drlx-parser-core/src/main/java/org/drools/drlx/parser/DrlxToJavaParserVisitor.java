@@ -425,22 +425,53 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
     @Override
     public Node visitOopathExpression(DrlxParser.OopathExpressionContext ctx) {
         NodeList<OOPathChunk> chunks = new NodeList<>();
-        
+
+        if (ctx.oopathRoot() != null) {
+            chunks.add((OOPathChunk) visit(ctx.oopathRoot()));
+        }
         if (ctx.oopathChunk() != null) {
             for (DrlxParser.OopathChunkContext chunkCtx : ctx.oopathChunk()) {
-                OOPathChunk chunk = (OOPathChunk) visit(chunkCtx);
-                chunks.add(chunk);
+                chunks.add((OOPathChunk) visit(chunkCtx));
             }
         }
-        
+
         OOPathExpr oopathExpr = new OOPathExpr(null, chunks);
-        
+
         // Set parent relationships
         for (OOPathChunk chunk : chunks) {
             chunk.setParentNode(oopathExpr);
         }
-        
+
         return oopathExpr;
+    }
+
+    @Override
+    public Node visitOopathRoot(DrlxParser.OopathRootContext ctx) {
+        // Temporary: delegate to chunk-style construction. Task 13 will replace
+        // this with a throw-on-positional version after refactoring the chunk
+        // builder into a shared helper.
+        SimpleName field = new SimpleName(ctx.identifier(0).getText());
+        SimpleName inlineCast = ctx.identifier().size() > 1 ? new SimpleName(ctx.identifier(1).getText()) : null;
+
+        NodeList<DrlxExpression> conditions = new NodeList<>();
+        if (ctx.drlxExpression() != null) {
+            for (DrlxParser.DrlxExpressionContext drlxCtx : ctx.drlxExpression()) {
+                DrlxExpression condition = (DrlxExpression) visit(drlxCtx);
+                conditions.add(condition);
+            }
+        }
+
+        OOPathChunk chunk = new OOPathChunk(null, field, inlineCast, conditions);
+
+        field.setParentNode(chunk);
+        if (inlineCast != null) {
+            inlineCast.setParentNode(chunk);
+        }
+        for (DrlxExpression condition : conditions) {
+            condition.setParentNode(chunk);
+        }
+
+        return chunk;
     }
 
     @Override

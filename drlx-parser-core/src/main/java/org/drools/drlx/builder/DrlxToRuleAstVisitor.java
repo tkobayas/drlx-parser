@@ -90,36 +90,41 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private static String extractEntryPointFromOopathCtx(DrlxParser.OopathExpressionContext ctx) {
-        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
-        if (chunks.isEmpty()) {
+        DrlxParser.OopathRootContext root = ctx.oopathRoot();
+        if (root == null) {
             return "";
         }
-        return chunks.get(0).identifier(0).getText();
+        return root.identifier(0).getText();
     }
 
     /**
-     * Extract inline cast type from the first oopathChunk, if present.
+     * Extract inline cast type from the oopath root, if present.
      * e.g., {@code /objects#Car[speed > 80]} → {@code "Car"}.
      */
     private static String extractCastType(DrlxParser.OopathExpressionContext ctx) {
-        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
-        if (chunks.isEmpty()) {
+        DrlxParser.OopathRootContext root = ctx.oopathRoot();
+        if (root == null) {
             return null;
         }
-        DrlxParser.OopathChunkContext firstChunk = chunks.get(0);
-        if (firstChunk.identifier().size() > 1) {
-            return firstChunk.identifier(1).getText();
+        if (root.identifier().size() > 1) {
+            return root.identifier(1).getText();
         }
         return null;
     }
 
     private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {
         List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
-        if (chunks.isEmpty()) {
+        if (!chunks.isEmpty()) {
+            DrlxParser.OopathChunkContext lastChunk = chunks.get(chunks.size() - 1);
+            return lastChunk.drlxExpression().stream()
+                    .map(this::getText)
+                    .toList();
+        }
+        DrlxParser.OopathRootContext root = ctx.oopathRoot();
+        if (root == null) {
             return List.of();
         }
-        DrlxParser.OopathChunkContext lastChunk = chunks.get(chunks.size() - 1);
-        return lastChunk.drlxExpression().stream()
+        return root.drlxExpression().stream()
                 .map(this::getText)
                 .toList();
     }
