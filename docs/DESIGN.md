@@ -59,6 +59,8 @@ rule "age check" {
 Key syntax elements:
 - **Patterns:** `Type $var : /entryPoint[ conditions ]`
 - **OOPath:** navigates object graphs with nested filtering
+- **Inline cast:** `/entryPoint#Type[ conditions ]` filters by type
+- **Positional:** `/entryPoint(arg0, arg1, ...)` resolves args to fields via `@Position(N)` annotations on the pattern type. Combinable with inline cast and slotted: `/entryPoint#Type(arg)[ conditions ]`. Grammar restricts positional to the root chunk only — `/a/b("x")` is a parse error. See `specs/2026-04-17-positional-syntax-design.md`.
 - **Alpha conditions:** single-fact constraints (`age > 18`)
 - **Beta conditions:** cross-fact joins (`age < $other.age`)
 - **Consequences:** Java statement blocks in `do { ... }`
