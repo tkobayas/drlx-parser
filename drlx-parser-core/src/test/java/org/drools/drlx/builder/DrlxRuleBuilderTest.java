@@ -380,6 +380,70 @@ class DrlxRuleBuilderTest {
         kieSession.dispose();
     }
 
+    @Test
+    void testPositionalAndSlotted() {
+        // Positional + slotted: city == "paris" AND district == "Belleville"
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                unit MyUnit;
+
+                rule MatchParisBelleville {
+                    Location l : /locations("paris")[ district == "Belleville" ],
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("locations");
+        entryPoint.insert(new Location("paris", "Belleville"));
+        entryPoint.insert(new Location("paris", "Montmartre"));
+        entryPoint.insert(new Location("london", "Soho"));
+
+        int fired = kieSession.fireAllRules();
+
+        assertThat(fired).isEqualTo(1);
+
+        kieSession.dispose();
+    }
+
+    @Test
+    void testPositionalSyntaxTwoArgs() {
+        // Multi-arg positional: city == "paris" AND district == "Belleville"
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                unit MyUnit;
+
+                rule MatchParisBelleville {
+                    Location l : /locations("paris", "Belleville"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("locations");
+        entryPoint.insert(new Location("paris", "Belleville"));
+        entryPoint.insert(new Location("paris", "Montmartre"));
+        entryPoint.insert(new Location("london", "Soho"));
+
+        int fired = kieSession.fireAllRules();
+
+        assertThat(fired).isEqualTo(1);
+
+        kieSession.dispose();
+    }
+
     private List<Path> listClassFiles() {
         try (Stream<Path> walk = Files.walk(DEFAULT_PERSISTENCE_PATH)) {
             return walk
