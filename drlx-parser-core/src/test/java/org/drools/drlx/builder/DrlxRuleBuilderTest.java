@@ -14,6 +14,7 @@ import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.ReteDumper;
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Employee;
+import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
@@ -342,6 +343,38 @@ class DrlxRuleBuilderTest {
         int fired = kieSession.fireAllRules();
 
         // Only the 2 Employees should match, not the plain Person
+        assertThat(fired).isEqualTo(2);
+
+        kieSession.dispose();
+    }
+
+    @Test
+    void testPositionalSyntax() {
+        // Single-arg positional: /locations("paris") → city == "paris"
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                unit MyUnit;
+
+                rule MatchParisLocations {
+                    Location l : /locations("paris"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+        KieSession kieSession = kieBase.newKieSession();
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("locations");
+        entryPoint.insert(new Location("paris", "Belleville"));
+        entryPoint.insert(new Location("paris", "Montmartre"));
+        entryPoint.insert(new Location("london", "Soho"));
+
+        int fired = kieSession.fireAllRules();
+
         assertThat(fired).isEqualTo(2);
 
         kieSession.dispose();
