@@ -13,6 +13,7 @@ import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.ReteDumper;
 import org.drools.drlx.domain.Address;
+import org.drools.drlx.domain.ChildPositioned;
 import org.drools.drlx.domain.DuplicatePositionLocation;
 import org.drools.drlx.domain.Employee;
 import org.drools.drlx.domain.Location;
@@ -444,6 +445,32 @@ class DrlxRuleBuilderTest {
         assertThat(fired).isEqualTo(1);
 
         kieSession.dispose();
+    }
+
+    @Test
+    void testPositionalInheritedCollisionFails() {
+        // ChildPositioned and its parent BasePositioned both declare @Position(0) —
+        // resolver must reject the inherited collision.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.ChildPositioned;
+
+                unit MyUnit;
+
+                rule TryInheritedCollision {
+                    ChildPositioned l : /things("x"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Duplicate @Position(0)")
+                .hasMessageContaining("ChildPositioned")
+                .hasMessageContaining("BasePositioned");
     }
 
     @Test
