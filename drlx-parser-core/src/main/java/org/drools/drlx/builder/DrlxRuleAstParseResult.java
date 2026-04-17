@@ -78,7 +78,7 @@ public final class DrlxRuleAstParseResult {
                                 pattern.getEntryPoint(),
                                 List.copyOf(pattern.getConditionsList()),
                                 castTypeName,
-                                List.of()));
+                                List.copyOf(pattern.getPositionalArgsList())));
                     }
                     case CONSEQUENCE -> items.add(new ConsequenceIR(itemParseResult.getConsequence().getBlock()));
                     case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
@@ -108,6 +108,7 @@ public final class DrlxRuleAstParseResult {
                 pb.setCastTypeName(p.castTypeName());
             }
             p.conditions().forEach(pb::addConditions);
+            p.positionalArgs().forEach(pb::addPositionalArgs);
             builder.setPattern(pb);
         } else if (item instanceof ConsequenceIR c) {
             builder.setConsequence(DrlxRuleAstProto.ConsequenceParseResult.newBuilder().setBlock(c.block()));

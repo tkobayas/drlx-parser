@@ -3240,6 +3240,31 @@ public final class DrlxRuleAstProto {
      */
     com.google.protobuf.ByteString
         getCastTypeNameBytes();
+
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @return A list containing the positionalArgs.
+     */
+    java.util.List<java.lang.String>
+        getPositionalArgsList();
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @return The count of positionalArgs.
+     */
+    int getPositionalArgsCount();
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @param index The index of the element to return.
+     * @return The positionalArgs at the given index.
+     */
+    java.lang.String getPositionalArgs(int index);
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the positionalArgs at the given index.
+     */
+    com.google.protobuf.ByteString
+        getPositionalArgsBytes(int index);
   }
   /**
    * Protobuf type {@code org.drools.drlx.builder.proto.PatternParseResult}
@@ -3260,6 +3285,8 @@ public final class DrlxRuleAstProto {
       conditions_ =
           com.google.protobuf.LazyStringArrayList.emptyList();
       castTypeName_ = "";
+      positionalArgs_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
     }
 
     @java.lang.Override
@@ -3475,6 +3502,43 @@ public final class DrlxRuleAstProto {
       }
     }
 
+    public static final int POSITIONAL_ARGS_FIELD_NUMBER = 6;
+    @SuppressWarnings("serial")
+    private com.google.protobuf.LazyStringArrayList positionalArgs_ =
+        com.google.protobuf.LazyStringArrayList.emptyList();
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @return A list containing the positionalArgs.
+     */
+    public com.google.protobuf.ProtocolStringList
+        getPositionalArgsList() {
+      return positionalArgs_;
+    }
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @return The count of positionalArgs.
+     */
+    public int getPositionalArgsCount() {
+      return positionalArgs_.size();
+    }
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @param index The index of the element to return.
+     * @return The positionalArgs at the given index.
+     */
+    public java.lang.String getPositionalArgs(int index) {
+      return positionalArgs_.get(index);
+    }
+    /**
+     * <code>repeated string positional_args = 6;</code>
+     * @param index The index of the value to return.
+     * @return The bytes of the positionalArgs at the given index.
+     */
+    public com.google.protobuf.ByteString
+        getPositionalArgsBytes(int index) {
+      return positionalArgs_.getByteString(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3503,6 +3567,9 @@ public final class DrlxRuleAstProto {
       }
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(castTypeName_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 5, castTypeName_);
+      }
+      for (int i = 0; i < positionalArgs_.size(); i++) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 6, positionalArgs_.getRaw(i));
       }
       getUnknownFields().writeTo(output);
     }
@@ -3533,6 +3600,14 @@ public final class DrlxRuleAstProto {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(castTypeName_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, castTypeName_);
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < positionalArgs_.size(); i++) {
+          dataSize += computeStringSizeNoTag(positionalArgs_.getRaw(i));
+        }
+        size += dataSize;
+        size += 1 * getPositionalArgsList().size();
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -3558,6 +3633,8 @@ public final class DrlxRuleAstProto {
           .equals(other.getConditionsList())) return false;
       if (!getCastTypeName()
           .equals(other.getCastTypeName())) return false;
+      if (!getPositionalArgsList()
+          .equals(other.getPositionalArgsList())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -3581,6 +3658,10 @@ public final class DrlxRuleAstProto {
       }
       hash = (37 * hash) + CAST_TYPE_NAME_FIELD_NUMBER;
       hash = (53 * hash) + getCastTypeName().hashCode();
+      if (getPositionalArgsCount() > 0) {
+        hash = (37 * hash) + POSITIONAL_ARGS_FIELD_NUMBER;
+        hash = (53 * hash) + getPositionalArgsList().hashCode();
+      }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3718,6 +3799,8 @@ public final class DrlxRuleAstProto {
         conditions_ =
             com.google.protobuf.LazyStringArrayList.emptyList();
         castTypeName_ = "";
+        positionalArgs_ =
+            com.google.protobuf.LazyStringArrayList.emptyList();
         return this;
       }
 
@@ -3766,6 +3849,10 @@ public final class DrlxRuleAstProto {
         }
         if (((from_bitField0_ & 0x00000010) != 0)) {
           result.castTypeName_ = castTypeName_;
+        }
+        if (((from_bitField0_ & 0x00000020) != 0)) {
+          positionalArgs_.makeImmutable();
+          result.positionalArgs_ = positionalArgs_;
         }
       }
 
@@ -3843,6 +3930,16 @@ public final class DrlxRuleAstProto {
           bitField0_ |= 0x00000010;
           onChanged();
         }
+        if (!other.positionalArgs_.isEmpty()) {
+          if (positionalArgs_.isEmpty()) {
+            positionalArgs_ = other.positionalArgs_;
+            bitField0_ |= 0x00000020;
+          } else {
+            ensurePositionalArgsIsMutable();
+            positionalArgs_.addAll(other.positionalArgs_);
+          }
+          onChanged();
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -3895,6 +3992,12 @@ public final class DrlxRuleAstProto {
                 bitField0_ |= 0x00000010;
                 break;
               } // case 42
+              case 50: {
+                java.lang.String s = input.readStringRequireUtf8();
+                ensurePositionalArgsIsMutable();
+                positionalArgs_.add(s);
+                break;
+              } // case 50
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -4307,6 +4410,117 @@ public final class DrlxRuleAstProto {
         checkByteStringIsUtf8(value);
         castTypeName_ = value;
         bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.LazyStringArrayList positionalArgs_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
+      private void ensurePositionalArgsIsMutable() {
+        if (!positionalArgs_.isModifiable()) {
+          positionalArgs_ = new com.google.protobuf.LazyStringArrayList(positionalArgs_);
+        }
+        bitField0_ |= 0x00000020;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @return A list containing the positionalArgs.
+       */
+      public com.google.protobuf.ProtocolStringList
+          getPositionalArgsList() {
+        positionalArgs_.makeImmutable();
+        return positionalArgs_;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @return The count of positionalArgs.
+       */
+      public int getPositionalArgsCount() {
+        return positionalArgs_.size();
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param index The index of the element to return.
+       * @return The positionalArgs at the given index.
+       */
+      public java.lang.String getPositionalArgs(int index) {
+        return positionalArgs_.get(index);
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param index The index of the value to return.
+       * @return The bytes of the positionalArgs at the given index.
+       */
+      public com.google.protobuf.ByteString
+          getPositionalArgsBytes(int index) {
+        return positionalArgs_.getByteString(index);
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param index The index to set the value at.
+       * @param value The positionalArgs to set.
+       * @return This builder for chaining.
+       */
+      public Builder setPositionalArgs(
+          int index, java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        ensurePositionalArgsIsMutable();
+        positionalArgs_.set(index, value);
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param value The positionalArgs to add.
+       * @return This builder for chaining.
+       */
+      public Builder addPositionalArgs(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        ensurePositionalArgsIsMutable();
+        positionalArgs_.add(value);
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param values The positionalArgs to add.
+       * @return This builder for chaining.
+       */
+      public Builder addAllPositionalArgs(
+          java.lang.Iterable<java.lang.String> values) {
+        ensurePositionalArgsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, positionalArgs_);
+        bitField0_ |= 0x00000020;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearPositionalArgs() {
+        positionalArgs_ =
+          com.google.protobuf.LazyStringArrayList.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000020);;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated string positional_args = 6;</code>
+       * @param value The bytes of the positionalArgs to add.
+       * @return This builder for chaining.
+       */
+      public Builder addPositionalArgsBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        ensurePositionalArgsIsMutable();
+        positionalArgs_.add(value);
+        bitField0_ |= 0x00000020;
         onChanged();
         return this;
       }
@@ -4972,12 +5186,13 @@ public final class DrlxRuleAstProto {
       ".drlx.builder.proto.PatternParseResultH\000" +
       "\022L\n\013consequence\030\002 \001(\01325.org.drools.drlx." +
       "builder.proto.ConsequenceParseResultH\000B\006" +
-      "\n\004item\"{\n\022PatternParseResult\022\021\n\ttype_nam" +
-      "e\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry_poin" +
-      "t\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast_type" +
-      "_name\030\005 \001(\t\"\'\n\026ConsequenceParseResult\022\r\n" +
-      "\005block\030\001 \001(\tB1\n\035org.drools.drlx.builder." +
-      "protoB\020DrlxRuleAstProtob\006proto3"
+      "\n\004item\"\224\001\n\022PatternParseResult\022\021\n\ttype_na" +
+      "me\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry_poi" +
+      "nt\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast_typ" +
+      "e_name\030\005 \001(\t\022\027\n\017positional_args\030\006 \003(\t\"\'\n" +
+      "\026ConsequenceParseResult\022\r\n\005block\030\001 \001(\tB1" +
+      "\n\035org.drools.drlx.builder.protoB\020DrlxRul" +
+      "eAstProtob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -5006,7 +5221,7 @@ public final class DrlxRuleAstProto {
     internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor,
-        new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", "CastTypeName", });
+        new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", "CastTypeName", "PositionalArgs", });
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable = new
