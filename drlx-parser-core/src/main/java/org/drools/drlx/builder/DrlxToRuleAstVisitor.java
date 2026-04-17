@@ -81,7 +81,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
         String castTypeName = extractCastType(oopathCtx);
         List<String> conditions = extractConditions(oopathCtx);
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, List.of());
+        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
+        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs);
     }
 
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {
@@ -110,6 +111,16 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             return root.identifier(1).getText();
         }
         return null;
+    }
+
+    private static List<String> extractPositionalArgs(DrlxParser.OopathExpressionContext ctx) {
+        DrlxParser.OopathRootContext root = ctx.oopathRoot();
+        if (root == null || root.expression() == null || root.expression().isEmpty()) {
+            return List.of();
+        }
+        return root.expression().stream()
+                .map(ParserRuleContext::getText)
+                .toList();
     }
 
     private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {
