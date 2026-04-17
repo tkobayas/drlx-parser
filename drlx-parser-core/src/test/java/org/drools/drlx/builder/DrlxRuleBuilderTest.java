@@ -13,6 +13,7 @@ import org.drools.base.reteoo.NodeTypeEnums;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.ReteDumper;
 import org.drools.drlx.domain.Address;
+import org.drools.drlx.domain.DuplicatePositionLocation;
 import org.drools.drlx.domain.Employee;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
@@ -443,6 +444,32 @@ class DrlxRuleBuilderTest {
         assertThat(fired).isEqualTo(1);
 
         kieSession.dispose();
+    }
+
+    @Test
+    void testPositionalDuplicatePositionFails() {
+        // Two fields both annotated @Position(0) — must fail loud, naming both fields.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.DuplicatePositionLocation;
+
+                unit MyUnit;
+
+                rule TryDuplicate {
+                    DuplicatePositionLocation l : /locations("paris"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Duplicate @Position(0)")
+                .hasMessageContaining("DuplicatePositionLocation")
+                .hasMessageContaining("city")
+                .hasMessageContaining("district");
     }
 
     @Test
