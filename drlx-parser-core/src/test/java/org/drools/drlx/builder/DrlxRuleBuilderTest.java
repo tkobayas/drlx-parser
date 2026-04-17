@@ -16,6 +16,7 @@ import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Employee;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
+import org.drools.drlx.domain.PlainLocation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
@@ -442,6 +443,30 @@ class DrlxRuleBuilderTest {
         assertThat(fired).isEqualTo(1);
 
         kieSession.dispose();
+    }
+
+    @Test
+    void testPositionalMissingAnnotation() {
+        // PlainLocation has no @Position annotations — positional resolution must fail loud.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.PlainLocation;
+
+                unit MyUnit;
+
+                rule TryPositional {
+                    PlainLocation l : /locations("paris"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Position(0)")
+                .hasMessageContaining("PlainLocation");
     }
 
     private List<Path> listClassFiles() {
