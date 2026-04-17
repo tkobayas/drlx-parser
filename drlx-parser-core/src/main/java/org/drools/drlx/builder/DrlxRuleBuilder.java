@@ -5,9 +5,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.drools.base.RuleBase;
 import org.drools.core.impl.RuleBaseFactory;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
@@ -130,11 +133,23 @@ public class DrlxRuleBuilder {
     private static CompilationUnitIR parseToRuleAst(String drlxSource) {
         CharStream charStream = CharStreams.fromString(drlxSource);
         DrlxLexer lexer = new DrlxLexer(charStream);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(THROWING_ERROR_LISTENER);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         DrlxParser parser = new DrlxParser(tokens);
+        parser.removeErrorListeners();
+        parser.addErrorListener(THROWING_ERROR_LISTENER);
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxCompilationUnit();
         return new DrlxToRuleAstVisitor(tokens).visitDrlxCompilationUnit(ctx);
     }
+
+    private static final BaseErrorListener THROWING_ERROR_LISTENER = new BaseErrorListener() {
+        @Override
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+                                int line, int charPositionInLine, String msg, RecognitionException e) {
+            throw new RuntimeException("DRLX parse error at line " + line + ":" + charPositionInLine + " - " + msg, e);
+        }
+    };
 
     private void persistBuildCache(String drlxSource, CompilationUnitIR ast, Path outputDir) throws IOException {
         switch (DrlxBuildCacheStrategy.current()) {

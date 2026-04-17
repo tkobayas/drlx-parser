@@ -448,6 +448,29 @@ class DrlxRuleBuilderTest {
     }
 
     @Test
+    void testPositionalOnNonRootChunkFails() {
+        // Positional on a navigation chunk (/locations/sub("x")) is grammatically
+        // invalid since the grammar split — only oopathRoot allows positional.
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                unit MyUnit;
+
+                rule TryPositionalOnNonRoot {
+                    Location l : /locations/sub("x"),
+                    do { System.out.println(l); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
     void testPositionalWithComplexExpression() {
         // Positional arg references a previously bound variable (beta path) AND
         // contains a binary operator (string concat) that exercises defensive parens.
