@@ -62,7 +62,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         if (ctx.ruleBody() != null) {
             ctx.ruleBody().ruleItem().forEach(itemCtx -> items.add(buildItem(itemCtx)));
         }
-        return new RuleIR(name, List.copyOf(items));
+        return new RuleIR(name, List.of(), List.copyOf(items));
     }
 
     private RuleItemIR buildItem(DrlxParser.RuleItemContext ctx) {

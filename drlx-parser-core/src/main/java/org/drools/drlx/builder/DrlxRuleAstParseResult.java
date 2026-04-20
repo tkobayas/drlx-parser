@@ -84,7 +84,7 @@ public final class DrlxRuleAstParseResult {
                     case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
                 }
             }
-            rules.add(new RuleIR(ruleParseResult.getName(), List.copyOf(items)));
+            rules.add(new RuleIR(ruleParseResult.getName(), List.of(), List.copyOf(items)));
         }
 
         return new CompilationUnitIR(parseResult.getPackageName(), List.copyOf(parseResult.getImportsList()), List.copyOf(rules));

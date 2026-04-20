@@ -15,7 +15,13 @@ public final class DrlxRuleAstModel {
     public record CompilationUnitIR(String packageName, List<String> imports, List<RuleIR> rules) {
     }
 
-    public record RuleIR(String name, List<RuleItemIR> items) {
+    public record RuleIR(String name,
+                         List<RuleAnnotationIR> annotations,
+                         List<RuleItemIR> items) {
+    }
+
+    public record RuleAnnotationIR(Kind kind, String rawValue) {
+        public enum Kind { SALIENCE, DESCRIPTION }
     }
 
     public sealed interface RuleItemIR permits PatternIR, ConsequenceIR {
