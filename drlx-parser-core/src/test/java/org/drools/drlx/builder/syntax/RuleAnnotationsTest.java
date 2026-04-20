@@ -60,4 +60,80 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
             assertThat(fired).containsExactly("HighSalience", "LowSalience");
         });
     }
+
+    @Test
+    void testDescriptionStoredAsMetadata() {
+        // @Description("Checks adult age") must be readable via Rule.getMetaData().get("Description").
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Description;
+
+                unit MyUnit;
+
+                @Description("Checks adult age")
+                rule CheckAge {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final Rule r = kieBase.getRule("org.drools.drlx.parser", "CheckAge");
+
+        assertThat(r).isNotNull();
+        assertThat(r.getMetaData()).containsEntry("Description", "Checks adult age");
+    }
+
+    @Test
+    void testSalienceAndDescriptionCombined() {
+        // Both annotations on one rule must each take effect independently.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Salience;
+                import org.drools.drlx.annotations.Description;
+
+                unit MyUnit;
+
+                @Salience(42)
+                @Description("The answer")
+                rule Combined {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final Rule r = kieBase.getRule("org.drools.drlx.parser", "Combined");
+
+        assertThat(r).isNotNull();
+        assertThat(r.getMetaData()).containsEntry("Description", "The answer");
+    }
+
+    @Test
+    void testFullyQualifiedAnnotationWithoutImport() {
+        // Fully-qualified form must be accepted with no matching 'import' line.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                @org.drools.drlx.annotations.Description("FQN form")
+                rule FullyQualified {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final Rule r = kieBase.getRule("org.drools.drlx.parser", "FullyQualified");
+
+        assertThat(r).isNotNull();
+        assertThat(r.getMetaData()).containsEntry("Description", "FQN form");
+    }
 }
