@@ -136,4 +136,29 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         assertThat(r).isNotNull();
         assertThat(r.getMetaData()).containsEntry("Description", "FQN form");
     }
+
+    @Test
+    void testSalienceWithoutImportFailsLoud() {
+        // @Salience used without an import and without FQN must throw at parse time.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                @Salience(10)
+                rule MissingImport {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("unresolved annotation")
+                .hasMessageContaining("Salience");
+    }
 }
