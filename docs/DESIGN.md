@@ -61,6 +61,7 @@ Key syntax elements:
 - **OOPath:** navigates object graphs with nested filtering
 - **Inline cast:** `/entryPoint#Type[ conditions ]` filters by type
 - **Positional:** `/entryPoint(arg0, arg1, ...)` resolves args to fields via `@Position(N)` annotations on the pattern type. Combinable with inline cast and slotted: `/entryPoint#Type(arg)[ conditions ]`. Grammar restricts positional to the root chunk only — `/a/b("x")` is a parse error. See `specs/2026-04-17-positional-syntax-design.md`.
+- **Rule annotations:** `@Salience(int)` controls firing priority; `@Description(String)` attaches metadata. Both require `import org.drools.drlx.annotations.Salience;` (or `.Description`) — or use the fully-qualified form. Unknowns, duplicates, missing imports, and non-literal arguments fail loud at parse time. See `specs/2026-04-20-rule-annotations-design.md`.
 - **Alpha conditions:** single-fact constraints (`age > 18`)
 - **Beta conditions:** cross-fact joins (`age < $other.age`)
 - **Consequences:** Java statement blocks in `do { ... }`
@@ -306,6 +307,7 @@ All tests live in `drlx-parser-core`:
 | `DrlxRuleBuilderTest` | Core builder: basic rule, lambda sharing, pre-build, runtime build, metadata fallback |
 | `syntax.PositionalTest` | Positional syntax (single/multi-arg, beta path, `@Position` resolution errors) |
 | `syntax.InlineCastTest` | Inline cast `#Type` filtering |
+| `syntax.RuleAnnotationsTest` | `@Salience`/`@Description` (metadata, firing order, import/duplicate/literal errors) |
 | `DrlxParserTest` | Low-level ANTLR parser verification |
 | `DrlxToJavaParserVisitorTest` | JavaParser AST conversion |
 | `TolerantDrlxToJavaParserVisitorTest` | Error-tolerant parsing edge cases |
