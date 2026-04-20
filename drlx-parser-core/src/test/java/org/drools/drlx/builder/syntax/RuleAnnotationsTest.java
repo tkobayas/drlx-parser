@@ -212,4 +212,55 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("duplicate @Salience");
     }
+
+    @Test
+    void testSalienceNonIntArgumentFailsLoud() {
+        // @Salience("ten") — string literal where int required — must throw.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Salience;
+
+                unit MyUnit;
+
+                @Salience("ten")
+                rule BadType {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Salience expects int literal");
+    }
+
+    @Test
+    void testSalienceExpressionArgumentFailsLoud() {
+        // @Salience(1 + 2) — expression, not a pure literal — must throw.
+        // The spec explicitly rejects expression-based salience in this first pass.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Salience;
+
+                unit MyUnit;
+
+                @Salience(1 + 2)
+                rule BadShape {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Salience expects int literal");
+    }
 }
