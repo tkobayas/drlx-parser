@@ -161,4 +161,29 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .hasMessageContaining("unresolved annotation")
                 .hasMessageContaining("Salience");
     }
+
+    @Test
+    void testUnsupportedAnnotationFailsLoud() {
+        // A fully-qualified annotation outside the supported set must be rejected.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                @org.example.NoLoop
+                rule Unsupported {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("unsupported DRLX rule annotation")
+                .hasMessageContaining("NoLoop");
+    }
 }
