@@ -303,7 +303,9 @@ All tests live in `drlx-parser-core`:
 |-----------|-------|
 | `DrlxCompilerTest` | 2-step build, RuleAST serialization, lambda deduplication |
 | `DrlxCompilerNoPersistTest` | In-memory build (no disk I/O) |
-| `DrlxRuleBuilderTest` | Direct rule building, alpha/beta/multi-join constraints |
+| `DrlxRuleBuilderTest` | Core builder: basic rule, lambda sharing, pre-build, runtime build, metadata fallback |
+| `syntax.PositionalTest` | Positional syntax (single/multi-arg, beta path, `@Position` resolution errors) |
+| `syntax.InlineCastTest` | Inline cast `#Type` filtering |
 | `DrlxParserTest` | Low-level ANTLR parser verification |
 | `DrlxToJavaParserVisitorTest` | JavaParser AST conversion |
 | `TolerantDrlxToJavaParserVisitorTest` | Error-tolerant parsing edge cases |
