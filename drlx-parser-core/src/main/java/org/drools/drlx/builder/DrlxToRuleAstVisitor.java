@@ -1,13 +1,18 @@
 package org.drools.drlx.builder;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.drlx.parser.DrlxParser;
@@ -20,6 +25,13 @@ import org.drools.drlx.parser.DrlxParserBaseVisitor;
  * work solely against the record model.
  */
 public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
+
+    private static final String SALIENCE_FQN = "org.drools.drlx.annotations.Salience";
+    private static final String DESCRIPTION_FQN = "org.drools.drlx.annotations.Description";
+
+    private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.of(
+            SALIENCE_FQN, Kind.SALIENCE,
+            DESCRIPTION_FQN, Kind.DESCRIPTION);
 
     private final TokenStream tokens;
 
@@ -48,21 +60,122 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             });
         }
 
+        Map<String, String> annotationImports = new LinkedHashMap<>();
+        for (String imp : imports) {
+            if (SUPPORTED_ANNOTATION_KINDS.containsKey(imp)) {
+                String simpleName = imp.substring(imp.lastIndexOf('.') + 1);
+                annotationImports.put(simpleName, imp);
+            }
+        }
+
         List<RuleIR> rules = new ArrayList<>();
         if (ctx.ruleDeclaration() != null) {
-            ctx.ruleDeclaration().forEach(ruleCtx -> rules.add(buildRule(ruleCtx)));
+            ctx.ruleDeclaration().forEach(ruleCtx -> rules.add(buildRule(ruleCtx, annotationImports)));
         }
 
         return new CompilationUnitIR(packageName, List.copyOf(imports), List.copyOf(rules));
     }
 
-    private RuleIR buildRule(DrlxParser.RuleDeclarationContext ctx) {
+    private RuleIR buildRule(DrlxParser.RuleDeclarationContext ctx,
+                             Map<String, String> annotationImports) {
         String name = ctx.identifier().getText();
+        List<RuleAnnotationIR> annotations = buildRuleAnnotations(ctx, annotationImports);
         List<RuleItemIR> items = new ArrayList<>();
         if (ctx.ruleBody() != null) {
             ctx.ruleBody().ruleItem().forEach(itemCtx -> items.add(buildItem(itemCtx)));
         }
-        return new RuleIR(name, List.of(), List.copyOf(items));
+        return new RuleIR(name, annotations, List.copyOf(items));
+    }
+
+    private List<RuleAnnotationIR> buildRuleAnnotations(DrlxParser.RuleDeclarationContext ctx,
+                                                        Map<String, String> annotationImports) {
+        if (ctx.annotation() == null || ctx.annotation().isEmpty()) {
+            return List.of();
+        }
+
+        List<RuleAnnotationIR> annotations = new ArrayList<>();
+        EnumSet<Kind> seen = EnumSet.noneOf(Kind.class);
+
+        for (DrlxParser.AnnotationContext annCtx : ctx.annotation()) {
+            int line = annCtx.getStart().getLine();
+            int col = annCtx.getStart().getCharPositionInLine();
+
+            String nameText = annotationNameText(annCtx);
+            Kind kind = resolveKind(nameText, annotationImports, line, col);
+
+            if (!seen.add(kind)) {
+                throw new RuntimeException(
+                        "duplicate @" + kindDisplayName(kind) + " at " + line + ":" + col);
+            }
+
+            String rawValue = extractAnnotationLiteral(annCtx, kind, line, col);
+            annotations.add(new RuleAnnotationIR(kind, rawValue));
+        }
+
+        return List.copyOf(annotations);
+    }
+
+    private static String kindDisplayName(Kind kind) {
+        return kind.name().charAt(0) + kind.name().substring(1).toLowerCase();
+    }
+
+    private static String annotationNameText(DrlxParser.AnnotationContext annCtx) {
+        if (annCtx.qualifiedName() != null) {
+            return annCtx.qualifiedName().getText();
+        }
+        if (annCtx.altAnnotationQualifiedName() != null) {
+            return annCtx.altAnnotationQualifiedName().getText();
+        }
+        throw new RuntimeException("Malformed annotation at "
+                + annCtx.getStart().getLine() + ":"
+                + annCtx.getStart().getCharPositionInLine());
+    }
+
+    private static Kind resolveKind(String nameText,
+                                    Map<String, String> annotationImports,
+                                    int line, int col) {
+        if (nameText.contains(".")) {
+            Kind kind = SUPPORTED_ANNOTATION_KINDS.get(nameText);
+            if (kind != null) {
+                return kind;
+            }
+            throw new RuntimeException(
+                    "unsupported DRLX rule annotation '@" + nameText + "' at "
+                    + line + ":" + col + " — supported: @Salience, @Description");
+        }
+        String fqn = annotationImports.get(nameText);
+        if (fqn != null) {
+            return SUPPORTED_ANNOTATION_KINDS.get(fqn);
+        }
+        throw new RuntimeException(
+                "unresolved annotation '@" + nameText + "' at "
+                + line + ":" + col + " — missing import?");
+    }
+
+    private static String extractAnnotationLiteral(DrlxParser.AnnotationContext annCtx,
+                                                   Kind kind, int line, int col) {
+        if (annCtx.elementValue() == null) {
+            throw new RuntimeException("@" + kindDisplayName(kind) + " expects one argument at " + line + ":" + col);
+        }
+        String text = annCtx.elementValue().getText();
+        switch (kind) {
+            case SALIENCE -> {
+                try {
+                    return String.valueOf(Integer.parseInt(text));
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException(
+                            "@Salience expects int literal, got '" + text + "' at " + line + ":" + col);
+                }
+            }
+            case DESCRIPTION -> {
+                if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
+                    return text.substring(1, text.length() - 1);
+                }
+                throw new RuntimeException(
+                        "@Description expects string literal, got '" + text + "' at " + line + ":" + col);
+            }
+            default -> throw new IllegalStateException("Unhandled annotation kind: " + kind);
+        }
     }
 
     private RuleItemIR buildItem(DrlxParser.RuleItemContext ctx) {
