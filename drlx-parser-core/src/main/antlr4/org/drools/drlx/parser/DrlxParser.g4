@@ -36,9 +36,9 @@ unitDeclaration
     : UNIT qualifiedName ';'
     ;
 
-// Rule declaration
+// Rule declaration — annotations may prefix the RULE keyword (e.g. @Salience(10))
 ruleDeclaration
-    : RULE identifier '{' ruleBody '}'
+    : annotation* RULE identifier '{' ruleBody '}'
     ;
 
 // Rule body contains rule items (patterns and consequences)
