@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
+import org.drools.base.base.SalienceInteger;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.Declaration;
@@ -19,6 +20,7 @@ import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.util.TypeResolver;
@@ -53,6 +55,7 @@ public class DrlxRuleAstRuntimeBuilder {
 
         RuleImpl rule = new RuleImpl(parseResult.name());
         rule.setResource(rule.getResource());
+        applyAnnotations(rule, parseResult.annotations());
 
         GroupElement ge = GroupElementFactory.newAndInstance();
         Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
@@ -118,5 +121,14 @@ public class DrlxRuleAstRuntimeBuilder {
         }
 
         return pattern;
+    }
+
+    private static void applyAnnotations(RuleImpl rule, List<RuleAnnotationIR> annotations) {
+        for (RuleAnnotationIR ann : annotations) {
+            switch (ann.kind()) {
+                case SALIENCE -> rule.setSalience(new SalienceInteger(Integer.parseInt(ann.rawValue())));
+                case DESCRIPTION -> rule.addMetaAttribute("Description", ann.rawValue());
+            }
+        }
     }
 }
