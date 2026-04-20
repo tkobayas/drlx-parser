@@ -346,17 +346,23 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
     @Override
     public Node visitRuleDeclaration(DrlxParser.RuleDeclarationContext ctx) {
+        if (ctx.annotation() != null && !ctx.annotation().isEmpty()) {
+            throw new UnsupportedOperationException(
+                    "Rule-level annotations are not supported in DrlxToJavaParserVisitor — "
+                    + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                    + "Note: this visitor is frozen for new DRLX syntax.");
+        }
         // Create rule declaration
         SimpleName name = new SimpleName(ctx.identifier().getText());
         RuleBody body = (RuleBody) visit(ctx.ruleBody());
         NodeList<AnnotationExpr> annotations = new NodeList<>();
-        
+
         RuleDeclaration ruleDecl = new RuleDeclaration(null, annotations, name, body);
-        
+
         // Set parent relationships
         name.setParentNode(ruleDecl);
         body.setParentNode(ruleDecl);
-        
+
         return ruleDecl;
     }
 
