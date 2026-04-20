@@ -15,6 +15,7 @@ message CompilationUnitParseResult {
 message RuleParseResult {
   string name = 1;
   repeated RuleItemParseResult items = 2;
+  repeated RuleAnnotationParseResult annotations = 3;
 }
 
 message RuleItemParseResult {
@@ -35,4 +36,15 @@ message PatternParseResult {
 
 message ConsequenceParseResult {
   string block = 1;
+}
+
+message RuleAnnotationParseResult {
+  AnnotationKind kind = 1;
+  string raw_value = 2;
+}
+
+enum AnnotationKind {
+  ANNOTATION_KIND_UNSPECIFIED = 0;
+  ANNOTATION_KIND_SALIENCE = 1;
+  ANNOTATION_KIND_DESCRIPTION = 2;
 }

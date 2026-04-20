@@ -15,6 +15,123 @@ public final class DrlxRuleAstProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  /**
+   * Protobuf enum {@code org.drools.drlx.builder.proto.AnnotationKind}
+   */
+  public enum AnnotationKind
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>ANNOTATION_KIND_UNSPECIFIED = 0;</code>
+     */
+    ANNOTATION_KIND_UNSPECIFIED(0),
+    /**
+     * <code>ANNOTATION_KIND_SALIENCE = 1;</code>
+     */
+    ANNOTATION_KIND_SALIENCE(1),
+    /**
+     * <code>ANNOTATION_KIND_DESCRIPTION = 2;</code>
+     */
+    ANNOTATION_KIND_DESCRIPTION(2),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>ANNOTATION_KIND_UNSPECIFIED = 0;</code>
+     */
+    public static final int ANNOTATION_KIND_UNSPECIFIED_VALUE = 0;
+    /**
+     * <code>ANNOTATION_KIND_SALIENCE = 1;</code>
+     */
+    public static final int ANNOTATION_KIND_SALIENCE_VALUE = 1;
+    /**
+     * <code>ANNOTATION_KIND_DESCRIPTION = 2;</code>
+     */
+    public static final int ANNOTATION_KIND_DESCRIPTION_VALUE = 2;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static AnnotationKind valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static AnnotationKind forNumber(int value) {
+      switch (value) {
+        case 0: return ANNOTATION_KIND_UNSPECIFIED;
+        case 1: return ANNOTATION_KIND_SALIENCE;
+        case 2: return ANNOTATION_KIND_DESCRIPTION;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<AnnotationKind>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        AnnotationKind> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<AnnotationKind>() {
+            public AnnotationKind findValueByNumber(int number) {
+              return AnnotationKind.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.getDescriptor().getEnumTypes().get(0);
+    }
+
+    private static final AnnotationKind[] VALUES = values();
+
+    public static AnnotationKind valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private AnnotationKind(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:org.drools.drlx.builder.proto.AnnotationKind)
+  }
+
   public interface CompilationUnitParseResultOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.CompilationUnitParseResult)
       com.google.protobuf.MessageOrBuilder {
@@ -1346,6 +1463,30 @@ public final class DrlxRuleAstProto {
      */
     org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
         int index);
+
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> 
+        getAnnotationsList();
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getAnnotations(int index);
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    int getAnnotationsCount();
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder> 
+        getAnnotationsOrBuilderList();
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder getAnnotationsOrBuilder(
+        int index);
   }
   /**
    * Protobuf type {@code org.drools.drlx.builder.proto.RuleParseResult}
@@ -1362,6 +1503,7 @@ public final class DrlxRuleAstProto {
     private RuleParseResult() {
       name_ = "";
       items_ = java.util.Collections.emptyList();
+      annotations_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -1464,6 +1606,47 @@ public final class DrlxRuleAstProto {
       return items_.get(index);
     }
 
+    public static final int ANNOTATIONS_FIELD_NUMBER = 3;
+    @SuppressWarnings("serial")
+    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> annotations_;
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> getAnnotationsList() {
+      return annotations_;
+    }
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder> 
+        getAnnotationsOrBuilderList() {
+      return annotations_;
+    }
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    @java.lang.Override
+    public int getAnnotationsCount() {
+      return annotations_.size();
+    }
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getAnnotations(int index) {
+      return annotations_.get(index);
+    }
+    /**
+     * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder getAnnotationsOrBuilder(
+        int index) {
+      return annotations_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1484,6 +1667,9 @@ public final class DrlxRuleAstProto {
       for (int i = 0; i < items_.size(); i++) {
         output.writeMessage(2, items_.get(i));
       }
+      for (int i = 0; i < annotations_.size(); i++) {
+        output.writeMessage(3, annotations_.get(i));
+      }
       getUnknownFields().writeTo(output);
     }
 
@@ -1499,6 +1685,10 @@ public final class DrlxRuleAstProto {
       for (int i = 0; i < items_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, items_.get(i));
+      }
+      for (int i = 0; i < annotations_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, annotations_.get(i));
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -1519,6 +1709,8 @@ public final class DrlxRuleAstProto {
           .equals(other.getName())) return false;
       if (!getItemsList()
           .equals(other.getItemsList())) return false;
+      if (!getAnnotationsList()
+          .equals(other.getAnnotationsList())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -1535,6 +1727,10 @@ public final class DrlxRuleAstProto {
       if (getItemsCount() > 0) {
         hash = (37 * hash) + ITEMS_FIELD_NUMBER;
         hash = (53 * hash) + getItemsList().hashCode();
+      }
+      if (getAnnotationsCount() > 0) {
+        hash = (37 * hash) + ANNOTATIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getAnnotationsList().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1675,6 +1871,13 @@ public final class DrlxRuleAstProto {
           itemsBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        if (annotationsBuilder_ == null) {
+          annotations_ = java.util.Collections.emptyList();
+        } else {
+          annotations_ = null;
+          annotationsBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -1716,6 +1919,15 @@ public final class DrlxRuleAstProto {
           result.items_ = items_;
         } else {
           result.items_ = itemsBuilder_.build();
+        }
+        if (annotationsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            annotations_ = java.util.Collections.unmodifiableList(annotations_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.annotations_ = annotations_;
+        } else {
+          result.annotations_ = annotationsBuilder_.build();
         }
       }
 
@@ -1801,6 +2013,32 @@ public final class DrlxRuleAstProto {
             }
           }
         }
+        if (annotationsBuilder_ == null) {
+          if (!other.annotations_.isEmpty()) {
+            if (annotations_.isEmpty()) {
+              annotations_ = other.annotations_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureAnnotationsIsMutable();
+              annotations_.addAll(other.annotations_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.annotations_.isEmpty()) {
+            if (annotationsBuilder_.isEmpty()) {
+              annotationsBuilder_.dispose();
+              annotationsBuilder_ = null;
+              annotations_ = other.annotations_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              annotationsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getAnnotationsFieldBuilder() : null;
+            } else {
+              annotationsBuilder_.addAllMessages(other.annotations_);
+            }
+          }
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -1845,6 +2083,19 @@ public final class DrlxRuleAstProto {
                 }
                 break;
               } // case 18
+              case 26: {
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult m =
+                    input.readMessage(
+                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.parser(),
+                        extensionRegistry);
+                if (annotationsBuilder_ == null) {
+                  ensureAnnotationsIsMutable();
+                  annotations_.add(m);
+                } else {
+                  annotationsBuilder_.addMessage(m);
+                }
+                break;
+              } // case 26
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -2172,6 +2423,246 @@ public final class DrlxRuleAstProto {
           items_ = null;
         }
         return itemsBuilder_;
+      }
+
+      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> annotations_ =
+        java.util.Collections.emptyList();
+      private void ensureAnnotationsIsMutable() {
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          annotations_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult>(annotations_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder> annotationsBuilder_;
+
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> getAnnotationsList() {
+        if (annotationsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(annotations_);
+        } else {
+          return annotationsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public int getAnnotationsCount() {
+        if (annotationsBuilder_ == null) {
+          return annotations_.size();
+        } else {
+          return annotationsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getAnnotations(int index) {
+        if (annotationsBuilder_ == null) {
+          return annotations_.get(index);
+        } else {
+          return annotationsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder setAnnotations(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult value) {
+        if (annotationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAnnotationsIsMutable();
+          annotations_.set(index, value);
+          onChanged();
+        } else {
+          annotationsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder setAnnotations(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder builderForValue) {
+        if (annotationsBuilder_ == null) {
+          ensureAnnotationsIsMutable();
+          annotations_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          annotationsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder addAnnotations(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult value) {
+        if (annotationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAnnotationsIsMutable();
+          annotations_.add(value);
+          onChanged();
+        } else {
+          annotationsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder addAnnotations(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult value) {
+        if (annotationsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureAnnotationsIsMutable();
+          annotations_.add(index, value);
+          onChanged();
+        } else {
+          annotationsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder addAnnotations(
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder builderForValue) {
+        if (annotationsBuilder_ == null) {
+          ensureAnnotationsIsMutable();
+          annotations_.add(builderForValue.build());
+          onChanged();
+        } else {
+          annotationsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder addAnnotations(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder builderForValue) {
+        if (annotationsBuilder_ == null) {
+          ensureAnnotationsIsMutable();
+          annotations_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          annotationsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder addAllAnnotations(
+          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> values) {
+        if (annotationsBuilder_ == null) {
+          ensureAnnotationsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, annotations_);
+          onChanged();
+        } else {
+          annotationsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder clearAnnotations() {
+        if (annotationsBuilder_ == null) {
+          annotations_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          annotationsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public Builder removeAnnotations(int index) {
+        if (annotationsBuilder_ == null) {
+          ensureAnnotationsIsMutable();
+          annotations_.remove(index);
+          onChanged();
+        } else {
+          annotationsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder getAnnotationsBuilder(
+          int index) {
+        return getAnnotationsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder getAnnotationsOrBuilder(
+          int index) {
+        if (annotationsBuilder_ == null) {
+          return annotations_.get(index);  } else {
+          return annotationsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder> 
+           getAnnotationsOrBuilderList() {
+        if (annotationsBuilder_ != null) {
+          return annotationsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(annotations_);
+        }
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder addAnnotationsBuilder() {
+        return getAnnotationsFieldBuilder().addBuilder(
+            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder addAnnotationsBuilder(
+          int index) {
+        return getAnnotationsFieldBuilder().addBuilder(
+            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder> 
+           getAnnotationsBuilderList() {
+        return getAnnotationsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder> 
+          getAnnotationsFieldBuilder() {
+        if (annotationsBuilder_ == null) {
+          annotationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder>(
+                  annotations_,
+                  ((bitField0_ & 0x00000004) != 0),
+                  getParentForChildren(),
+                  isClean());
+          annotations_ = null;
+        }
+        return annotationsBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -5140,6 +5631,663 @@ public final class DrlxRuleAstProto {
 
   }
 
+  public interface RuleAnnotationParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleAnnotationParseResult)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+     * @return The enum numeric value on the wire for kind.
+     */
+    int getKindValue();
+    /**
+     * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+     * @return The kind.
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind getKind();
+
+    /**
+     * <code>string raw_value = 2;</code>
+     * @return The rawValue.
+     */
+    java.lang.String getRawValue();
+    /**
+     * <code>string raw_value = 2;</code>
+     * @return The bytes for rawValue.
+     */
+    com.google.protobuf.ByteString
+        getRawValueBytes();
+  }
+  /**
+   * Protobuf type {@code org.drools.drlx.builder.proto.RuleAnnotationParseResult}
+   */
+  public static final class RuleAnnotationParseResult extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleAnnotationParseResult)
+      RuleAnnotationParseResultOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use RuleAnnotationParseResult.newBuilder() to construct.
+    private RuleAnnotationParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private RuleAnnotationParseResult() {
+      kind_ = 0;
+      rawValue_ = "";
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new RuleAnnotationParseResult();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder.class);
+    }
+
+    public static final int KIND_FIELD_NUMBER = 1;
+    private int kind_ = 0;
+    /**
+     * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+     * @return The enum numeric value on the wire for kind.
+     */
+    @java.lang.Override public int getKindValue() {
+      return kind_;
+    }
+    /**
+     * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+     * @return The kind.
+     */
+    @java.lang.Override public org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind getKind() {
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind result = org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.forNumber(kind_);
+      return result == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.UNRECOGNIZED : result;
+    }
+
+    public static final int RAW_VALUE_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object rawValue_ = "";
+    /**
+     * <code>string raw_value = 2;</code>
+     * @return The rawValue.
+     */
+    @java.lang.Override
+    public java.lang.String getRawValue() {
+      java.lang.Object ref = rawValue_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        rawValue_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string raw_value = 2;</code>
+     * @return The bytes for rawValue.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getRawValueBytes() {
+      java.lang.Object ref = rawValue_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        rawValue_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_UNSPECIFIED.getNumber()) {
+        output.writeEnum(1, kind_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(rawValue_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, rawValue_);
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_UNSPECIFIED.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, kind_);
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(rawValue_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, rawValue_);
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult)) {
+        return super.equals(obj);
+      }
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult) obj;
+
+      if (kind_ != other.kind_) return false;
+      if (!getRawValue()
+          .equals(other.getRawValue())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + KIND_FIELD_NUMBER;
+      hash = (53 * hash) + kind_;
+      hash = (37 * hash) + RAW_VALUE_FIELD_NUMBER;
+      hash = (53 * hash) + getRawValue().hashCode();
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.drools.drlx.builder.proto.RuleAnnotationParseResult}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleAnnotationParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder.class);
+      }
+
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        kind_ = 0;
+        rawValue_ = "";
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor;
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult(this);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.kind_ = kind_;
+        }
+        if (((from_bitField0_ & 0x00000002) != 0)) {
+          result.rawValue_ = rawValue_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.getDefaultInstance()) return this;
+        if (other.kind_ != 0) {
+          setKindValue(other.getKindValue());
+        }
+        if (!other.getRawValue().isEmpty()) {
+          rawValue_ = other.rawValue_;
+          bitField0_ |= 0x00000002;
+          onChanged();
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+                kind_ = input.readEnum();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 8
+              case 18: {
+                rawValue_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000002;
+                break;
+              } // case 18
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private int kind_ = 0;
+      /**
+       * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+       * @return The enum numeric value on the wire for kind.
+       */
+      @java.lang.Override public int getKindValue() {
+        return kind_;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+       * @param value The enum numeric value on the wire for kind to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKindValue(int value) {
+        kind_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+       * @return The kind.
+       */
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind getKind() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind result = org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.forNumber(kind_);
+        return result == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+       * @param value The kind to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKind(org.drools.drlx.builder.proto.DrlxRuleAstProto.AnnotationKind value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        kind_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.AnnotationKind kind = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearKind() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        kind_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object rawValue_ = "";
+      /**
+       * <code>string raw_value = 2;</code>
+       * @return The rawValue.
+       */
+      public java.lang.String getRawValue() {
+        java.lang.Object ref = rawValue_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          rawValue_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string raw_value = 2;</code>
+       * @return The bytes for rawValue.
+       */
+      public com.google.protobuf.ByteString
+          getRawValueBytes() {
+        java.lang.Object ref = rawValue_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          rawValue_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string raw_value = 2;</code>
+       * @param value The rawValue to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRawValue(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        rawValue_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string raw_value = 2;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearRawValue() {
+        rawValue_ = getDefaultInstance().getRawValue();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string raw_value = 2;</code>
+       * @param value The bytes for rawValue to set.
+       * @return This builder for chaining.
+       */
+      public Builder setRawValueBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        rawValue_ = value;
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleAnnotationParseResult)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleAnnotationParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult();
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<RuleAnnotationParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<RuleAnnotationParseResult>() {
+      @java.lang.Override
+      public RuleAnnotationParseResult parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<RuleAnnotationParseResult> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<RuleAnnotationParseResult> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor;
   private static final 
@@ -5165,6 +6313,11 @@ public final class DrlxRuleAstProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -5179,9 +6332,11 @@ public final class DrlxRuleAstProto {
       "ult\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name" +
       "\030\002 \001(\t\022\017\n\007imports\030\003 \003(\t\022=\n\005rules\030\004 \003(\0132." +
       ".org.drools.drlx.builder.proto.RuleParse" +
-      "Result\"b\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t\022" +
-      "A\n\005items\030\002 \003(\01322.org.drools.drlx.builder" +
-      ".proto.RuleItemParseResult\"\261\001\n\023RuleItemP" +
+      "Result\"\261\001\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t" +
+      "\022A\n\005items\030\002 \003(\01322.org.drools.drlx.builde" +
+      "r.proto.RuleItemParseResult\022M\n\013annotatio" +
+      "ns\030\003 \003(\01328.org.drools.drlx.builder.proto" +
+      ".RuleAnnotationParseResult\"\261\001\n\023RuleItemP" +
       "arseResult\022D\n\007pattern\030\001 \001(\01321.org.drools" +
       ".drlx.builder.proto.PatternParseResultH\000" +
       "\022L\n\013consequence\030\002 \001(\01325.org.drools.drlx." +
@@ -5190,9 +6345,14 @@ public final class DrlxRuleAstProto {
       "me\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry_poi" +
       "nt\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast_typ" +
       "e_name\030\005 \001(\t\022\027\n\017positional_args\030\006 \003(\t\"\'\n" +
-      "\026ConsequenceParseResult\022\r\n\005block\030\001 \001(\tB1" +
-      "\n\035org.drools.drlx.builder.protoB\020DrlxRul" +
-      "eAstProtob\006proto3"
+      "\026ConsequenceParseResult\022\r\n\005block\030\001 \001(\t\"k" +
+      "\n\031RuleAnnotationParseResult\022;\n\004kind\030\001 \001(" +
+      "\0162-.org.drools.drlx.builder.proto.Annota" +
+      "tionKind\022\021\n\traw_value\030\002 \001(\t*p\n\016Annotatio" +
+      "nKind\022\037\n\033ANNOTATION_KIND_UNSPECIFIED\020\000\022\034" +
+      "\n\030ANNOTATION_KIND_SALIENCE\020\001\022\037\n\033ANNOTATI" +
+      "ON_KIND_DESCRIPTION\020\002B1\n\035org.drools.drlx" +
+      ".builder.protoB\020DrlxRuleAstProtob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -5209,7 +6369,7 @@ public final class DrlxRuleAstProto {
     internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor,
-        new java.lang.String[] { "Name", "Items", });
+        new java.lang.String[] { "Name", "Items", "Annotations", });
     internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable = new
@@ -5228,6 +6388,12 @@ public final class DrlxRuleAstProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor,
         new java.lang.String[] { "Block", });
+    internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor,
+        new java.lang.String[] { "Kind", "RawValue", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

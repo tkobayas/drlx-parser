@@ -15,6 +15,7 @@ import java.util.List;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.drlx.builder.proto.DrlxRuleAstProto;
@@ -84,7 +85,11 @@ public final class DrlxRuleAstParseResult {
                     case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
                 }
             }
-            rules.add(new RuleIR(ruleParseResult.getName(), List.of(), List.copyOf(items)));
+            List<RuleAnnotationIR> ruleAnnotations = new ArrayList<>(ruleParseResult.getAnnotationsCount());
+            for (DrlxRuleAstProto.RuleAnnotationParseResult annPR : ruleParseResult.getAnnotationsList()) {
+                ruleAnnotations.add(new RuleAnnotationIR(fromProtoKind(annPR.getKind()), annPR.getRawValue()));
+            }
+            rules.add(new RuleIR(ruleParseResult.getName(), List.copyOf(ruleAnnotations), List.copyOf(items)));
         }
 
         return new CompilationUnitIR(parseResult.getPackageName(), List.copyOf(parseResult.getImportsList()), List.copyOf(rules));
@@ -94,7 +99,29 @@ public final class DrlxRuleAstParseResult {
         DrlxRuleAstProto.RuleParseResult.Builder builder = DrlxRuleAstProto.RuleParseResult.newBuilder()
                 .setName(rule.name());
         rule.items().forEach(item -> builder.addItems(toProtoItem(item)));
+        for (RuleAnnotationIR ann : rule.annotations()) {
+            builder.addAnnotations(DrlxRuleAstProto.RuleAnnotationParseResult.newBuilder()
+                    .setKind(toProtoKind(ann.kind()))
+                    .setRawValue(ann.rawValue())
+                    .build());
+        }
         return builder.build();
+    }
+
+    private static RuleAnnotationIR.Kind fromProtoKind(DrlxRuleAstProto.AnnotationKind k) {
+        return switch (k) {
+            case ANNOTATION_KIND_SALIENCE -> RuleAnnotationIR.Kind.SALIENCE;
+            case ANNOTATION_KIND_DESCRIPTION -> RuleAnnotationIR.Kind.DESCRIPTION;
+            case ANNOTATION_KIND_UNSPECIFIED, UNRECOGNIZED ->
+                    throw new IllegalStateException("Unknown proto annotation kind: " + k);
+        };
+    }
+
+    private static DrlxRuleAstProto.AnnotationKind toProtoKind(RuleAnnotationIR.Kind k) {
+        return switch (k) {
+            case SALIENCE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_SALIENCE;
+            case DESCRIPTION -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DESCRIPTION;
+        };
     }
 
     private static DrlxRuleAstProto.RuleItemParseResult toProtoItem(RuleItemIR item) {
