@@ -186,4 +186,30 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .hasMessageContaining("unsupported DRLX rule annotation")
                 .hasMessageContaining("NoLoop");
     }
+
+    @Test
+    void testDuplicateSalienceFailsLoud() {
+        // Two @Salience on one rule must throw.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Salience;
+
+                unit MyUnit;
+
+                @Salience(5)
+                @Salience(10)
+                rule Duplicate {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("duplicate @Salience");
+    }
 }
