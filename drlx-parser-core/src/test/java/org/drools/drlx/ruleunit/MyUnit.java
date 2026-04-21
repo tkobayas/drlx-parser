@@ -6,6 +6,7 @@ import org.drools.drlx.domain.DuplicatePositionLocation;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.domain.PlainLocation;
+import org.drools.drlx.domain.Vehicle;
 import org.drools.ruleunits.api.DataStore;
 
 public class MyUnit {
@@ -20,4 +21,5 @@ public class MyUnit {
     public DataStore<ChildPositioned> childPositionedThings;
     public DataStore<DuplicatePositionLocation> duplicateLocations;
     public DataStore<PlainLocation> plainLocations;
+    public DataStore<Vehicle> objects;
 }
