@@ -5,10 +5,12 @@ import java.util.Map;
 
 import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.NodeList;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
+import com.github.javaparser.ast.expr.SimpleName;
 import com.github.javaparser.ast.expr.VariableDeclarationExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -16,6 +18,8 @@ import com.github.javaparser.ast.stmt.Statement;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.mvel3.parser.ast.expr.RuleBody;
+import org.mvel3.parser.ast.expr.RuleDeclaration;
 
 public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
 
@@ -26,6 +30,19 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
 
     public Map<Integer, Node> getTokenIdJPNodeMap() {
         return tokenIdJPNodeMap;
+    }
+
+    @Override
+    public Node visitRuleDeclaration(DrlxParser.RuleDeclarationContext ctx) {
+        // Silent-drop rule-level annotations so LSP completion works while the user is typing
+        // inside an annotated rule body. Parent throws; this override preserves tolerance.
+        SimpleName name = new SimpleName(ctx.identifier().getText());
+        RuleBody body = (RuleBody) visit(ctx.ruleBody());
+        NodeList<AnnotationExpr> annotations = new NodeList<>();
+        RuleDeclaration ruleDecl = new RuleDeclaration(null, annotations, name, body);
+        name.setParentNode(ruleDecl);
+        body.setParentNode(ruleDecl);
+        return ruleDecl;
     }
 
     @Override

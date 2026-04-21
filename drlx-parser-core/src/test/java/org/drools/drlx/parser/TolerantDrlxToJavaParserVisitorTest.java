@@ -45,6 +45,7 @@ import org.mvel3.parser.ast.expr.RulePattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsJavaParserASTWithTolerance;
+import static org.drools.drlx.util.DrlxHelper.parseDrlxCompilationUnitAsJavaParserASTWithTolerance;
 
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class TolerantDrlxToJavaParserVisitorTest {
@@ -409,6 +410,44 @@ class TolerantDrlxToJavaParserVisitorTest {
 
         // Now we can suggest completions for System.* by getting all public static fields
         // This would be where code completion suggestions would come from
+    }
+
+    @Test
+    void incompleteRule_WithAnnotation() {
+        // LSP scenario: DRLX unit with a rule-level annotation and an unfinished consequence.
+        // Tolerant visitor must silent-drop the annotation so completion still works —
+        // DrlxToJavaParserVisitor.visitRuleDeclaration throws when ctx.annotation() is non-empty,
+        // and the LSP code-completion flow inherits that throw without this override.
+        String compilationUnitString = """
+                unit MyUnit;
+
+                @Salience(5)
+                rule R1 {
+                   var a : /as,
+                   do { System.
+                """;
+
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseDrlxCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
+
+        assertThat(compilationUnit.getTypes()).hasSize(1);
+        assertThat(compilationUnit.getType(0)).isInstanceOf(RuleDeclaration.class);
+
+        RuleDeclaration ruleDecl = (RuleDeclaration) compilationUnit.getType(0);
+        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
+        // Annotation must be silently dropped in tolerant mode.
+        assertThat(ruleDecl.getAnnotations()).isEmpty();
+
+        // Rule body still parsed and completion marker still reachable.
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        assertThat(ruleBody).isNotNull();
+        RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(1);
+        BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
+        Statement stmt = consequenceBlock.getStatements().get(0);
+        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+        FieldAccessExpr fieldAccess = (FieldAccessExpr) exprStmt.getExpression();
+        assertThat(fieldAccess.getName().asString()).isEqualTo("__COMPLETION_FIELD__");
+        assertThat(((NameExpr) fieldAccess.getScope()).getName().asString()).isEqualTo("System");
     }
 
     @Test
