@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class TypeInferenceTest extends DrlxBuilderTestSupport {
 
@@ -79,5 +80,62 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
             objects.insert(new Car("XYZ", 40));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
         });
+    }
+
+    @Test
+    void missingUnitDeclaration_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                rule NoUnit {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("'unit'");
+    }
+
+    @Test
+    void missingUnitImport_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                unit MyUnit;
+
+                rule NoImport {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("Unit class 'MyUnit' not found")
+                .hasMessageContaining("import");
+    }
+
+    @Test
+    void unitClassNotOnClasspath_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.NotARealUnit;
+
+                unit NotARealUnit;
+
+                rule BadUnit {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("not on classpath");
     }
 }
