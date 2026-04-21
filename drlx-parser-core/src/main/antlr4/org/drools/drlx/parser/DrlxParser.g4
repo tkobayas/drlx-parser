@@ -47,10 +47,18 @@ ruleBody
     : ruleItem*
     ;
 
-// Rule item can be a pattern or consequence
+// Rule item can be a pattern, a `not` group element, or a consequence
 ruleItem
     : rulePattern
+    | notElement
     | ruleConsequence
+    ;
+
+// 'not' group element — single-element form only in this landing.
+// DRLX spec §"'not' / 'exists'" line 599. Multi-element `not(/a, /b)`
+// deferred to a follow-up issue.
+notElement
+    : NOT oopathExpression
     ;
 
 // Pattern: type bind : oopathExpression ,
