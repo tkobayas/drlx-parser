@@ -27,6 +27,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.annotations.Salience;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience(5)
@@ -70,6 +71,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.annotations.Description;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Description("Checks adult age")
@@ -96,6 +98,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.annotations.Salience;
                 import org.drools.drlx.annotations.Description;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience(42)
@@ -121,6 +124,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @org.drools.drlx.annotations.Description("FQN form")
@@ -145,6 +149,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience(10)
@@ -170,6 +175,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @org.example.NoLoop
@@ -196,6 +202,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.annotations.Salience;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience(5)
@@ -222,6 +229,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.annotations.Salience;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience("ten")
@@ -248,6 +256,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.annotations.Salience;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 @Salience(1 + 2)

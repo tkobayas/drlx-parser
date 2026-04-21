@@ -31,6 +31,7 @@ class DrlxCompilerTest {
 
                     import org.drools.drlx.domain.Person;
 
+                    import org.drools.drlx.ruleunit.MyUnit;
                     unit MyUnit;
 
                     rule JoinRule {
@@ -78,6 +79,7 @@ class DrlxCompilerTest {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Address;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge1 {
@@ -123,6 +125,7 @@ class DrlxCompilerTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule JoinRule {
@@ -159,6 +162,7 @@ class DrlxCompilerTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MultiLevelJoinRule {
@@ -210,6 +214,7 @@ class DrlxCompilerTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule Rule_0 {
@@ -268,6 +273,7 @@ class DrlxCompilerTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge {

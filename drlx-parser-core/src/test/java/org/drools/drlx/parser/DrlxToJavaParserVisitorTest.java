@@ -235,6 +235,7 @@ class DrlxToJavaParserVisitorTest {
                 
                 import org.drools.drlx.domain.Person;
                 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
                 
                 rule CheckAge {
@@ -251,7 +252,7 @@ class DrlxToJavaParserVisitorTest {
 
         assertThat(compilationUnit.getImports())
                 .map(ImportDeclaration::getNameAsString)
-                .containsExactly("org.drools.drlx.domain.Person");
+                .containsExactly("org.drools.drlx.domain.Person", "org.drools.drlx.ruleunit.MyUnit");
 
         assertThat(compilationUnit.getTypes()).hasSize(1);
 

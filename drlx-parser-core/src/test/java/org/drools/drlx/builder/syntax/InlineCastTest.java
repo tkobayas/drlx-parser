@@ -19,6 +19,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Employee;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckEmployee {
@@ -51,6 +52,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Employee;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MatchAllEmployees {

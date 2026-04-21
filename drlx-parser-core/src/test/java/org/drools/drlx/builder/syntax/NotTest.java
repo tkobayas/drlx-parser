@@ -21,6 +21,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule OnlyAdults {

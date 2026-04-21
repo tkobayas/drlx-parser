@@ -35,6 +35,7 @@ class DrlxRuleBuilderTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge {
@@ -66,6 +67,7 @@ class DrlxRuleBuilderTest {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Address;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge1 {
@@ -152,6 +154,7 @@ class DrlxRuleBuilderTest {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Address;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge1 {
@@ -196,6 +199,7 @@ class DrlxRuleBuilderTest {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Address;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge1 {
@@ -240,6 +244,7 @@ class DrlxRuleBuilderTest {
 
                 import org.drools.drlx.domain.Person;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule CheckAge {

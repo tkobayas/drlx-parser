@@ -19,6 +19,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Location;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MatchParisLocations {
@@ -47,6 +48,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Location;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MatchParisBelleville {
@@ -75,6 +77,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Location;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MatchParisBelleville {
@@ -104,6 +107,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.Location;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule TryPositionalOnNonRoot {
@@ -128,6 +132,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.domain.Person;
                 import org.drools.drlx.domain.Location;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule MatchByPersonName {
@@ -160,6 +165,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.ChildPositioned;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule TryInheritedCollision {
@@ -185,6 +191,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.DuplicatePositionLocation;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule TryDuplicate {
@@ -211,6 +218,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 import org.drools.drlx.domain.PlainLocation;
 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule TryPositional {

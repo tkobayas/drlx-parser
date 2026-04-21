@@ -100,6 +100,7 @@ class DrlxParserTest {
                 
                 import org.drools.drlx.domain.Person;
                 
+                import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
                 
                 rule CheckAge {
