@@ -31,4 +31,27 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
         });
     }
+
+    @Test
+    void explicitTypeMatchesUnitField() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule ExplicitMatches {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        });
+    }
 }
