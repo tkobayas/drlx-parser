@@ -159,7 +159,7 @@ KieBase
 |-------|------|
 | `DrlxRuleBuilder` | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
 | `DrlxToRuleAstVisitor` | Walks the ANTLR parse tree and produces `DrlxRuleAstModel` IR records. The only ANTLR-aware step in the pipeline. |
-| `DrlxRuleAstModel` | In-memory IR: `CompilationUnitIR`, `RuleIR`, `PatternIR`, `ConsequenceIR`. Shared by runtime build and proto serialization. |
+| `DrlxRuleAstModel` | In-memory IR: `CompilationUnitIR(packageName, unitName, imports, rules)`, `RuleIR(name, annotations, lhs, rhs)`, `RuleAnnotationIR`, `PatternIR`, `ConsequenceIR`, `GroupElementIR`. Sealed interface `LhsItemIR` permits `PatternIR \| GroupElementIR` for tree-shape LHS. `unitName` is the simple name from `unit <Name>;`; the runtime builder resolves it against imports. Shared by runtime build and proto serialization. |
 | `DrlxRuleAstRuntimeBuilder` | Builds `KiePackages` from `DrlxRuleAstModel` IR. Uses `DrlxLambdaCompiler` via composition. |
 | `DrlxLambdaCompiler` | Owns lambda compilation: constraints, beta constraints, consequences, batch mode, pre-built metadata reuse. |
 | `DrlxPreBuildLambdaCompiler` | Extends `DrlxLambdaCompiler`. Records lambda metadata during pre-build. |
@@ -198,6 +198,17 @@ Alpha and beta constraints differ in how they receive fact data:
 | MVEL declarations | `Declaration<?>[]` from pattern type | Merged from all referenced bindings |
 | Example | `age > 18` | `age < $p1.age` |
 | Property access | Direct field access | `Method.invoke()` via cached `PropertyExtractor` |
+
+## Pattern Type Resolution
+
+Pattern types resolve with precedence `castType > explicit (cross-checked) > inferred`.
+The inferred path consults a `Map<entryPoint, Class<?>>` built reflectively at build
+time from the unit class's `DataSource<T>` / `DataStore<T>` fields. `'var'` counts as
+"no explicit type" and routes through inference. Every DRLX compilation unit must
+declare `unit <Name>;` and import the class (or give its FQN). Missing unit class,
+undeclared entry points, raw `DataSource` fields, or explicit-type mismatches all
+fail loud at build time with actionable messages. See
+`specs/2026-04-21-type-inference-from-unit-class-design.md`.
 
 ## Build Cache Strategy: RuleAST
 
