@@ -41,7 +41,8 @@ public final class DrlxRuleAstParseResult {
         DrlxRuleAstProto.CompilationUnitParseResult.Builder builder =
                 DrlxRuleAstProto.CompilationUnitParseResult.newBuilder()
                         .setSourceHash(hashSource(drlxSource))
-                        .setPackageName(data.packageName());
+                        .setPackageName(data.packageName())
+                        .setUnitName(data.unitName() == null ? "" : data.unitName());
 
         data.imports().forEach(builder::addImports);
         data.rules().forEach(rule -> builder.addRules(toProtoRule(rule)));
@@ -89,6 +90,7 @@ public final class DrlxRuleAstParseResult {
         }
 
         return new CompilationUnitIR(parseResult.getPackageName(),
+                parseResult.getUnitName(),
                 List.copyOf(parseResult.getImportsList()),
                 List.copyOf(rules));
     }

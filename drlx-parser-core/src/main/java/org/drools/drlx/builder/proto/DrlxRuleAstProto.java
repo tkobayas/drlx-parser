@@ -324,6 +324,18 @@ public final class DrlxRuleAstProto {
      */
     org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResultOrBuilder getRulesOrBuilder(
         int index);
+
+    /**
+     * <code>string unit_name = 5;</code>
+     * @return The unitName.
+     */
+    java.lang.String getUnitName();
+    /**
+     * <code>string unit_name = 5;</code>
+     * @return The bytes for unitName.
+     */
+    com.google.protobuf.ByteString
+        getUnitNameBytes();
   }
   /**
    * Protobuf type {@code org.drools.drlx.builder.proto.CompilationUnitParseResult}
@@ -343,6 +355,7 @@ public final class DrlxRuleAstProto {
       imports_ =
           com.google.protobuf.LazyStringArrayList.emptyList();
       rules_ = java.util.Collections.emptyList();
+      unitName_ = "";
     }
 
     @java.lang.Override
@@ -521,6 +534,45 @@ public final class DrlxRuleAstProto {
       return rules_.get(index);
     }
 
+    public static final int UNIT_NAME_FIELD_NUMBER = 5;
+    @SuppressWarnings("serial")
+    private volatile java.lang.Object unitName_ = "";
+    /**
+     * <code>string unit_name = 5;</code>
+     * @return The unitName.
+     */
+    @java.lang.Override
+    public java.lang.String getUnitName() {
+      java.lang.Object ref = unitName_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        unitName_ = s;
+        return s;
+      }
+    }
+    /**
+     * <code>string unit_name = 5;</code>
+     * @return The bytes for unitName.
+     */
+    @java.lang.Override
+    public com.google.protobuf.ByteString
+        getUnitNameBytes() {
+      java.lang.Object ref = unitName_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        unitName_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -546,6 +598,9 @@ public final class DrlxRuleAstProto {
       }
       for (int i = 0; i < rules_.size(); i++) {
         output.writeMessage(4, rules_.get(i));
+      }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(unitName_)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, unitName_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -574,6 +629,9 @@ public final class DrlxRuleAstProto {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(4, rules_.get(i));
       }
+      if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(unitName_)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, unitName_);
+      }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
       return size;
@@ -597,6 +655,8 @@ public final class DrlxRuleAstProto {
           .equals(other.getImportsList())) return false;
       if (!getRulesList()
           .equals(other.getRulesList())) return false;
+      if (!getUnitName()
+          .equals(other.getUnitName())) return false;
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -620,6 +680,8 @@ public final class DrlxRuleAstProto {
         hash = (37 * hash) + RULES_FIELD_NUMBER;
         hash = (53 * hash) + getRulesList().hashCode();
       }
+      hash = (37 * hash) + UNIT_NAME_FIELD_NUMBER;
+      hash = (53 * hash) + getUnitName().hashCode();
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -762,6 +824,7 @@ public final class DrlxRuleAstProto {
           rulesBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000008);
+        unitName_ = "";
         return this;
       }
 
@@ -817,6 +880,9 @@ public final class DrlxRuleAstProto {
         if (((from_bitField0_ & 0x00000004) != 0)) {
           imports_.makeImmutable();
           result.imports_ = imports_;
+        }
+        if (((from_bitField0_ & 0x00000010) != 0)) {
+          result.unitName_ = unitName_;
         }
       }
 
@@ -910,6 +976,11 @@ public final class DrlxRuleAstProto {
             }
           }
         }
+        if (!other.getUnitName().isEmpty()) {
+          unitName_ = other.unitName_;
+          bitField0_ |= 0x00000010;
+          onChanged();
+        }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
         return this;
@@ -965,6 +1036,11 @@ public final class DrlxRuleAstProto {
                 }
                 break;
               } // case 34
+              case 42: {
+                unitName_ = input.readStringRequireUtf8();
+                bitField0_ |= 0x00000010;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -1475,6 +1551,78 @@ public final class DrlxRuleAstProto {
           rules_ = null;
         }
         return rulesBuilder_;
+      }
+
+      private java.lang.Object unitName_ = "";
+      /**
+       * <code>string unit_name = 5;</code>
+       * @return The unitName.
+       */
+      public java.lang.String getUnitName() {
+        java.lang.Object ref = unitName_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          unitName_ = s;
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>string unit_name = 5;</code>
+       * @return The bytes for unitName.
+       */
+      public com.google.protobuf.ByteString
+          getUnitNameBytes() {
+        java.lang.Object ref = unitName_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          unitName_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>string unit_name = 5;</code>
+       * @param value The unitName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnitName(
+          java.lang.String value) {
+        if (value == null) { throw new NullPointerException(); }
+        unitName_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string unit_name = 5;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearUnitName() {
+        unitName_ = getDefaultInstance().getUnitName();
+        bitField0_ = (bitField0_ & ~0x00000010);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>string unit_name = 5;</code>
+       * @param value The bytes for unitName to set.
+       * @return This builder for chaining.
+       */
+      public Builder setUnitNameBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) { throw new NullPointerException(); }
+        checkByteStringIsUtf8(value);
+        unitName_ = value;
+        bitField0_ |= 0x00000010;
+        onChanged();
+        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -7830,39 +7978,40 @@ public final class DrlxRuleAstProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\023drlx_rule_ast.proto\022\035org.drools.drlx.b" +
-      "uilder.proto\"\227\001\n\032CompilationUnitParseRes" +
+      "uilder.proto\"\252\001\n\032CompilationUnitParseRes" +
       "ult\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name" +
       "\030\002 \001(\t\022\017\n\007imports\030\003 \003(\t\022=\n\005rules\030\004 \003(\0132." +
       ".org.drools.drlx.builder.proto.RuleParse" +
-      "Result\"\370\001\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t" +
-      "\022M\n\013annotations\030\003 \003(\01328.org.drools.drlx." +
-      "builder.proto.RuleAnnotationParseResult\022" +
-      ">\n\003lhs\030\004 \003(\01321.org.drools.drlx.builder.p" +
-      "roto.LhsItemParseResult\022B\n\003rhs\030\005 \001(\01325.o" +
-      "rg.drools.drlx.builder.proto.Consequence" +
-      "ParseResultJ\004\010\002\020\003\"\253\001\n\022LhsItemParseResult" +
-      "\022D\n\007pattern\030\001 \001(\01321.org.drools.drlx.buil" +
-      "der.proto.PatternParseResultH\000\022G\n\005group\030" +
-      "\002 \001(\01326.org.drools.drlx.builder.proto.Gr" +
-      "oupElementParseResultH\000B\006\n\004kind\"\235\001\n\027Grou" +
-      "pElementParseResult\022=\n\004kind\030\001 \001(\0162/.org." +
-      "drools.drlx.builder.proto.GroupElementKi" +
-      "nd\022C\n\010children\030\002 \003(\01321.org.drools.drlx.b" +
-      "uilder.proto.LhsItemParseResult\"\224\001\n\022Patt" +
-      "ernParseResult\022\021\n\ttype_name\030\001 \001(\t\022\021\n\tbin" +
-      "d_name\030\002 \001(\t\022\023\n\013entry_point\030\003 \001(\t\022\022\n\ncon" +
-      "ditions\030\004 \003(\t\022\026\n\016cast_type_name\030\005 \001(\t\022\027\n" +
-      "\017positional_args\030\006 \003(\t\"\'\n\026ConsequencePar" +
-      "seResult\022\r\n\005block\030\001 \001(\t\"k\n\031RuleAnnotatio" +
-      "nParseResult\022;\n\004kind\030\001 \001(\0162-.org.drools." +
-      "drlx.builder.proto.AnnotationKind\022\021\n\traw" +
-      "_value\030\002 \001(\t*p\n\016AnnotationKind\022\037\n\033ANNOTA" +
-      "TION_KIND_UNSPECIFIED\020\000\022\034\n\030ANNOTATION_KI" +
-      "ND_SALIENCE\020\001\022\037\n\033ANNOTATION_KIND_DESCRIP" +
-      "TION\020\002*R\n\020GroupElementKind\022\"\n\036GROUP_ELEM" +
-      "ENT_KIND_UNSPECIFIED\020\000\022\032\n\026GROUP_ELEMENT_" +
-      "KIND_NOT\020\001B1\n\035org.drools.drlx.builder.pr" +
-      "otoB\020DrlxRuleAstProtob\006proto3"
+      "Result\022\021\n\tunit_name\030\005 \001(\t\"\370\001\n\017RuleParseR" +
+      "esult\022\014\n\004name\030\001 \001(\t\022M\n\013annotations\030\003 \003(\013" +
+      "28.org.drools.drlx.builder.proto.RuleAnn" +
+      "otationParseResult\022>\n\003lhs\030\004 \003(\01321.org.dr" +
+      "ools.drlx.builder.proto.LhsItemParseResu" +
+      "lt\022B\n\003rhs\030\005 \001(\01325.org.drools.drlx.builde" +
+      "r.proto.ConsequenceParseResultJ\004\010\002\020\003\"\253\001\n" +
+      "\022LhsItemParseResult\022D\n\007pattern\030\001 \001(\01321.o" +
+      "rg.drools.drlx.builder.proto.PatternPars" +
+      "eResultH\000\022G\n\005group\030\002 \001(\01326.org.drools.dr" +
+      "lx.builder.proto.GroupElementParseResult" +
+      "H\000B\006\n\004kind\"\235\001\n\027GroupElementParseResult\022=" +
+      "\n\004kind\030\001 \001(\0162/.org.drools.drlx.builder.p" +
+      "roto.GroupElementKind\022C\n\010children\030\002 \003(\0132" +
+      "1.org.drools.drlx.builder.proto.LhsItemP" +
+      "arseResult\"\224\001\n\022PatternParseResult\022\021\n\ttyp" +
+      "e_name\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry" +
+      "_point\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast" +
+      "_type_name\030\005 \001(\t\022\027\n\017positional_args\030\006 \003(" +
+      "\t\"\'\n\026ConsequenceParseResult\022\r\n\005block\030\001 \001" +
+      "(\t\"k\n\031RuleAnnotationParseResult\022;\n\004kind\030" +
+      "\001 \001(\0162-.org.drools.drlx.builder.proto.An" +
+      "notationKind\022\021\n\traw_value\030\002 \001(\t*p\n\016Annot" +
+      "ationKind\022\037\n\033ANNOTATION_KIND_UNSPECIFIED" +
+      "\020\000\022\034\n\030ANNOTATION_KIND_SALIENCE\020\001\022\037\n\033ANNO" +
+      "TATION_KIND_DESCRIPTION\020\002*R\n\020GroupElemen" +
+      "tKind\022\"\n\036GROUP_ELEMENT_KIND_UNSPECIFIED\020" +
+      "\000\022\032\n\026GROUP_ELEMENT_KIND_NOT\020\001B1\n\035org.dro" +
+      "ols.drlx.builder.protoB\020DrlxRuleAstProto" +
+      "b\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -7873,7 +8022,7 @@ public final class DrlxRuleAstProto {
     internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_CompilationUnitParseResult_descriptor,
-        new java.lang.String[] { "SourceHash", "PackageName", "Imports", "Rules", });
+        new java.lang.String[] { "SourceHash", "PackageName", "Imports", "Rules", "UnitName", });
     internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable = new

@@ -73,7 +73,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             ctx.ruleDeclaration().forEach(ruleCtx -> rules.add(buildRule(ruleCtx, annotationImports)));
         }
 
-        return new CompilationUnitIR(packageName, List.copyOf(imports), List.copyOf(rules));
+        String unitName = "";
+        if (ctx.unitDeclaration() != null) {
+            unitName = ctx.unitDeclaration().qualifiedName().getText();
+        }
+
+        return new CompilationUnitIR(packageName, unitName, List.copyOf(imports), List.copyOf(rules));
     }
 
     private RuleIR buildRule(DrlxParser.RuleDeclarationContext ctx,

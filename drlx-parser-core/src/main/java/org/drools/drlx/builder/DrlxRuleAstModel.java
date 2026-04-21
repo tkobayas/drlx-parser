@@ -12,7 +12,10 @@ public final class DrlxRuleAstModel {
     private DrlxRuleAstModel() {
     }
 
-    public record CompilationUnitIR(String packageName, List<String> imports, List<RuleIR> rules) {
+    public record CompilationUnitIR(String packageName,
+                                    String unitName,
+                                    List<String> imports,
+                                    List<RuleIR> rules) {
     }
 
     public record RuleIR(String name,

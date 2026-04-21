@@ -10,6 +10,7 @@ message CompilationUnitParseResult {
   string package_name = 2;
   repeated string imports = 3;
   repeated RuleParseResult rules = 4;
+  string unit_name = 5;
 }
 
 message RuleParseResult {
