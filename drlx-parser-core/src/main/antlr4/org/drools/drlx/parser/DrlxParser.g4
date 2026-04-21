@@ -56,9 +56,9 @@ ruleItem
 
 // 'not' group element — single-element form only in this landing.
 // DRLX spec §"'not' / 'exists'" line 599. Multi-element `not(/a, /b)`
-// deferred to a follow-up issue.
+// deferred to a follow-up issue. Trailing ',' mirrors rulePattern.
 notElement
-    : NOT oopathExpression
+    : NOT oopathExpression ','
     ;
 
 // Pattern: type bind : oopathExpression ,
