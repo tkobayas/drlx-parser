@@ -169,7 +169,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
 
                 rule TryInheritedCollision {
-                    ChildPositioned l : /things("x"),
+                    ChildPositioned l : /childPositionedThings("x"),
                     do { System.out.println(l); }
                 }
                 """;
@@ -195,7 +195,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
 
                 rule TryDuplicate {
-                    DuplicatePositionLocation l : /locations("paris"),
+                    DuplicatePositionLocation l : /duplicateLocations("paris"),
                     do { System.out.println(l); }
                 }
                 """;
@@ -222,7 +222,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
 
                 rule TryPositional {
-                    PlainLocation l : /locations("paris"),
+                    PlainLocation l : /plainLocations("paris"),
                     do { System.out.println(l); }
                 }
                 """;
