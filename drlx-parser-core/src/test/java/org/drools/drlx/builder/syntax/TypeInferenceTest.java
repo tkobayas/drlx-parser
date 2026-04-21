@@ -138,4 +138,67 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
         assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
                 .hasMessageContaining("not on classpath");
     }
+
+    @Test
+    void rawDataSourceField_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnitWithRawField;
+
+                unit MyUnitWithRawField;
+
+                rule RawField {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("raw DataSource")
+                .hasMessageContaining("persons");
+    }
+
+    @Test
+    void entryPointNotOnUnit_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule UnknownEntry {
+                    Person p : /strangers[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("entry point 'strangers' is not declared")
+                .hasMessageContaining("MyUnit");
+    }
+
+    @Test
+    void explicitTypeMismatchesUnitField_failsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule Mismatch {
+                    Location p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("does not match unit-class declaration");
+    }
 }
