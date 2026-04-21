@@ -45,9 +45,44 @@ public class DrlxRuleAstRuntimeBuilder {
         pkg.setClassLoader(Thread.currentThread().getContextClassLoader());
 
         parseResult.imports().forEach(importName -> pkg.addImport(new ImportDeclaration(importName)));
+
+        Class<?> unitClass = resolveUnitClass(parseResult.unitName(),
+                                              parseResult.imports(),
+                                              pkg.getTypeResolver());
+        java.util.Objects.requireNonNull(unitClass);
+
         parseResult.rules().forEach(rule -> pkg.addRule(buildRule(rule, pkg.getTypeResolver())));
 
         return List.of(pkg);
+    }
+
+    private static Class<?> resolveUnitClass(String unitName,
+                                             List<String> imports,
+                                             TypeResolver typeResolver) {
+        if (unitName == null || unitName.isEmpty()) {
+            throw new RuntimeException(
+                    "DRLX compilation unit is missing a 'unit <Name>;' declaration");
+        }
+        if (unitName.contains(".")) {
+            return resolveOrThrow(unitName, typeResolver);
+        }
+        for (String imp : imports) {
+            String simple = imp.substring(imp.lastIndexOf('.') + 1);
+            if (simple.equals(unitName)) {
+                return resolveOrThrow(imp, typeResolver);
+            }
+        }
+        throw new RuntimeException(
+                "Unit class '" + unitName + "' not found — add `import <fqn>." + unitName
+                + ";` to the DRLX source.");
+    }
+
+    private static Class<?> resolveOrThrow(String fqn, TypeResolver typeResolver) {
+        try {
+            return typeResolver.resolveType(fqn);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("Unit class '" + fqn + "' not on classpath", e);
+        }
     }
 
     private RuleImpl buildRule(RuleIR parseResult, TypeResolver typeResolver) {
