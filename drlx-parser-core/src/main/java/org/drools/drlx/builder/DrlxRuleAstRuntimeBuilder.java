@@ -18,11 +18,11 @@ import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
-import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
-import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.util.TypeResolver;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.Type;
@@ -57,30 +57,42 @@ public class DrlxRuleAstRuntimeBuilder {
         rule.setResource(rule.getResource());
         applyAnnotations(rule, parseResult.annotations());
 
-        GroupElement ge = GroupElementFactory.newAndInstance();
+        GroupElement root = GroupElementFactory.newAndInstance();
         Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
 
-        for (RuleItemIR item : parseResult.items()) {
+        buildLhs(parseResult.lhs(), root, typeResolver, boundVariables);
+
+        if (parseResult.rhs() != null) {
+            Map<String, Type<?>> types = lambdaCompiler.getTypeMap(root);
+            rule.setConsequence(lambdaCompiler.createLambdaConsequence(parseResult.rhs().block(), types));
+        }
+
+        rule.setLhs(root);
+        return rule;
+    }
+
+    private void buildLhs(List<LhsItemIR> items, GroupElement parent,
+                          TypeResolver typeResolver, Map<String, BoundVariable> boundVariables) {
+        for (LhsItemIR item : items) {
             if (item instanceof PatternIR patternIr) {
                 Pattern pattern = buildPattern(patternIr, typeResolver, boundVariables);
-                ge.addChild(pattern);
-
+                parent.addChild(pattern);
                 Declaration declaration = pattern.getDeclaration();
                 if (declaration != null) {
                     Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
                     boundVariables.put(declaration.getIdentifier(),
                             new BoundVariable(declaration.getIdentifier(), patternClass, pattern));
                 }
-            } else if (item instanceof ConsequenceIR consequenceIr) {
-                Map<String, Type<?>> types = lambdaCompiler.getTypeMap(ge);
-                rule.setConsequence(lambdaCompiler.createLambdaConsequence(consequenceIr.block(), types));
+            } else if (item instanceof GroupElementIR group) {
+                GroupElement ge = switch (group.kind()) {
+                    case NOT -> GroupElementFactory.newNotInstance();
+                };
+                buildLhs(group.children(), ge, typeResolver, boundVariables);
+                parent.addChild(ge);
             } else {
-                throw new IllegalArgumentException("Unsupported rule item: " + item.getClass().getName());
+                throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
         }
-
-        rule.setLhs(ge);
-        return rule;
     }
 
     private Pattern buildPattern(PatternIR parseResult,

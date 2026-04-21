@@ -132,6 +132,122 @@ public final class DrlxRuleAstProto {
     // @@protoc_insertion_point(enum_scope:org.drools.drlx.builder.proto.AnnotationKind)
   }
 
+  /**
+   * Protobuf enum {@code org.drools.drlx.builder.proto.GroupElementKind}
+   */
+  public enum GroupElementKind
+      implements com.google.protobuf.ProtocolMessageEnum {
+    /**
+     * <code>GROUP_ELEMENT_KIND_UNSPECIFIED = 0;</code>
+     */
+    GROUP_ELEMENT_KIND_UNSPECIFIED(0),
+    /**
+     * <pre>
+     * 2, 3, 4 reserved for EXISTS, AND, OR
+     * </pre>
+     *
+     * <code>GROUP_ELEMENT_KIND_NOT = 1;</code>
+     */
+    GROUP_ELEMENT_KIND_NOT(1),
+    UNRECOGNIZED(-1),
+    ;
+
+    /**
+     * <code>GROUP_ELEMENT_KIND_UNSPECIFIED = 0;</code>
+     */
+    public static final int GROUP_ELEMENT_KIND_UNSPECIFIED_VALUE = 0;
+    /**
+     * <pre>
+     * 2, 3, 4 reserved for EXISTS, AND, OR
+     * </pre>
+     *
+     * <code>GROUP_ELEMENT_KIND_NOT = 1;</code>
+     */
+    public static final int GROUP_ELEMENT_KIND_NOT_VALUE = 1;
+
+
+    public final int getNumber() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalArgumentException(
+            "Can't get the number of an unknown enum value.");
+      }
+      return value;
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     * @deprecated Use {@link #forNumber(int)} instead.
+     */
+    @java.lang.Deprecated
+    public static GroupElementKind valueOf(int value) {
+      return forNumber(value);
+    }
+
+    /**
+     * @param value The numeric wire value of the corresponding enum entry.
+     * @return The enum associated with the given numeric wire value.
+     */
+    public static GroupElementKind forNumber(int value) {
+      switch (value) {
+        case 0: return GROUP_ELEMENT_KIND_UNSPECIFIED;
+        case 1: return GROUP_ELEMENT_KIND_NOT;
+        default: return null;
+      }
+    }
+
+    public static com.google.protobuf.Internal.EnumLiteMap<GroupElementKind>
+        internalGetValueMap() {
+      return internalValueMap;
+    }
+    private static final com.google.protobuf.Internal.EnumLiteMap<
+        GroupElementKind> internalValueMap =
+          new com.google.protobuf.Internal.EnumLiteMap<GroupElementKind>() {
+            public GroupElementKind findValueByNumber(int number) {
+              return GroupElementKind.forNumber(number);
+            }
+          };
+
+    public final com.google.protobuf.Descriptors.EnumValueDescriptor
+        getValueDescriptor() {
+      if (this == UNRECOGNIZED) {
+        throw new java.lang.IllegalStateException(
+            "Can't get the descriptor of an unrecognized enum value.");
+      }
+      return getDescriptor().getValues().get(ordinal());
+    }
+    public final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptorForType() {
+      return getDescriptor();
+    }
+    public static final com.google.protobuf.Descriptors.EnumDescriptor
+        getDescriptor() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.getDescriptor().getEnumTypes().get(1);
+    }
+
+    private static final GroupElementKind[] VALUES = values();
+
+    public static GroupElementKind valueOf(
+        com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+      if (desc.getType() != getDescriptor()) {
+        throw new java.lang.IllegalArgumentException(
+          "EnumValueDescriptor is not for this type.");
+      }
+      if (desc.getIndex() == -1) {
+        return UNRECOGNIZED;
+      }
+      return VALUES[desc.getIndex()];
+    }
+
+    private final int value;
+
+    private GroupElementKind(int value) {
+      this.value = value;
+    }
+
+    // @@protoc_insertion_point(enum_scope:org.drools.drlx.builder.proto.GroupElementKind)
+  }
+
   public interface CompilationUnitParseResultOrBuilder extends
       // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.CompilationUnitParseResult)
       com.google.protobuf.MessageOrBuilder {
@@ -1441,30 +1557,6 @@ public final class DrlxRuleAstProto {
         getNameBytes();
 
     /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> 
-        getItemsList();
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index);
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    int getItemsCount();
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
-        getItemsOrBuilderList();
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
-        int index);
-
-    /**
      * <code>repeated .org.drools.drlx.builder.proto.RuleAnnotationParseResult annotations = 3;</code>
      */
     java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> 
@@ -1487,6 +1579,77 @@ public final class DrlxRuleAstProto {
      */
     org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder getAnnotationsOrBuilder(
         int index);
+
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> 
+        getLhsList();
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getLhs(int index);
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    int getLhsCount();
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+        getLhsOrBuilderList();
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getLhsOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     * @return Whether the rhs field is set.
+     */
+    boolean hasRhs();
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     * @return The rhs.
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getRhs();
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getRhsOrBuilder();
   }
   /**
    * Protobuf type {@code org.drools.drlx.builder.proto.RuleParseResult}
@@ -1502,8 +1665,8 @@ public final class DrlxRuleAstProto {
     }
     private RuleParseResult() {
       name_ = "";
-      items_ = java.util.Collections.emptyList();
       annotations_ = java.util.Collections.emptyList();
+      lhs_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -1526,6 +1689,7 @@ public final class DrlxRuleAstProto {
               org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.Builder.class);
     }
 
+    private int bitField0_;
     public static final int NAME_FIELD_NUMBER = 1;
     @SuppressWarnings("serial")
     private volatile java.lang.Object name_ = "";
@@ -1563,47 +1727,6 @@ public final class DrlxRuleAstProto {
       } else {
         return (com.google.protobuf.ByteString) ref;
       }
-    }
-
-    public static final int ITEMS_FIELD_NUMBER = 2;
-    @SuppressWarnings("serial")
-    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> items_;
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    @java.lang.Override
-    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> getItemsList() {
-      return items_;
-    }
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    @java.lang.Override
-    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
-        getItemsOrBuilderList() {
-      return items_;
-    }
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    @java.lang.Override
-    public int getItemsCount() {
-      return items_.size();
-    }
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index) {
-      return items_.get(index);
-    }
-    /**
-     * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-     */
-    @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
-        int index) {
-      return items_.get(index);
     }
 
     public static final int ANNOTATIONS_FIELD_NUMBER = 3;
@@ -1647,6 +1770,105 @@ public final class DrlxRuleAstProto {
       return annotations_.get(index);
     }
 
+    public static final int LHS_FIELD_NUMBER = 4;
+    @SuppressWarnings("serial")
+    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> lhs_;
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> getLhsList() {
+      return lhs_;
+    }
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+        getLhsOrBuilderList() {
+      return lhs_;
+    }
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    @java.lang.Override
+    public int getLhsCount() {
+      return lhs_.size();
+    }
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getLhs(int index) {
+      return lhs_.get(index);
+    }
+    /**
+     * <pre>
+     * NEW — tree-shape LHS
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getLhsOrBuilder(
+        int index) {
+      return lhs_.get(index);
+    }
+
+    public static final int RHS_FIELD_NUMBER = 5;
+    private org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult rhs_;
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     * @return Whether the rhs field is set.
+     */
+    @java.lang.Override
+    public boolean hasRhs() {
+      return ((bitField0_ & 0x00000001) != 0);
+    }
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     * @return The rhs.
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getRhs() {
+      return rhs_ == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance() : rhs_;
+    }
+    /**
+     * <pre>
+     * NEW — consequence out of items
+     * </pre>
+     *
+     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getRhsOrBuilder() {
+      return rhs_ == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance() : rhs_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1664,11 +1886,14 @@ public final class DrlxRuleAstProto {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
       }
-      for (int i = 0; i < items_.size(); i++) {
-        output.writeMessage(2, items_.get(i));
-      }
       for (int i = 0; i < annotations_.size(); i++) {
         output.writeMessage(3, annotations_.get(i));
+      }
+      for (int i = 0; i < lhs_.size(); i++) {
+        output.writeMessage(4, lhs_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        output.writeMessage(5, getRhs());
       }
       getUnknownFields().writeTo(output);
     }
@@ -1682,13 +1907,17 @@ public final class DrlxRuleAstProto {
       if (!com.google.protobuf.GeneratedMessageV3.isStringEmpty(name_)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, name_);
       }
-      for (int i = 0; i < items_.size(); i++) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, items_.get(i));
-      }
       for (int i = 0; i < annotations_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, annotations_.get(i));
+      }
+      for (int i = 0; i < lhs_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(4, lhs_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) != 0)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, getRhs());
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -1707,10 +1936,15 @@ public final class DrlxRuleAstProto {
 
       if (!getName()
           .equals(other.getName())) return false;
-      if (!getItemsList()
-          .equals(other.getItemsList())) return false;
       if (!getAnnotationsList()
           .equals(other.getAnnotationsList())) return false;
+      if (!getLhsList()
+          .equals(other.getLhsList())) return false;
+      if (hasRhs() != other.hasRhs()) return false;
+      if (hasRhs()) {
+        if (!getRhs()
+            .equals(other.getRhs())) return false;
+      }
       if (!getUnknownFields().equals(other.getUnknownFields())) return false;
       return true;
     }
@@ -1724,13 +1958,17 @@ public final class DrlxRuleAstProto {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + NAME_FIELD_NUMBER;
       hash = (53 * hash) + getName().hashCode();
-      if (getItemsCount() > 0) {
-        hash = (37 * hash) + ITEMS_FIELD_NUMBER;
-        hash = (53 * hash) + getItemsList().hashCode();
-      }
       if (getAnnotationsCount() > 0) {
         hash = (37 * hash) + ANNOTATIONS_FIELD_NUMBER;
         hash = (53 * hash) + getAnnotationsList().hashCode();
+      }
+      if (getLhsCount() > 0) {
+        hash = (37 * hash) + LHS_FIELD_NUMBER;
+        hash = (53 * hash) + getLhsList().hashCode();
+      }
+      if (hasRhs()) {
+        hash = (37 * hash) + RHS_FIELD_NUMBER;
+        hash = (53 * hash) + getRhs().hashCode();
       }
       hash = (29 * hash) + getUnknownFields().hashCode();
       memoizedHashCode = hash;
@@ -1851,33 +2089,46 @@ public final class DrlxRuleAstProto {
 
       // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult.newBuilder()
       private Builder() {
-
+        maybeForceBuilderInitialization();
       }
 
       private Builder(
           com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
         super(parent);
-
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getAnnotationsFieldBuilder();
+          getLhsFieldBuilder();
+          getRhsFieldBuilder();
+        }
       }
       @java.lang.Override
       public Builder clear() {
         super.clear();
         bitField0_ = 0;
         name_ = "";
-        if (itemsBuilder_ == null) {
-          items_ = java.util.Collections.emptyList();
-        } else {
-          items_ = null;
-          itemsBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000002);
         if (annotationsBuilder_ == null) {
           annotations_ = java.util.Collections.emptyList();
         } else {
           annotations_ = null;
           annotationsBuilder_.clear();
         }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (lhsBuilder_ == null) {
+          lhs_ = java.util.Collections.emptyList();
+        } else {
+          lhs_ = null;
+          lhsBuilder_.clear();
+        }
         bitField0_ = (bitField0_ & ~0x00000004);
+        rhs_ = null;
+        if (rhsBuilder_ != null) {
+          rhsBuilder_.dispose();
+          rhsBuilder_ = null;
+        }
         return this;
       }
 
@@ -1911,23 +2162,23 @@ public final class DrlxRuleAstProto {
       }
 
       private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleParseResult result) {
-        if (itemsBuilder_ == null) {
-          if (((bitField0_ & 0x00000002) != 0)) {
-            items_ = java.util.Collections.unmodifiableList(items_);
-            bitField0_ = (bitField0_ & ~0x00000002);
-          }
-          result.items_ = items_;
-        } else {
-          result.items_ = itemsBuilder_.build();
-        }
         if (annotationsBuilder_ == null) {
-          if (((bitField0_ & 0x00000004) != 0)) {
+          if (((bitField0_ & 0x00000002) != 0)) {
             annotations_ = java.util.Collections.unmodifiableList(annotations_);
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000002);
           }
           result.annotations_ = annotations_;
         } else {
           result.annotations_ = annotationsBuilder_.build();
+        }
+        if (lhsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) != 0)) {
+            lhs_ = java.util.Collections.unmodifiableList(lhs_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.lhs_ = lhs_;
+        } else {
+          result.lhs_ = lhsBuilder_.build();
         }
       }
 
@@ -1936,6 +2187,14 @@ public final class DrlxRuleAstProto {
         if (((from_bitField0_ & 0x00000001) != 0)) {
           result.name_ = name_;
         }
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000008) != 0)) {
+          result.rhs_ = rhsBuilder_ == null
+              ? rhs_
+              : rhsBuilder_.build();
+          to_bitField0_ |= 0x00000001;
+        }
+        result.bitField0_ |= to_bitField0_;
       }
 
       @java.lang.Override
@@ -1987,37 +2246,11 @@ public final class DrlxRuleAstProto {
           bitField0_ |= 0x00000001;
           onChanged();
         }
-        if (itemsBuilder_ == null) {
-          if (!other.items_.isEmpty()) {
-            if (items_.isEmpty()) {
-              items_ = other.items_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-            } else {
-              ensureItemsIsMutable();
-              items_.addAll(other.items_);
-            }
-            onChanged();
-          }
-        } else {
-          if (!other.items_.isEmpty()) {
-            if (itemsBuilder_.isEmpty()) {
-              itemsBuilder_.dispose();
-              itemsBuilder_ = null;
-              items_ = other.items_;
-              bitField0_ = (bitField0_ & ~0x00000002);
-              itemsBuilder_ = 
-                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
-                   getItemsFieldBuilder() : null;
-            } else {
-              itemsBuilder_.addAllMessages(other.items_);
-            }
-          }
-        }
         if (annotationsBuilder_ == null) {
           if (!other.annotations_.isEmpty()) {
             if (annotations_.isEmpty()) {
               annotations_ = other.annotations_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
             } else {
               ensureAnnotationsIsMutable();
               annotations_.addAll(other.annotations_);
@@ -2030,7 +2263,7 @@ public final class DrlxRuleAstProto {
               annotationsBuilder_.dispose();
               annotationsBuilder_ = null;
               annotations_ = other.annotations_;
-              bitField0_ = (bitField0_ & ~0x00000004);
+              bitField0_ = (bitField0_ & ~0x00000002);
               annotationsBuilder_ = 
                 com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
                    getAnnotationsFieldBuilder() : null;
@@ -2038,6 +2271,35 @@ public final class DrlxRuleAstProto {
               annotationsBuilder_.addAllMessages(other.annotations_);
             }
           }
+        }
+        if (lhsBuilder_ == null) {
+          if (!other.lhs_.isEmpty()) {
+            if (lhs_.isEmpty()) {
+              lhs_ = other.lhs_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureLhsIsMutable();
+              lhs_.addAll(other.lhs_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.lhs_.isEmpty()) {
+            if (lhsBuilder_.isEmpty()) {
+              lhsBuilder_.dispose();
+              lhsBuilder_ = null;
+              lhs_ = other.lhs_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              lhsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getLhsFieldBuilder() : null;
+            } else {
+              lhsBuilder_.addAllMessages(other.lhs_);
+            }
+          }
+        }
+        if (other.hasRhs()) {
+          mergeRhs(other.getRhs());
         }
         this.mergeUnknownFields(other.getUnknownFields());
         onChanged();
@@ -2070,19 +2332,6 @@ public final class DrlxRuleAstProto {
                 bitField0_ |= 0x00000001;
                 break;
               } // case 10
-              case 18: {
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult m =
-                    input.readMessage(
-                        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.parser(),
-                        extensionRegistry);
-                if (itemsBuilder_ == null) {
-                  ensureItemsIsMutable();
-                  items_.add(m);
-                } else {
-                  itemsBuilder_.addMessage(m);
-                }
-                break;
-              } // case 18
               case 26: {
                 org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult m =
                     input.readMessage(
@@ -2096,6 +2345,26 @@ public final class DrlxRuleAstProto {
                 }
                 break;
               } // case 26
+              case 34: {
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult m =
+                    input.readMessage(
+                        org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.parser(),
+                        extensionRegistry);
+                if (lhsBuilder_ == null) {
+                  ensureLhsIsMutable();
+                  lhs_.add(m);
+                } else {
+                  lhsBuilder_.addMessage(m);
+                }
+                break;
+              } // case 34
+              case 42: {
+                input.readMessage(
+                    getRhsFieldBuilder().getBuilder(),
+                    extensionRegistry);
+                bitField0_ |= 0x00000008;
+                break;
+              } // case 42
               default: {
                 if (!super.parseUnknownField(input, extensionRegistry, tag)) {
                   done = true; // was an endgroup tag
@@ -2185,252 +2454,12 @@ public final class DrlxRuleAstProto {
         return this;
       }
 
-      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> items_ =
-        java.util.Collections.emptyList();
-      private void ensureItemsIsMutable() {
-        if (!((bitField0_ & 0x00000002) != 0)) {
-          items_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult>(items_);
-          bitField0_ |= 0x00000002;
-         }
-      }
-
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> itemsBuilder_;
-
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> getItemsList() {
-        if (itemsBuilder_ == null) {
-          return java.util.Collections.unmodifiableList(items_);
-        } else {
-          return itemsBuilder_.getMessageList();
-        }
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public int getItemsCount() {
-        if (itemsBuilder_ == null) {
-          return items_.size();
-        } else {
-          return itemsBuilder_.getCount();
-        }
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getItems(int index) {
-        if (itemsBuilder_ == null) {
-          return items_.get(index);
-        } else {
-          return itemsBuilder_.getMessage(index);
-        }
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder setItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
-        if (itemsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureItemsIsMutable();
-          items_.set(index, value);
-          onChanged();
-        } else {
-          itemsBuilder_.setMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder setItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
-        if (itemsBuilder_ == null) {
-          ensureItemsIsMutable();
-          items_.set(index, builderForValue.build());
-          onChanged();
-        } else {
-          itemsBuilder_.setMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder addItems(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
-        if (itemsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureItemsIsMutable();
-          items_.add(value);
-          onChanged();
-        } else {
-          itemsBuilder_.addMessage(value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder addItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult value) {
-        if (itemsBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          ensureItemsIsMutable();
-          items_.add(index, value);
-          onChanged();
-        } else {
-          itemsBuilder_.addMessage(index, value);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder addItems(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
-        if (itemsBuilder_ == null) {
-          ensureItemsIsMutable();
-          items_.add(builderForValue.build());
-          onChanged();
-        } else {
-          itemsBuilder_.addMessage(builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder addItems(
-          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder builderForValue) {
-        if (itemsBuilder_ == null) {
-          ensureItemsIsMutable();
-          items_.add(index, builderForValue.build());
-          onChanged();
-        } else {
-          itemsBuilder_.addMessage(index, builderForValue.build());
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder addAllItems(
-          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult> values) {
-        if (itemsBuilder_ == null) {
-          ensureItemsIsMutable();
-          com.google.protobuf.AbstractMessageLite.Builder.addAll(
-              values, items_);
-          onChanged();
-        } else {
-          itemsBuilder_.addAllMessages(values);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder clearItems() {
-        if (itemsBuilder_ == null) {
-          items_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000002);
-          onChanged();
-        } else {
-          itemsBuilder_.clear();
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public Builder removeItems(int index) {
-        if (itemsBuilder_ == null) {
-          ensureItemsIsMutable();
-          items_.remove(index);
-          onChanged();
-        } else {
-          itemsBuilder_.remove(index);
-        }
-        return this;
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder getItemsBuilder(
-          int index) {
-        return getItemsFieldBuilder().getBuilder(index);
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder getItemsOrBuilder(
-          int index) {
-        if (itemsBuilder_ == null) {
-          return items_.get(index);  } else {
-          return itemsBuilder_.getMessageOrBuilder(index);
-        }
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
-           getItemsOrBuilderList() {
-        if (itemsBuilder_ != null) {
-          return itemsBuilder_.getMessageOrBuilderList();
-        } else {
-          return java.util.Collections.unmodifiableList(items_);
-        }
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder addItemsBuilder() {
-        return getItemsFieldBuilder().addBuilder(
-            org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder addItemsBuilder(
-          int index) {
-        return getItemsFieldBuilder().addBuilder(
-            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance());
-      }
-      /**
-       * <code>repeated .org.drools.drlx.builder.proto.RuleItemParseResult items = 2;</code>
-       */
-      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder> 
-           getItemsBuilderList() {
-        return getItemsFieldBuilder().getBuilderList();
-      }
-      private com.google.protobuf.RepeatedFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder> 
-          getItemsFieldBuilder() {
-        if (itemsBuilder_ == null) {
-          itemsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder>(
-                  items_,
-                  ((bitField0_ & 0x00000002) != 0),
-                  getParentForChildren(),
-                  isClean());
-          items_ = null;
-        }
-        return itemsBuilder_;
-      }
-
       private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult> annotations_ =
         java.util.Collections.emptyList();
       private void ensureAnnotationsIsMutable() {
-        if (!((bitField0_ & 0x00000004) != 0)) {
+        if (!((bitField0_ & 0x00000002) != 0)) {
           annotations_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult>(annotations_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000002;
          }
       }
 
@@ -2580,7 +2609,7 @@ public final class DrlxRuleAstProto {
       public Builder clearAnnotations() {
         if (annotationsBuilder_ == null) {
           annotations_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000002);
           onChanged();
         } else {
           annotationsBuilder_.clear();
@@ -2657,12 +2686,481 @@ public final class DrlxRuleAstProto {
           annotationsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
               org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleAnnotationParseResultOrBuilder>(
                   annotations_,
-                  ((bitField0_ & 0x00000004) != 0),
+                  ((bitField0_ & 0x00000002) != 0),
                   getParentForChildren(),
                   isClean());
           annotations_ = null;
         }
         return annotationsBuilder_;
+      }
+
+      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> lhs_ =
+        java.util.Collections.emptyList();
+      private void ensureLhsIsMutable() {
+        if (!((bitField0_ & 0x00000004) != 0)) {
+          lhs_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult>(lhs_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> lhsBuilder_;
+
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> getLhsList() {
+        if (lhsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(lhs_);
+        } else {
+          return lhsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public int getLhsCount() {
+        if (lhsBuilder_ == null) {
+          return lhs_.size();
+        } else {
+          return lhsBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getLhs(int index) {
+        if (lhsBuilder_ == null) {
+          return lhs_.get(index);
+        } else {
+          return lhsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder setLhs(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (lhsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLhsIsMutable();
+          lhs_.set(index, value);
+          onChanged();
+        } else {
+          lhsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder setLhs(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (lhsBuilder_ == null) {
+          ensureLhsIsMutable();
+          lhs_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          lhsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder addLhs(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (lhsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLhsIsMutable();
+          lhs_.add(value);
+          onChanged();
+        } else {
+          lhsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder addLhs(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (lhsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLhsIsMutable();
+          lhs_.add(index, value);
+          onChanged();
+        } else {
+          lhsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder addLhs(
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (lhsBuilder_ == null) {
+          ensureLhsIsMutable();
+          lhs_.add(builderForValue.build());
+          onChanged();
+        } else {
+          lhsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder addLhs(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (lhsBuilder_ == null) {
+          ensureLhsIsMutable();
+          lhs_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          lhsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder addAllLhs(
+          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> values) {
+        if (lhsBuilder_ == null) {
+          ensureLhsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, lhs_);
+          onChanged();
+        } else {
+          lhsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder clearLhs() {
+        if (lhsBuilder_ == null) {
+          lhs_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          lhsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public Builder removeLhs(int index) {
+        if (lhsBuilder_ == null) {
+          ensureLhsIsMutable();
+          lhs_.remove(index);
+          onChanged();
+        } else {
+          lhsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder getLhsBuilder(
+          int index) {
+        return getLhsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getLhsOrBuilder(
+          int index) {
+        if (lhsBuilder_ == null) {
+          return lhs_.get(index);  } else {
+          return lhsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+           getLhsOrBuilderList() {
+        if (lhsBuilder_ != null) {
+          return lhsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(lhs_);
+        }
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder addLhsBuilder() {
+        return getLhsFieldBuilder().addBuilder(
+            org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder addLhsBuilder(
+          int index) {
+        return getLhsFieldBuilder().addBuilder(
+            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * NEW — tree-shape LHS
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult lhs = 4;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder> 
+           getLhsBuilderList() {
+        return getLhsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+          getLhsFieldBuilder() {
+        if (lhsBuilder_ == null) {
+          lhsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder>(
+                  lhs_,
+                  ((bitField0_ & 0x00000004) != 0),
+                  getParentForChildren(),
+                  isClean());
+          lhs_ = null;
+        }
+        return lhsBuilder_;
+      }
+
+      private org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult rhs_;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> rhsBuilder_;
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       * @return Whether the rhs field is set.
+       */
+      public boolean hasRhs() {
+        return ((bitField0_ & 0x00000008) != 0);
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       * @return The rhs.
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getRhs() {
+        if (rhsBuilder_ == null) {
+          return rhs_ == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance() : rhs_;
+        } else {
+          return rhsBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public Builder setRhs(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
+        if (rhsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          rhs_ = value;
+        } else {
+          rhsBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public Builder setRhs(
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder builderForValue) {
+        if (rhsBuilder_ == null) {
+          rhs_ = builderForValue.build();
+        } else {
+          rhsBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public Builder mergeRhs(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
+        if (rhsBuilder_ == null) {
+          if (((bitField0_ & 0x00000008) != 0) &&
+            rhs_ != null &&
+            rhs_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance()) {
+            getRhsBuilder().mergeFrom(value);
+          } else {
+            rhs_ = value;
+          }
+        } else {
+          rhsBuilder_.mergeFrom(value);
+        }
+        if (rhs_ != null) {
+          bitField0_ |= 0x00000008;
+          onChanged();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public Builder clearRhs() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        rhs_ = null;
+        if (rhsBuilder_ != null) {
+          rhsBuilder_.dispose();
+          rhsBuilder_ = null;
+        }
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder getRhsBuilder() {
+        bitField0_ |= 0x00000008;
+        onChanged();
+        return getRhsFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getRhsOrBuilder() {
+        if (rhsBuilder_ != null) {
+          return rhsBuilder_.getMessageOrBuilder();
+        } else {
+          return rhs_ == null ?
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance() : rhs_;
+        }
+      }
+      /**
+       * <pre>
+       * NEW — consequence out of items
+       * </pre>
+       *
+       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult rhs = 5;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> 
+          getRhsFieldBuilder() {
+        if (rhsBuilder_ == null) {
+          rhsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder>(
+                  getRhs(),
+                  getParentForChildren(),
+                  isClean());
+          rhs_ = null;
+        }
+        return rhsBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -2728,8 +3226,8 @@ public final class DrlxRuleAstProto {
 
   }
 
-  public interface RuleItemParseResultOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.RuleItemParseResult)
+  public interface LhsItemParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.LhsItemParseResult)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -2748,68 +3246,68 @@ public final class DrlxRuleAstProto {
     org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder();
 
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-     * @return Whether the consequence field is set.
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+     * @return Whether the group field is set.
      */
-    boolean hasConsequence();
+    boolean hasGroup();
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-     * @return The consequence.
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+     * @return The group.
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getGroup();
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
      */
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder getGroupOrBuilder();
 
-    org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.ItemCase getItemCase();
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.KindCase getKindCase();
   }
   /**
-   * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemParseResult}
+   * Protobuf type {@code org.drools.drlx.builder.proto.LhsItemParseResult}
    */
-  public static final class RuleItemParseResult extends
+  public static final class LhsItemParseResult extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.RuleItemParseResult)
-      RuleItemParseResultOrBuilder {
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.LhsItemParseResult)
+      LhsItemParseResultOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use RuleItemParseResult.newBuilder() to construct.
-    private RuleItemParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use LhsItemParseResult.newBuilder() to construct.
+    private LhsItemParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private RuleItemParseResult() {
+    private LhsItemParseResult() {
     }
 
     @java.lang.Override
     @SuppressWarnings({"unused"})
     protected java.lang.Object newInstance(
         UnusedPrivateParameter unused) {
-      return new RuleItemParseResult();
+      return new LhsItemParseResult();
     }
 
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor;
     }
 
     @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder.class);
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder.class);
     }
 
-    private int itemCase_ = 0;
+    private int kindCase_ = 0;
     @SuppressWarnings("serial")
-    private java.lang.Object item_;
-    public enum ItemCase
+    private java.lang.Object kind_;
+    public enum KindCase
         implements com.google.protobuf.Internal.EnumLite,
             com.google.protobuf.AbstractMessage.InternalOneOfEnum {
       PATTERN(1),
-      CONSEQUENCE(2),
-      ITEM_NOT_SET(0);
+      GROUP(2),
+      KIND_NOT_SET(0);
       private final int value;
-      private ItemCase(int value) {
+      private KindCase(int value) {
         this.value = value;
       }
       /**
@@ -2818,15 +3316,15 @@ public final class DrlxRuleAstProto {
        * @deprecated Use {@link #forNumber(int)} instead.
        */
       @java.lang.Deprecated
-      public static ItemCase valueOf(int value) {
+      public static KindCase valueOf(int value) {
         return forNumber(value);
       }
 
-      public static ItemCase forNumber(int value) {
+      public static KindCase forNumber(int value) {
         switch (value) {
           case 1: return PATTERN;
-          case 2: return CONSEQUENCE;
-          case 0: return ITEM_NOT_SET;
+          case 2: return GROUP;
+          case 0: return KIND_NOT_SET;
           default: return null;
         }
       }
@@ -2835,10 +3333,10 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public ItemCase
-    getItemCase() {
-      return ItemCase.forNumber(
-          itemCase_);
+    public KindCase
+    getKindCase() {
+      return KindCase.forNumber(
+          kindCase_);
     }
 
     public static final int PATTERN_FIELD_NUMBER = 1;
@@ -2848,7 +3346,7 @@ public final class DrlxRuleAstProto {
      */
     @java.lang.Override
     public boolean hasPattern() {
-      return itemCase_ == 1;
+      return kindCase_ == 1;
     }
     /**
      * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
@@ -2856,8 +3354,8 @@ public final class DrlxRuleAstProto {
      */
     @java.lang.Override
     public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getPattern() {
-      if (itemCase_ == 1) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
+      if (kindCase_ == 1) {
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_;
       }
       return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
     }
@@ -2866,41 +3364,41 @@ public final class DrlxRuleAstProto {
      */
     @java.lang.Override
     public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder() {
-      if (itemCase_ == 1) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
+      if (kindCase_ == 1) {
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_;
       }
       return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
     }
 
-    public static final int CONSEQUENCE_FIELD_NUMBER = 2;
+    public static final int GROUP_FIELD_NUMBER = 2;
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-     * @return Whether the consequence field is set.
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+     * @return Whether the group field is set.
      */
     @java.lang.Override
-    public boolean hasConsequence() {
-      return itemCase_ == 2;
+    public boolean hasGroup() {
+      return kindCase_ == 2;
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-     * @return The consequence.
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+     * @return The group.
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence() {
-      if (itemCase_ == 2) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getGroup() {
+      if (kindCase_ == 2) {
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
     }
     /**
-     * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+     * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
      */
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder() {
-      if (itemCase_ == 2) {
-         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder getGroupOrBuilder() {
+      if (kindCase_ == 2) {
+         return (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_;
       }
-      return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2917,11 +3415,11 @@ public final class DrlxRuleAstProto {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
-      if (itemCase_ == 1) {
-        output.writeMessage(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_);
+      if (kindCase_ == 1) {
+        output.writeMessage(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_);
       }
-      if (itemCase_ == 2) {
-        output.writeMessage(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_);
+      if (kindCase_ == 2) {
+        output.writeMessage(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_);
       }
       getUnknownFields().writeTo(output);
     }
@@ -2932,13 +3430,13 @@ public final class DrlxRuleAstProto {
       if (size != -1) return size;
 
       size = 0;
-      if (itemCase_ == 1) {
+      if (kindCase_ == 1) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_);
+          .computeMessageSize(1, (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_);
       }
-      if (itemCase_ == 2) {
+      if (kindCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_);
+          .computeMessageSize(2, (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_);
       }
       size += getUnknownFields().getSerializedSize();
       memoizedSize = size;
@@ -2950,20 +3448,20 @@ public final class DrlxRuleAstProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult)) {
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult)) {
         return super.equals(obj);
       }
-      org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult) obj;
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult) obj;
 
-      if (!getItemCase().equals(other.getItemCase())) return false;
-      switch (itemCase_) {
+      if (!getKindCase().equals(other.getKindCase())) return false;
+      switch (kindCase_) {
         case 1:
           if (!getPattern()
               .equals(other.getPattern())) return false;
           break;
         case 2:
-          if (!getConsequence()
-              .equals(other.getConsequence())) return false;
+          if (!getGroup()
+              .equals(other.getGroup())) return false;
           break;
         case 0:
         default:
@@ -2979,14 +3477,14 @@ public final class DrlxRuleAstProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      switch (itemCase_) {
+      switch (kindCase_) {
         case 1:
           hash = (37 * hash) + PATTERN_FIELD_NUMBER;
           hash = (53 * hash) + getPattern().hashCode();
           break;
         case 2:
-          hash = (37 * hash) + CONSEQUENCE_FIELD_NUMBER;
-          hash = (53 * hash) + getConsequence().hashCode();
+          hash = (37 * hash) + GROUP_FIELD_NUMBER;
+          hash = (53 * hash) + getGroup().hashCode();
           break;
         case 0:
         default:
@@ -2996,44 +3494,44 @@ public final class DrlxRuleAstProto {
       return hash;
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(byte[] data)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3041,26 +3539,26 @@ public final class DrlxRuleAstProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseDelimitedFrom(java.io.InputStream input)
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseDelimitedFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult parseFrom(
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3073,7 +3571,7 @@ public final class DrlxRuleAstProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult prototype) {
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     @java.lang.Override
@@ -3089,26 +3587,26 @@ public final class DrlxRuleAstProto {
       return builder;
     }
     /**
-     * Protobuf type {@code org.drools.drlx.builder.proto.RuleItemParseResult}
+     * Protobuf type {@code org.drools.drlx.builder.proto.LhsItemParseResult}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.RuleItemParseResult)
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResultOrBuilder {
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.LhsItemParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor;
       }
 
       @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.Builder.class);
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder.class);
       }
 
-      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.newBuilder()
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.newBuilder()
       private Builder() {
 
       }
@@ -3125,28 +3623,28 @@ public final class DrlxRuleAstProto {
         if (patternBuilder_ != null) {
           patternBuilder_.clear();
         }
-        if (consequenceBuilder_ != null) {
-          consequenceBuilder_.clear();
+        if (groupBuilder_ != null) {
+          groupBuilder_.clear();
         }
-        itemCase_ = 0;
-        item_ = null;
+        kindCase_ = 0;
+        kind_ = null;
         return this;
       }
 
       @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor;
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstanceForType() {
-        return org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance();
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult build() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result = buildPartial();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
@@ -3154,28 +3652,28 @@ public final class DrlxRuleAstProto {
       }
 
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult buildPartial() {
-        org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult(this);
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult(this);
         if (bitField0_ != 0) { buildPartial0(result); }
         buildPartialOneofs(result);
         onBuilt();
         return result;
       }
 
-      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result) {
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult result) {
         int from_bitField0_ = bitField0_;
       }
 
-      private void buildPartialOneofs(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult result) {
-        result.itemCase_ = itemCase_;
-        result.item_ = this.item_;
-        if (itemCase_ == 1 &&
+      private void buildPartialOneofs(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult result) {
+        result.kindCase_ = kindCase_;
+        result.kind_ = this.kind_;
+        if (kindCase_ == 1 &&
             patternBuilder_ != null) {
-          result.item_ = patternBuilder_.build();
+          result.kind_ = patternBuilder_.build();
         }
-        if (itemCase_ == 2 &&
-            consequenceBuilder_ != null) {
-          result.item_ = consequenceBuilder_.build();
+        if (kindCase_ == 2 &&
+            groupBuilder_ != null) {
+          result.kind_ = groupBuilder_.build();
         }
       }
 
@@ -3213,26 +3711,26 @@ public final class DrlxRuleAstProto {
       }
       @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult) {
-          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult)other);
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult other) {
-        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult.getDefaultInstance()) return this;
-        switch (other.getItemCase()) {
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance()) return this;
+        switch (other.getKindCase()) {
           case PATTERN: {
             mergePattern(other.getPattern());
             break;
           }
-          case CONSEQUENCE: {
-            mergeConsequence(other.getConsequence());
+          case GROUP: {
+            mergeGroup(other.getGroup());
             break;
           }
-          case ITEM_NOT_SET: {
+          case KIND_NOT_SET: {
             break;
           }
         }
@@ -3266,14 +3764,14 @@ public final class DrlxRuleAstProto {
                 input.readMessage(
                     getPatternFieldBuilder().getBuilder(),
                     extensionRegistry);
-                itemCase_ = 1;
+                kindCase_ = 1;
                 break;
               } // case 10
               case 18: {
                 input.readMessage(
-                    getConsequenceFieldBuilder().getBuilder(),
+                    getGroupFieldBuilder().getBuilder(),
                     extensionRegistry);
-                itemCase_ = 2;
+                kindCase_ = 2;
                 break;
               } // case 18
               default: {
@@ -3291,17 +3789,17 @@ public final class DrlxRuleAstProto {
         } // finally
         return this;
       }
-      private int itemCase_ = 0;
-      private java.lang.Object item_;
-      public ItemCase
-          getItemCase() {
-        return ItemCase.forNumber(
-            itemCase_);
+      private int kindCase_ = 0;
+      private java.lang.Object kind_;
+      public KindCase
+          getKindCase() {
+        return KindCase.forNumber(
+            kindCase_);
       }
 
-      public Builder clearItem() {
-        itemCase_ = 0;
-        item_ = null;
+      public Builder clearKind() {
+        kindCase_ = 0;
+        kind_ = null;
         onChanged();
         return this;
       }
@@ -3316,7 +3814,7 @@ public final class DrlxRuleAstProto {
        */
       @java.lang.Override
       public boolean hasPattern() {
-        return itemCase_ == 1;
+        return kindCase_ == 1;
       }
       /**
        * <code>.org.drools.drlx.builder.proto.PatternParseResult pattern = 1;</code>
@@ -3325,12 +3823,12 @@ public final class DrlxRuleAstProto {
       @java.lang.Override
       public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult getPattern() {
         if (patternBuilder_ == null) {
-          if (itemCase_ == 1) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
+          if (kindCase_ == 1) {
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_;
           }
           return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
         } else {
-          if (itemCase_ == 1) {
+          if (kindCase_ == 1) {
             return patternBuilder_.getMessage();
           }
           return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
@@ -3344,12 +3842,12 @@ public final class DrlxRuleAstProto {
           if (value == null) {
             throw new NullPointerException();
           }
-          item_ = value;
+          kind_ = value;
           onChanged();
         } else {
           patternBuilder_.setMessage(value);
         }
-        itemCase_ = 1;
+        kindCase_ = 1;
         return this;
       }
       /**
@@ -3358,12 +3856,12 @@ public final class DrlxRuleAstProto {
       public Builder setPattern(
           org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder builderForValue) {
         if (patternBuilder_ == null) {
-          item_ = builderForValue.build();
+          kind_ = builderForValue.build();
           onChanged();
         } else {
           patternBuilder_.setMessage(builderForValue.build());
         }
-        itemCase_ = 1;
+        kindCase_ = 1;
         return this;
       }
       /**
@@ -3371,22 +3869,22 @@ public final class DrlxRuleAstProto {
        */
       public Builder mergePattern(org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult value) {
         if (patternBuilder_ == null) {
-          if (itemCase_ == 1 &&
-              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance()) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_)
+          if (kindCase_ == 1 &&
+              kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance()) {
+            kind_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_)
                 .mergeFrom(value).buildPartial();
           } else {
-            item_ = value;
+            kind_ = value;
           }
           onChanged();
         } else {
-          if (itemCase_ == 1) {
+          if (kindCase_ == 1) {
             patternBuilder_.mergeFrom(value);
           } else {
             patternBuilder_.setMessage(value);
           }
         }
-        itemCase_ = 1;
+        kindCase_ = 1;
         return this;
       }
       /**
@@ -3394,15 +3892,15 @@ public final class DrlxRuleAstProto {
        */
       public Builder clearPattern() {
         if (patternBuilder_ == null) {
-          if (itemCase_ == 1) {
-            itemCase_ = 0;
-            item_ = null;
+          if (kindCase_ == 1) {
+            kindCase_ = 0;
+            kind_ = null;
             onChanged();
           }
         } else {
-          if (itemCase_ == 1) {
-            itemCase_ = 0;
-            item_ = null;
+          if (kindCase_ == 1) {
+            kindCase_ = 0;
+            kind_ = null;
           }
           patternBuilder_.clear();
         }
@@ -3419,11 +3917,11 @@ public final class DrlxRuleAstProto {
        */
       @java.lang.Override
       public org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder getPatternOrBuilder() {
-        if ((itemCase_ == 1) && (patternBuilder_ != null)) {
+        if ((kindCase_ == 1) && (patternBuilder_ != null)) {
           return patternBuilder_.getMessageOrBuilder();
         } else {
-          if (itemCase_ == 1) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_;
+          if (kindCase_ == 1) {
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_;
           }
           return org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
         }
@@ -3435,161 +3933,161 @@ public final class DrlxRuleAstProto {
           org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder> 
           getPatternFieldBuilder() {
         if (patternBuilder_ == null) {
-          if (!(itemCase_ == 1)) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
+          if (!(kindCase_ == 1)) {
+            kind_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.getDefaultInstance();
           }
           patternBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
               org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResultOrBuilder>(
-                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) item_,
+                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.PatternParseResult) kind_,
                   getParentForChildren(),
                   isClean());
-          item_ = null;
+          kind_ = null;
         }
-        itemCase_ = 1;
+        kindCase_ = 1;
         onChanged();
         return patternBuilder_;
       }
 
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> consequenceBuilder_;
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder> groupBuilder_;
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-       * @return Whether the consequence field is set.
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+       * @return Whether the group field is set.
        */
       @java.lang.Override
-      public boolean hasConsequence() {
-        return itemCase_ == 2;
+      public boolean hasGroup() {
+        return kindCase_ == 2;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
-       * @return The consequence.
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
+       * @return The group.
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult getConsequence() {
-        if (consequenceBuilder_ == null) {
-          if (itemCase_ == 2) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getGroup() {
+        if (groupBuilder_ == null) {
+          if (kindCase_ == 2) {
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
         } else {
-          if (itemCase_ == 2) {
-            return consequenceBuilder_.getMessage();
+          if (kindCase_ == 2) {
+            return groupBuilder_.getMessage();
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
-      public Builder setConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
-        if (consequenceBuilder_ == null) {
+      public Builder setGroup(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult value) {
+        if (groupBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          item_ = value;
+          kind_ = value;
           onChanged();
         } else {
-          consequenceBuilder_.setMessage(value);
+          groupBuilder_.setMessage(value);
         }
-        itemCase_ = 2;
+        kindCase_ = 2;
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
-      public Builder setConsequence(
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder builderForValue) {
-        if (consequenceBuilder_ == null) {
-          item_ = builderForValue.build();
+      public Builder setGroup(
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder builderForValue) {
+        if (groupBuilder_ == null) {
+          kind_ = builderForValue.build();
           onChanged();
         } else {
-          consequenceBuilder_.setMessage(builderForValue.build());
+          groupBuilder_.setMessage(builderForValue.build());
         }
-        itemCase_ = 2;
+        kindCase_ = 2;
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
-      public Builder mergeConsequence(org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult value) {
-        if (consequenceBuilder_ == null) {
-          if (itemCase_ == 2 &&
-              item_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance()) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_)
+      public Builder mergeGroup(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult value) {
+        if (groupBuilder_ == null) {
+          if (kindCase_ == 2 &&
+              kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance()) {
+            kind_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.newBuilder((org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_)
                 .mergeFrom(value).buildPartial();
           } else {
-            item_ = value;
+            kind_ = value;
           }
           onChanged();
         } else {
-          if (itemCase_ == 2) {
-            consequenceBuilder_.mergeFrom(value);
+          if (kindCase_ == 2) {
+            groupBuilder_.mergeFrom(value);
           } else {
-            consequenceBuilder_.setMessage(value);
+            groupBuilder_.setMessage(value);
           }
         }
-        itemCase_ = 2;
+        kindCase_ = 2;
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
-      public Builder clearConsequence() {
-        if (consequenceBuilder_ == null) {
-          if (itemCase_ == 2) {
-            itemCase_ = 0;
-            item_ = null;
+      public Builder clearGroup() {
+        if (groupBuilder_ == null) {
+          if (kindCase_ == 2) {
+            kindCase_ = 0;
+            kind_ = null;
             onChanged();
           }
         } else {
-          if (itemCase_ == 2) {
-            itemCase_ = 0;
-            item_ = null;
+          if (kindCase_ == 2) {
+            kindCase_ = 0;
+            kind_ = null;
           }
-          consequenceBuilder_.clear();
+          groupBuilder_.clear();
         }
         return this;
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder getConsequenceBuilder() {
-        return getConsequenceFieldBuilder().getBuilder();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder getGroupBuilder() {
+        return getGroupFieldBuilder().getBuilder();
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
       @java.lang.Override
-      public org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder getConsequenceOrBuilder() {
-        if ((itemCase_ == 2) && (consequenceBuilder_ != null)) {
-          return consequenceBuilder_.getMessageOrBuilder();
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder getGroupOrBuilder() {
+        if ((kindCase_ == 2) && (groupBuilder_ != null)) {
+          return groupBuilder_.getMessageOrBuilder();
         } else {
-          if (itemCase_ == 2) {
-            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_;
+          if (kindCase_ == 2) {
+            return (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_;
           }
-          return org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+          return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
         }
       }
       /**
-       * <code>.org.drools.drlx.builder.proto.ConsequenceParseResult consequence = 2;</code>
+       * <code>.org.drools.drlx.builder.proto.GroupElementParseResult group = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder> 
-          getConsequenceFieldBuilder() {
-        if (consequenceBuilder_ == null) {
-          if (!(itemCase_ == 2)) {
-            item_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.getDefaultInstance();
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder> 
+          getGroupFieldBuilder() {
+        if (groupBuilder_ == null) {
+          if (!(kindCase_ == 2)) {
+            kind_ = org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
           }
-          consequenceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResultOrBuilder>(
-                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.ConsequenceParseResult) item_,
+          groupBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder>(
+                  (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) kind_,
                   getParentForChildren(),
                   isClean());
-          item_ = null;
+          kind_ = null;
         }
-        itemCase_ = 2;
+        kindCase_ = 2;
         onChanged();
-        return consequenceBuilder_;
+        return groupBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -3604,23 +4102,23 @@ public final class DrlxRuleAstProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.RuleItemParseResult)
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.LhsItemParseResult)
     }
 
-    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.RuleItemParseResult)
-    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.LhsItemParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult();
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult();
     }
 
-    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstance() {
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    private static final com.google.protobuf.Parser<RuleItemParseResult>
-        PARSER = new com.google.protobuf.AbstractParser<RuleItemParseResult>() {
+    private static final com.google.protobuf.Parser<LhsItemParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<LhsItemParseResult>() {
       @java.lang.Override
-      public RuleItemParseResult parsePartialFrom(
+      public LhsItemParseResult parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3639,17 +4137,1016 @@ public final class DrlxRuleAstProto {
       }
     };
 
-    public static com.google.protobuf.Parser<RuleItemParseResult> parser() {
+    public static com.google.protobuf.Parser<LhsItemParseResult> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<RuleItemParseResult> getParserForType() {
+    public com.google.protobuf.Parser<LhsItemParseResult> getParserForType() {
       return PARSER;
     }
 
     @java.lang.Override
-    public org.drools.drlx.builder.proto.DrlxRuleAstProto.RuleItemParseResult getDefaultInstanceForType() {
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GroupElementParseResultOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:org.drools.drlx.builder.proto.GroupElementParseResult)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+     * @return The enum numeric value on the wire for kind.
+     */
+    int getKindValue();
+    /**
+     * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+     * @return The kind.
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind getKind();
+
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> 
+        getChildrenList();
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getChildren(int index);
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    int getChildrenCount();
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+        getChildrenOrBuilderList();
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getChildrenOrBuilder(
+        int index);
+  }
+  /**
+   * Protobuf type {@code org.drools.drlx.builder.proto.GroupElementParseResult}
+   */
+  public static final class GroupElementParseResult extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:org.drools.drlx.builder.proto.GroupElementParseResult)
+      GroupElementParseResultOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GroupElementParseResult.newBuilder() to construct.
+    private GroupElementParseResult(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GroupElementParseResult() {
+      kind_ = 0;
+      children_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new GroupElementParseResult();
+    }
+
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder.class);
+    }
+
+    public static final int KIND_FIELD_NUMBER = 1;
+    private int kind_ = 0;
+    /**
+     * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+     * @return The enum numeric value on the wire for kind.
+     */
+    @java.lang.Override public int getKindValue() {
+      return kind_;
+    }
+    /**
+     * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+     * @return The kind.
+     */
+    @java.lang.Override public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind getKind() {
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind result = org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.forNumber(kind_);
+      return result == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.UNRECOGNIZED : result;
+    }
+
+    public static final int CHILDREN_FIELD_NUMBER = 2;
+    @SuppressWarnings("serial")
+    private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> children_;
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> getChildrenList() {
+      return children_;
+    }
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    @java.lang.Override
+    public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+        getChildrenOrBuilderList() {
+      return children_;
+    }
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    @java.lang.Override
+    public int getChildrenCount() {
+      return children_.size();
+    }
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getChildren(int index) {
+      return children_.get(index);
+    }
+    /**
+     * <pre>
+     * recursive
+     * </pre>
+     *
+     * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+     */
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getChildrenOrBuilder(
+        int index) {
+      return children_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_UNSPECIFIED.getNumber()) {
+        output.writeEnum(1, kind_);
+      }
+      for (int i = 0; i < children_.size(); i++) {
+        output.writeMessage(2, children_.get(i));
+      }
+      getUnknownFields().writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (kind_ != org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_UNSPECIFIED.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, kind_);
+      }
+      for (int i = 0; i < children_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, children_.get(i));
+      }
+      size += getUnknownFields().getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult)) {
+        return super.equals(obj);
+      }
+      org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult other = (org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) obj;
+
+      if (kind_ != other.kind_) return false;
+      if (!getChildrenList()
+          .equals(other.getChildrenList())) return false;
+      if (!getUnknownFields().equals(other.getUnknownFields())) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + KIND_FIELD_NUMBER;
+      hash = (53 * hash) + kind_;
+      if (getChildrenCount() > 0) {
+        hash = (37 * hash) + CHILDREN_FIELD_NUMBER;
+        hash = (53 * hash) + getChildrenList().hashCode();
+      }
+      hash = (29 * hash) + getUnknownFields().hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code org.drools.drlx.builder.proto.GroupElementParseResult}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:org.drools.drlx.builder.proto.GroupElementParseResult)
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResultOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.class, org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.Builder.class);
+      }
+
+      // Construct using org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.newBuilder()
+      private Builder() {
+
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        bitField0_ = 0;
+        kind_ = 0;
+        if (childrenBuilder_ == null) {
+          children_ = java.util.Collections.emptyList();
+        } else {
+          children_ = null;
+          childrenBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor;
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getDefaultInstanceForType() {
+        return org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult build() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult buildPartial() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult result = new org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult(this);
+        buildPartialRepeatedFields(result);
+        if (bitField0_ != 0) { buildPartial0(result); }
+        onBuilt();
+        return result;
+      }
+
+      private void buildPartialRepeatedFields(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult result) {
+        if (childrenBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) != 0)) {
+            children_ = java.util.Collections.unmodifiableList(children_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.children_ = children_;
+        } else {
+          result.children_ = childrenBuilder_.build();
+        }
+      }
+
+      private void buildPartial0(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult result) {
+        int from_bitField0_ = bitField0_;
+        if (((from_bitField0_ & 0x00000001) != 0)) {
+          result.kind_ = kind_;
+        }
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult) {
+          return mergeFrom((org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult other) {
+        if (other == org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult.getDefaultInstance()) return this;
+        if (other.kind_ != 0) {
+          setKindValue(other.getKindValue());
+        }
+        if (childrenBuilder_ == null) {
+          if (!other.children_.isEmpty()) {
+            if (children_.isEmpty()) {
+              children_ = other.children_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureChildrenIsMutable();
+              children_.addAll(other.children_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.children_.isEmpty()) {
+            if (childrenBuilder_.isEmpty()) {
+              childrenBuilder_.dispose();
+              childrenBuilder_ = null;
+              children_ = other.children_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+              childrenBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getChildrenFieldBuilder() : null;
+            } else {
+              childrenBuilder_.addAllMessages(other.children_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.getUnknownFields());
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              case 8: {
+                kind_ = input.readEnum();
+                bitField0_ |= 0x00000001;
+                break;
+              } // case 8
+              case 18: {
+                org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult m =
+                    input.readMessage(
+                        org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.parser(),
+                        extensionRegistry);
+                if (childrenBuilder_ == null) {
+                  ensureChildrenIsMutable();
+                  children_.add(m);
+                } else {
+                  childrenBuilder_.addMessage(m);
+                }
+                break;
+              } // case 18
+              default: {
+                if (!super.parseUnknownField(input, extensionRegistry, tag)) {
+                  done = true; // was an endgroup tag
+                }
+                break;
+              } // default:
+            } // switch (tag)
+          } // while (!done)
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.unwrapIOException();
+        } finally {
+          onChanged();
+        } // finally
+        return this;
+      }
+      private int bitField0_;
+
+      private int kind_ = 0;
+      /**
+       * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+       * @return The enum numeric value on the wire for kind.
+       */
+      @java.lang.Override public int getKindValue() {
+        return kind_;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+       * @param value The enum numeric value on the wire for kind to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKindValue(int value) {
+        kind_ = value;
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+       * @return The kind.
+       */
+      @java.lang.Override
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind getKind() {
+        org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind result = org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.forNumber(kind_);
+        return result == null ? org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+       * @param value The kind to set.
+       * @return This builder for chaining.
+       */
+      public Builder setKind(org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementKind value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        bitField0_ |= 0x00000001;
+        kind_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.org.drools.drlx.builder.proto.GroupElementKind kind = 1;</code>
+       * @return This builder for chaining.
+       */
+      public Builder clearKind() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        kind_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> children_ =
+        java.util.Collections.emptyList();
+      private void ensureChildrenIsMutable() {
+        if (!((bitField0_ & 0x00000002) != 0)) {
+          children_ = new java.util.ArrayList<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult>(children_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> childrenBuilder_;
+
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> getChildrenList() {
+        if (childrenBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(children_);
+        } else {
+          return childrenBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public int getChildrenCount() {
+        if (childrenBuilder_ == null) {
+          return children_.size();
+        } else {
+          return childrenBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult getChildren(int index) {
+        if (childrenBuilder_ == null) {
+          return children_.get(index);
+        } else {
+          return childrenBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder setChildren(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (childrenBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChildrenIsMutable();
+          children_.set(index, value);
+          onChanged();
+        } else {
+          childrenBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder setChildren(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (childrenBuilder_ == null) {
+          ensureChildrenIsMutable();
+          children_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          childrenBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder addChildren(org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (childrenBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChildrenIsMutable();
+          children_.add(value);
+          onChanged();
+        } else {
+          childrenBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder addChildren(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult value) {
+        if (childrenBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureChildrenIsMutable();
+          children_.add(index, value);
+          onChanged();
+        } else {
+          childrenBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder addChildren(
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (childrenBuilder_ == null) {
+          ensureChildrenIsMutable();
+          children_.add(builderForValue.build());
+          onChanged();
+        } else {
+          childrenBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder addChildren(
+          int index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder builderForValue) {
+        if (childrenBuilder_ == null) {
+          ensureChildrenIsMutable();
+          children_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          childrenBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder addAllChildren(
+          java.lang.Iterable<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult> values) {
+        if (childrenBuilder_ == null) {
+          ensureChildrenIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, children_);
+          onChanged();
+        } else {
+          childrenBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder clearChildren() {
+        if (childrenBuilder_ == null) {
+          children_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+        } else {
+          childrenBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public Builder removeChildren(int index) {
+        if (childrenBuilder_ == null) {
+          ensureChildrenIsMutable();
+          children_.remove(index);
+          onChanged();
+        } else {
+          childrenBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder getChildrenBuilder(
+          int index) {
+        return getChildrenFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder getChildrenOrBuilder(
+          int index) {
+        if (childrenBuilder_ == null) {
+          return children_.get(index);  } else {
+          return childrenBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public java.util.List<? extends org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+           getChildrenOrBuilderList() {
+        if (childrenBuilder_ != null) {
+          return childrenBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(children_);
+        }
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder addChildrenBuilder() {
+        return getChildrenFieldBuilder().addBuilder(
+            org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder addChildrenBuilder(
+          int index) {
+        return getChildrenFieldBuilder().addBuilder(
+            index, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * recursive
+       * </pre>
+       *
+       * <code>repeated .org.drools.drlx.builder.proto.LhsItemParseResult children = 2;</code>
+       */
+      public java.util.List<org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder> 
+           getChildrenBuilderList() {
+        return getChildrenFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder> 
+          getChildrenFieldBuilder() {
+        if (childrenBuilder_ == null) {
+          childrenBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResult.Builder, org.drools.drlx.builder.proto.DrlxRuleAstProto.LhsItemParseResultOrBuilder>(
+                  children_,
+                  ((bitField0_ & 0x00000002) != 0),
+                  getParentForChildren(),
+                  isClean());
+          children_ = null;
+        }
+        return childrenBuilder_;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:org.drools.drlx.builder.proto.GroupElementParseResult)
+    }
+
+    // @@protoc_insertion_point(class_scope:org.drools.drlx.builder.proto.GroupElementParseResult)
+    private static final org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult();
+    }
+
+    public static org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<GroupElementParseResult>
+        PARSER = new com.google.protobuf.AbstractParser<GroupElementParseResult>() {
+      @java.lang.Override
+      public GroupElementParseResult parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        Builder builder = newBuilder();
+        try {
+          builder.mergeFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(builder.buildPartial());
+        } catch (com.google.protobuf.UninitializedMessageException e) {
+          throw e.asInvalidProtocolBufferException().setUnfinishedMessage(builder.buildPartial());
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(e)
+              .setUnfinishedMessage(builder.buildPartial());
+        }
+        return builder.buildPartial();
+      }
+    };
+
+    public static com.google.protobuf.Parser<GroupElementParseResult> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GroupElementParseResult> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public org.drools.drlx.builder.proto.DrlxRuleAstProto.GroupElementParseResult getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -6299,10 +7796,15 @@ public final class DrlxRuleAstProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor;
+    internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable;
+      internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor;
   private static final 
@@ -6332,27 +7834,35 @@ public final class DrlxRuleAstProto {
       "ult\022\023\n\013source_hash\030\001 \001(\t\022\024\n\014package_name" +
       "\030\002 \001(\t\022\017\n\007imports\030\003 \003(\t\022=\n\005rules\030\004 \003(\0132." +
       ".org.drools.drlx.builder.proto.RuleParse" +
-      "Result\"\261\001\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t" +
-      "\022A\n\005items\030\002 \003(\01322.org.drools.drlx.builde" +
-      "r.proto.RuleItemParseResult\022M\n\013annotatio" +
-      "ns\030\003 \003(\01328.org.drools.drlx.builder.proto" +
-      ".RuleAnnotationParseResult\"\261\001\n\023RuleItemP" +
-      "arseResult\022D\n\007pattern\030\001 \001(\01321.org.drools" +
-      ".drlx.builder.proto.PatternParseResultH\000" +
-      "\022L\n\013consequence\030\002 \001(\01325.org.drools.drlx." +
-      "builder.proto.ConsequenceParseResultH\000B\006" +
-      "\n\004item\"\224\001\n\022PatternParseResult\022\021\n\ttype_na" +
-      "me\030\001 \001(\t\022\021\n\tbind_name\030\002 \001(\t\022\023\n\013entry_poi" +
-      "nt\030\003 \001(\t\022\022\n\nconditions\030\004 \003(\t\022\026\n\016cast_typ" +
-      "e_name\030\005 \001(\t\022\027\n\017positional_args\030\006 \003(\t\"\'\n" +
-      "\026ConsequenceParseResult\022\r\n\005block\030\001 \001(\t\"k" +
-      "\n\031RuleAnnotationParseResult\022;\n\004kind\030\001 \001(" +
-      "\0162-.org.drools.drlx.builder.proto.Annota" +
-      "tionKind\022\021\n\traw_value\030\002 \001(\t*p\n\016Annotatio" +
-      "nKind\022\037\n\033ANNOTATION_KIND_UNSPECIFIED\020\000\022\034" +
-      "\n\030ANNOTATION_KIND_SALIENCE\020\001\022\037\n\033ANNOTATI" +
-      "ON_KIND_DESCRIPTION\020\002B1\n\035org.drools.drlx" +
-      ".builder.protoB\020DrlxRuleAstProtob\006proto3"
+      "Result\"\370\001\n\017RuleParseResult\022\014\n\004name\030\001 \001(\t" +
+      "\022M\n\013annotations\030\003 \003(\01328.org.drools.drlx." +
+      "builder.proto.RuleAnnotationParseResult\022" +
+      ">\n\003lhs\030\004 \003(\01321.org.drools.drlx.builder.p" +
+      "roto.LhsItemParseResult\022B\n\003rhs\030\005 \001(\01325.o" +
+      "rg.drools.drlx.builder.proto.Consequence" +
+      "ParseResultJ\004\010\002\020\003\"\253\001\n\022LhsItemParseResult" +
+      "\022D\n\007pattern\030\001 \001(\01321.org.drools.drlx.buil" +
+      "der.proto.PatternParseResultH\000\022G\n\005group\030" +
+      "\002 \001(\01326.org.drools.drlx.builder.proto.Gr" +
+      "oupElementParseResultH\000B\006\n\004kind\"\235\001\n\027Grou" +
+      "pElementParseResult\022=\n\004kind\030\001 \001(\0162/.org." +
+      "drools.drlx.builder.proto.GroupElementKi" +
+      "nd\022C\n\010children\030\002 \003(\01321.org.drools.drlx.b" +
+      "uilder.proto.LhsItemParseResult\"\224\001\n\022Patt" +
+      "ernParseResult\022\021\n\ttype_name\030\001 \001(\t\022\021\n\tbin" +
+      "d_name\030\002 \001(\t\022\023\n\013entry_point\030\003 \001(\t\022\022\n\ncon" +
+      "ditions\030\004 \003(\t\022\026\n\016cast_type_name\030\005 \001(\t\022\027\n" +
+      "\017positional_args\030\006 \003(\t\"\'\n\026ConsequencePar" +
+      "seResult\022\r\n\005block\030\001 \001(\t\"k\n\031RuleAnnotatio" +
+      "nParseResult\022;\n\004kind\030\001 \001(\0162-.org.drools." +
+      "drlx.builder.proto.AnnotationKind\022\021\n\traw" +
+      "_value\030\002 \001(\t*p\n\016AnnotationKind\022\037\n\033ANNOTA" +
+      "TION_KIND_UNSPECIFIED\020\000\022\034\n\030ANNOTATION_KI" +
+      "ND_SALIENCE\020\001\022\037\n\033ANNOTATION_KIND_DESCRIP" +
+      "TION\020\002*R\n\020GroupElementKind\022\"\n\036GROUP_ELEM" +
+      "ENT_KIND_UNSPECIFIED\020\000\022\032\n\026GROUP_ELEMENT_" +
+      "KIND_NOT\020\001B1\n\035org.drools.drlx.builder.pr" +
+      "otoB\020DrlxRuleAstProtob\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -6369,27 +7879,33 @@ public final class DrlxRuleAstProto {
     internal_static_org_drools_drlx_builder_proto_RuleParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_RuleParseResult_descriptor,
-        new java.lang.String[] { "Name", "Items", "Annotations", });
-    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor =
+        new java.lang.String[] { "Name", "Annotations", "Lhs", "Rhs", });
+    internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_fieldAccessorTable = new
+    internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_org_drools_drlx_builder_proto_RuleItemParseResult_descriptor,
-        new java.lang.String[] { "Pattern", "Consequence", "Item", });
-    internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor =
+        internal_static_org_drools_drlx_builder_proto_LhsItemParseResult_descriptor,
+        new java.lang.String[] { "Pattern", "Group", "Kind", });
+    internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor =
       getDescriptor().getMessageTypes().get(3);
+    internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_org_drools_drlx_builder_proto_GroupElementParseResult_descriptor,
+        new java.lang.String[] { "Kind", "Children", });
+    internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor =
+      getDescriptor().getMessageTypes().get(4);
     internal_static_org_drools_drlx_builder_proto_PatternParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_PatternParseResult_descriptor,
         new java.lang.String[] { "TypeName", "BindName", "EntryPoint", "Conditions", "CastTypeName", "PositionalArgs", });
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_ConsequenceParseResult_descriptor,
         new java.lang.String[] { "Block", });
     internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_org_drools_drlx_builder_proto_RuleAnnotationParseResult_descriptor,

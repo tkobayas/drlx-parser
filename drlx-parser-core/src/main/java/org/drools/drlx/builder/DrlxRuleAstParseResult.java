@@ -14,10 +14,11 @@ import java.util.List;
 
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
-import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.drlx.builder.proto.DrlxRuleAstProto;
 
 /**
@@ -67,43 +68,93 @@ public final class DrlxRuleAstParseResult {
 
         List<RuleIR> rules = new ArrayList<>(parseResult.getRulesCount());
         for (DrlxRuleAstProto.RuleParseResult ruleParseResult : parseResult.getRulesList()) {
-            List<RuleItemIR> items = new ArrayList<>(ruleParseResult.getItemsCount());
-            for (DrlxRuleAstProto.RuleItemParseResult itemParseResult : ruleParseResult.getItemsList()) {
-                switch (itemParseResult.getItemCase()) {
-                    case PATTERN -> {
-                        DrlxRuleAstProto.PatternParseResult pattern = itemParseResult.getPattern();
-                        String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
-                        items.add(new PatternIR(
-                                pattern.getTypeName(),
-                                pattern.getBindName(),
-                                pattern.getEntryPoint(),
-                                List.copyOf(pattern.getConditionsList()),
-                                castTypeName,
-                                List.copyOf(pattern.getPositionalArgsList())));
-                    }
-                    case CONSEQUENCE -> items.add(new ConsequenceIR(itemParseResult.getConsequence().getBlock()));
-                    case ITEM_NOT_SET -> throw new IllegalStateException("Rule item without payload in " + parseResultFile);
-                }
+            List<LhsItemIR> lhs = new ArrayList<>(ruleParseResult.getLhsCount());
+            for (DrlxRuleAstProto.LhsItemParseResult itemParseResult : ruleParseResult.getLhsList()) {
+                lhs.add(fromProtoLhs(itemParseResult, parseResultFile));
             }
+            ConsequenceIR rhs = ruleParseResult.hasRhs()
+                    ? new ConsequenceIR(ruleParseResult.getRhs().getBlock())
+                    : null;
+
             List<RuleAnnotationIR> ruleAnnotations = new ArrayList<>(ruleParseResult.getAnnotationsCount());
             for (DrlxRuleAstProto.RuleAnnotationParseResult annPR : ruleParseResult.getAnnotationsList()) {
                 ruleAnnotations.add(new RuleAnnotationIR(fromProtoKind(annPR.getKind()), annPR.getRawValue()));
             }
-            rules.add(new RuleIR(ruleParseResult.getName(), List.copyOf(ruleAnnotations), List.copyOf(items)));
+
+            rules.add(new RuleIR(
+                    ruleParseResult.getName(),
+                    List.copyOf(ruleAnnotations),
+                    List.copyOf(lhs),
+                    rhs));
         }
 
-        return new CompilationUnitIR(parseResult.getPackageName(), List.copyOf(parseResult.getImportsList()), List.copyOf(rules));
+        return new CompilationUnitIR(parseResult.getPackageName(),
+                List.copyOf(parseResult.getImportsList()),
+                List.copyOf(rules));
+    }
+
+    private static LhsItemIR fromProtoLhs(DrlxRuleAstProto.LhsItemParseResult item, Path file) {
+        return switch (item.getKindCase()) {
+            case PATTERN -> {
+                DrlxRuleAstProto.PatternParseResult pattern = item.getPattern();
+                String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
+                yield new PatternIR(
+                        pattern.getTypeName(),
+                        pattern.getBindName(),
+                        pattern.getEntryPoint(),
+                        List.copyOf(pattern.getConditionsList()),
+                        castTypeName,
+                        List.copyOf(pattern.getPositionalArgsList()));
+            }
+            case GROUP -> {
+                DrlxRuleAstProto.GroupElementParseResult group = item.getGroup();
+                List<LhsItemIR> children = new ArrayList<>(group.getChildrenCount());
+                for (DrlxRuleAstProto.LhsItemParseResult child : group.getChildrenList()) {
+                    children.add(fromProtoLhs(child, file));
+                }
+                yield new GroupElementIR(fromProtoGroupKind(group.getKind()), List.copyOf(children));
+            }
+            case KIND_NOT_SET -> throw new IllegalStateException("LHS item without payload in " + file);
+        };
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {
         DrlxRuleAstProto.RuleParseResult.Builder builder = DrlxRuleAstProto.RuleParseResult.newBuilder()
                 .setName(rule.name());
-        rule.items().forEach(item -> builder.addItems(toProtoItem(item)));
+        rule.lhs().forEach(item -> builder.addLhs(toProtoLhs(item)));
+        if (rule.rhs() != null) {
+            builder.setRhs(DrlxRuleAstProto.ConsequenceParseResult.newBuilder()
+                    .setBlock(rule.rhs().block()));
+        }
         for (RuleAnnotationIR ann : rule.annotations()) {
             builder.addAnnotations(DrlxRuleAstProto.RuleAnnotationParseResult.newBuilder()
                     .setKind(toProtoKind(ann.kind()))
                     .setRawValue(ann.rawValue())
                     .build());
+        }
+        return builder.build();
+    }
+
+    private static DrlxRuleAstProto.LhsItemParseResult toProtoLhs(LhsItemIR item) {
+        DrlxRuleAstProto.LhsItemParseResult.Builder builder = DrlxRuleAstProto.LhsItemParseResult.newBuilder();
+        if (item instanceof PatternIR p) {
+            DrlxRuleAstProto.PatternParseResult.Builder pb = DrlxRuleAstProto.PatternParseResult.newBuilder()
+                    .setTypeName(p.typeName())
+                    .setBindName(p.bindName())
+                    .setEntryPoint(p.entryPoint());
+            if (p.castTypeName() != null) {
+                pb.setCastTypeName(p.castTypeName());
+            }
+            p.conditions().forEach(pb::addConditions);
+            p.positionalArgs().forEach(pb::addPositionalArgs);
+            builder.setPattern(pb);
+        } else if (item instanceof GroupElementIR g) {
+            DrlxRuleAstProto.GroupElementParseResult.Builder gb = DrlxRuleAstProto.GroupElementParseResult.newBuilder()
+                    .setKind(toProtoGroupKind(g.kind()));
+            g.children().forEach(child -> gb.addChildren(toProtoLhs(child)));
+            builder.setGroup(gb);
+        } else {
+            throw new IllegalArgumentException("Unsupported LHS item: " + item);
         }
         return builder.build();
     }
@@ -124,25 +175,18 @@ public final class DrlxRuleAstParseResult {
         };
     }
 
-    private static DrlxRuleAstProto.RuleItemParseResult toProtoItem(RuleItemIR item) {
-        DrlxRuleAstProto.RuleItemParseResult.Builder builder = DrlxRuleAstProto.RuleItemParseResult.newBuilder();
-        if (item instanceof PatternIR p) {
-            DrlxRuleAstProto.PatternParseResult.Builder pb = DrlxRuleAstProto.PatternParseResult.newBuilder()
-                    .setTypeName(p.typeName())
-                    .setBindName(p.bindName())
-                    .setEntryPoint(p.entryPoint());
-            if (p.castTypeName() != null) {
-                pb.setCastTypeName(p.castTypeName());
-            }
-            p.conditions().forEach(pb::addConditions);
-            p.positionalArgs().forEach(pb::addPositionalArgs);
-            builder.setPattern(pb);
-        } else if (item instanceof ConsequenceIR c) {
-            builder.setConsequence(DrlxRuleAstProto.ConsequenceParseResult.newBuilder().setBlock(c.block()));
-        } else {
-            throw new IllegalArgumentException("Unsupported rule item: " + item);
-        }
-        return builder.build();
+    private static GroupElementIR.Kind fromProtoGroupKind(DrlxRuleAstProto.GroupElementKind k) {
+        return switch (k) {
+            case GROUP_ELEMENT_KIND_NOT -> GroupElementIR.Kind.NOT;
+            case GROUP_ELEMENT_KIND_UNSPECIFIED, UNRECOGNIZED ->
+                    throw new IllegalStateException("Unknown proto group-element kind: " + k);
+        };
+    }
+
+    private static DrlxRuleAstProto.GroupElementKind toProtoGroupKind(GroupElementIR.Kind k) {
+        return switch (k) {
+            case NOT -> DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_NOT;
+        };
     }
 
     private static String hashSource(String drlxSource) {

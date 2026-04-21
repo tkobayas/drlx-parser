@@ -13,8 +13,8 @@ import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
+import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
-import org.drools.drlx.builder.DrlxRuleAstModel.RuleItemIR;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
 
@@ -80,11 +80,24 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                              Map<String, String> annotationImports) {
         String name = ctx.identifier().getText();
         List<RuleAnnotationIR> annotations = buildRuleAnnotations(ctx, annotationImports);
-        List<RuleItemIR> items = new ArrayList<>();
+        List<LhsItemIR> lhs = new ArrayList<>();
+        ConsequenceIR rhs = null;
         if (ctx.ruleBody() != null) {
-            ctx.ruleBody().ruleItem().forEach(itemCtx -> items.add(buildItem(itemCtx)));
+            for (DrlxParser.RuleItemContext itemCtx : ctx.ruleBody().ruleItem()) {
+                if (itemCtx.ruleConsequence() != null) {
+                    if (rhs != null) {
+                        throw new RuntimeException(
+                                "rule '" + name + "' has more than one consequence block");
+                    }
+                    rhs = new ConsequenceIR(extractConsequence(itemCtx.ruleConsequence()));
+                } else if (itemCtx.rulePattern() != null) {
+                    lhs.add(buildPattern(itemCtx.rulePattern()));
+                } else {
+                    throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
+                }
+            }
         }
-        return new RuleIR(name, annotations, List.copyOf(items));
+        return new RuleIR(name, annotations, List.copyOf(lhs), rhs);
     }
 
     private List<RuleAnnotationIR> buildRuleAnnotations(DrlxParser.RuleDeclarationContext ctx,
@@ -176,15 +189,6 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             default -> throw new IllegalStateException("Unhandled annotation kind: " + kind);
         }
-    }
-
-    private RuleItemIR buildItem(DrlxParser.RuleItemContext ctx) {
-        if (ctx.rulePattern() != null) {
-            return buildPattern(ctx.rulePattern());
-        } else if (ctx.ruleConsequence() != null) {
-            return new ConsequenceIR(extractConsequence(ctx.ruleConsequence()));
-        }
-        throw new IllegalArgumentException("Unsupported rule item: " + ctx.getText());
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {

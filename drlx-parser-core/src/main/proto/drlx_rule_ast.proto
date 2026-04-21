@@ -14,15 +14,22 @@ message CompilationUnitParseResult {
 
 message RuleParseResult {
   string name = 1;
-  repeated RuleItemParseResult items = 2;
+  reserved 2;                                      // retired flat `items` field
   repeated RuleAnnotationParseResult annotations = 3;
+  repeated LhsItemParseResult lhs = 4;             // NEW — tree-shape LHS
+  ConsequenceParseResult rhs = 5;                  // NEW — consequence out of items
 }
 
-message RuleItemParseResult {
-  oneof item {
+message LhsItemParseResult {
+  oneof kind {
     PatternParseResult pattern = 1;
-    ConsequenceParseResult consequence = 2;
+    GroupElementParseResult group = 2;
   }
+}
+
+message GroupElementParseResult {
+  GroupElementKind kind = 1;
+  repeated LhsItemParseResult children = 2;        // recursive
 }
 
 message PatternParseResult {
@@ -47,4 +54,10 @@ enum AnnotationKind {
   ANNOTATION_KIND_UNSPECIFIED = 0;
   ANNOTATION_KIND_SALIENCE = 1;
   ANNOTATION_KIND_DESCRIPTION = 2;
+}
+
+enum GroupElementKind {
+  GROUP_ELEMENT_KIND_UNSPECIFIED = 0;
+  GROUP_ELEMENT_KIND_NOT = 1;
+  // 2, 3, 4 reserved for EXISTS, AND, OR
 }

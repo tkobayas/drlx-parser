@@ -17,14 +17,16 @@ public final class DrlxRuleAstModel {
 
     public record RuleIR(String name,
                          List<RuleAnnotationIR> annotations,
-                         List<RuleItemIR> items) {
+                         List<LhsItemIR> lhs,
+                         ConsequenceIR rhs) {
     }
 
     public record RuleAnnotationIR(Kind kind, String rawValue) {
         public enum Kind { SALIENCE, DESCRIPTION }
     }
 
-    public sealed interface RuleItemIR permits PatternIR, ConsequenceIR {
+    /** LHS tree node — either a pattern leaf or a nested group element. */
+    public sealed interface LhsItemIR permits PatternIR, GroupElementIR {
     }
 
     public record PatternIR(String typeName,
@@ -32,9 +34,16 @@ public final class DrlxRuleAstModel {
                             String entryPoint,
                             List<String> conditions,
                             String castTypeName,
-                            List<String> positionalArgs) implements RuleItemIR {
+                            List<String> positionalArgs) implements LhsItemIR {
     }
 
-    public record ConsequenceIR(String block) implements RuleItemIR {
+    public record GroupElementIR(Kind kind, List<LhsItemIR> children) implements LhsItemIR {
+        public enum Kind {
+            NOT
+            // EXISTS, AND, OR — reserved for follow-up issues #9, #11.
+        }
+    }
+
+    public record ConsequenceIR(String block) {
     }
 }
