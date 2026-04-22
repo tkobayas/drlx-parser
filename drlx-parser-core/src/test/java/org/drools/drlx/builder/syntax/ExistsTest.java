@@ -107,4 +107,52 @@ class ExistsTest extends DrlxBuilderTestSupport {
             assertThat(fired).containsExactly("ConfirmedPerson");
         });
     }
+
+    @Test
+    void existsMultiElement_crossProduct() {
+        // `exists(/persons[age>=18], /orders[amount>1000])` — EXISTS-with-AND
+        // semantics: fires while at least one `(adult, high-value order)`
+        // combination exists. Exercises the AND-wrap path for multi-child
+        // EXISTS (Drools' newExistsInstance() enforces single-child).
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule HasAdultWithHighValueOrder {
+                    exists(/persons[ age >= 18 ], /orders[ amount > 1000 ]),
+                    do { System.out.println("adult with high-value order exists"); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final List<String> fired = new ArrayList<>();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fired.add(event.getMatch().getRule().getName());
+                }
+            });
+
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+            final EntryPoint orders = kieSession.getEntryPoint("orders");
+
+            // Neither side → EXISTS unsatisfied, no firing.
+            assertThat(kieSession.fireAllRules()).isZero();
+
+            // Only adult → EXISTS still unsatisfied (missing order side).
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isZero();
+
+            // Add a high-value order → both sides match → EXISTS satisfied,
+            // rule fires once.
+            orders.insert(new Order("O1", 99, 5000));
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(fired).containsExactly("HasAdultWithHighValueOrder");
+        });
+    }
 }
