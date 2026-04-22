@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
@@ -97,6 +98,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     rhs = new ConsequenceIR(extractConsequence(itemCtx.ruleConsequence()));
                 } else if (itemCtx.rulePattern() != null) {
                     lhs.add(buildPattern(itemCtx.rulePattern()));
+                } else if (itemCtx.notElement() != null) {
+                    lhs.add(buildNotElement(itemCtx.notElement()));
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
@@ -194,6 +197,16 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             default -> throw new IllegalStateException("Unhandled annotation kind: " + kind);
         }
+    }
+
+    private GroupElementIR buildNotElement(DrlxParser.NotElementContext ctx) {
+        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
+        String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
+        String castTypeName = extractCastType(oopathCtx);
+        List<String> conditions = extractConditions(oopathCtx);
+        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
+        PatternIR inner = new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs);
+        return new GroupElementIR(GroupElementIR.Kind.NOT, List.of(inner));
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
