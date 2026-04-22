@@ -238,7 +238,16 @@ public class DrlxRuleAstRuntimeBuilder {
                 GroupElement ge = switch (group.kind()) {
                     case NOT -> GroupElementFactory.newNotInstance();
                 };
-                buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, boundVariables);
+                // Drools' NOT requires a single child. For multi-element
+                // not(/a, /b) wrap the children in an AND so the NOT has
+                // exactly one child that represents the conjunction.
+                if (group.kind() == GroupElementIR.Kind.NOT && group.children().size() > 1) {
+                    GroupElement andInstance = GroupElementFactory.newAndInstance();
+                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, boundVariables);
+                    ge.addChild(andInstance);
+                } else {
+                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, boundVariables);
+                }
                 parent.addChild(ge);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());

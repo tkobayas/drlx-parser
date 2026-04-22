@@ -54,11 +54,13 @@ ruleItem
     | ruleConsequence
     ;
 
-// 'not' group element — single-element form only in this landing.
-// DRLX spec §"'not' / 'exists'" line 599. Multi-element `not(/a, /b)`
-// deferred to a follow-up issue. Trailing ',' mirrors rulePattern.
+// 'not' group element. Bare form `not /a,` for a single child; paren
+// form `not(/a[, /b, ...]),` for either single-in-parens or multi-element.
+// DRLX spec §"'not' / 'exists'" line 597. Trailing ',' after the closing
+// ')' (or after the bare oopath) is the ruleItem terminator.
 notElement
     : NOT oopathExpression ','
+    | NOT '(' oopathExpression (',' oopathExpression)* ')' ','
     ;
 
 // Pattern: type bind : oopathExpression ,

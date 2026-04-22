@@ -55,7 +55,7 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
         // the tokenIdJPNodeMap stays populated via the inner oopath walk.
         SimpleName type = new SimpleName("var");
         SimpleName bind = new SimpleName("_");
-        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
+        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression(0));
         RulePattern pattern = new RulePattern(null, type, bind, expr);
         type.setParentNode(pattern);
         bind.setParentNode(pattern);

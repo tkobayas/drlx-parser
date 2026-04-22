@@ -200,13 +200,19 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private GroupElementIR buildNotElement(DrlxParser.NotElementContext ctx) {
-        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
+        List<LhsItemIR> children = new ArrayList<>();
+        for (DrlxParser.OopathExpressionContext oopathCtx : ctx.oopathExpression()) {
+            children.add(buildPatternFromOopath(oopathCtx));
+        }
+        return new GroupElementIR(GroupElementIR.Kind.NOT, List.copyOf(children));
+    }
+
+    private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
         String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
         String castTypeName = extractCastType(oopathCtx);
         List<String> conditions = extractConditions(oopathCtx);
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
-        PatternIR inner = new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs);
-        return new GroupElementIR(GroupElementIR.Kind.NOT, List.of(inner));
+        return new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs);
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
