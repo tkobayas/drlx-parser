@@ -3,6 +3,7 @@ package org.drools.drlx.builder.syntax;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
@@ -54,6 +55,56 @@ class ExistsTest extends DrlxBuilderTestSupport {
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
             assertThat(fired).containsExactly("HasAdult");
+        });
+    }
+
+    @Test
+    void existsWithOuterBinding() {
+        // `Person p : /persons[...], exists /orders[customerId == p.age]` —
+        // outer binding 'p' is referenced inside the EXISTS constraint, proving
+        // beta-join from the outer pattern into the EXISTS group element.
+        //
+        // Domain note: correlates Order.customerId with Person.age only to
+        // avoid adding a new integer field to Person. The semantic — "fire
+        // when a person exists AND at least one order references them" — is
+        // what's tested.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule ConfirmedPerson {
+                    Person p : /persons[ age > 0 ],
+                    exists /orders[ customerId == p.age ],
+                    do { System.out.println("confirmed: " + p); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final List<String> fired = new ArrayList<>();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fired.add(event.getMatch().getRule().getName());
+                }
+            });
+
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+            final EntryPoint orders = kieSession.getEntryPoint("orders");
+
+            // Person but no order → EXISTS unsatisfied, no firing.
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isZero();
+            assertThat(fired).isEmpty();
+
+            // Add a matching order (customerId == Alice.age = 30) → fires.
+            orders.insert(new Order("O1", 30, 100));
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(fired).containsExactly("ConfirmedPerson");
         });
     }
 }
