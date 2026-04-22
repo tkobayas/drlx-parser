@@ -180,4 +180,26 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 .hasMessageContaining("parse error")
                 .hasMessageContaining("var");
     }
+
+    @Test
+    void existsEmpty_failsParse() {
+        // `exists()` — parens with zero inner oopaths. Grammar's first
+        // oopathExpression is not optional, so this is a parse error.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule EmptyExists {
+                    exists(),
+                    do { System.out.println("unreachable"); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("parse error");
+    }
 }
