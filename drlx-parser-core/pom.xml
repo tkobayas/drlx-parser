@@ -72,6 +72,47 @@
 
     <build>
         <plugins>
+            <!--
+                Wipe stale ANTLR artifacts (.tokens, .interp, gen/) from the source
+                tree before antlr4-maven-plugin regenerates. IDE-side ANTLR plugins
+                and manual CLI runs drop these files into src/main/antlr4/, and
+                ANTLR's tokenVocab resolution then prefers the stale version over
+                the freshly regenerated one in target/, causing lexer/parser
+                token-ID skew. Running at generate-sources ensures a clean state
+                on every Maven build.
+            -->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.2</version>
+                <executions>
+                    <execution>
+                        <id>wipe-stale-antlr-artifacts</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>${basedir}/src/main/antlr4/org/drools/drlx/parser</directory>
+                                    <includes>
+                                        <include>*.tokens</include>
+                                        <include>*.interp</include>
+                                    </includes>
+                                </fileset>
+                                <fileset>
+                                    <directory>${basedir}/src/main/antlr4/org/drools/drlx/parser/gen</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>${basedir}/gen</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.antlr</groupId>
                 <artifactId>antlr4-maven-plugin</artifactId>
