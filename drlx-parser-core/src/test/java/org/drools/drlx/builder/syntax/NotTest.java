@@ -254,6 +254,28 @@ class NotTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void notEmpty_failsParse() {
+        // `not()` — parens with zero inner oopaths. Grammar's first
+        // oopathExpression is not optional, so this is a parse error.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule EmptyNot {
+                    not(),
+                    do { System.out.println("unreachable"); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("parse error");
+    }
+
+    @Test
     void notMultiElementForm_failsParse() {
         // Multi-element `not(/a, /b)` is spec'd (DRLX §'not'/'exists' line 597)
         // but deferred to a follow-up issue. Grammar in this landing rejects it.
