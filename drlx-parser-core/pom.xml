@@ -94,6 +94,21 @@
             </plugin>
 
             <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${version.protobuf}:exe:${os.detected.classifier}</protocArtifact>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.2.0</version>
@@ -107,6 +122,7 @@
                         <configuration>
                             <sources>
                                 <source>target/generated-sources/antlr4</source>
+                                <source>target/generated-sources/protobuf/java</source>
                             </sources>
                         </configuration>
                     </execution>
