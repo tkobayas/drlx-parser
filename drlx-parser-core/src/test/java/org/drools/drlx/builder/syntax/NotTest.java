@@ -1,8 +1,16 @@
 package org.drools.drlx.builder.syntax;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
+import org.drools.drlx.builder.DrlxRuleAstParseResult;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
@@ -100,5 +108,33 @@ class NotTest extends DrlxBuilderTestSupport {
             orders.insert(new Order("O1", 30, 100));
             assertThat(kieSession.fireAllRules()).isZero();
         });
+    }
+
+    @Test
+    void protoRoundTrip_withNot() throws Exception {
+        PatternIR inner = new PatternIR("", "", "persons", List.of("age < 18"), null, List.of());
+        GroupElementIR notGroup = new GroupElementIR(GroupElementIR.Kind.NOT, List.of(inner));
+        RuleIR ruleIR = new RuleIR("OnlyAdults", List.of(), List.of(notGroup),
+                new ConsequenceIR("System.out.println(\"only adults\");"));
+        CompilationUnitIR original = new CompilationUnitIR(
+                "org.drools.drlx.parser",
+                "MyUnit",
+                List.of("org.drools.drlx.domain.Person", "org.drools.drlx.ruleunit.MyUnit"),
+                List.of(ruleIR));
+
+        Path tmpDir = Files.createTempDirectory("drlx-proto-roundtrip");
+        try {
+            String source = "// round-trip source";
+            DrlxRuleAstParseResult.save(source, original, tmpDir);
+
+            CompilationUnitIR reloaded = DrlxRuleAstParseResult.load(
+                    source, DrlxRuleAstParseResult.parseResultFilePath(tmpDir));
+
+            assertThat(reloaded).isEqualTo(original);
+        } finally {
+            Path pb = DrlxRuleAstParseResult.parseResultFilePath(tmpDir);
+            Files.deleteIfExists(pb);
+            Files.deleteIfExists(tmpDir);
+        }
     }
 }
