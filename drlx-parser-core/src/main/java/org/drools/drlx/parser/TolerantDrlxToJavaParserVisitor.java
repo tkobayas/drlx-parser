@@ -18,8 +18,10 @@ import com.github.javaparser.ast.stmt.Statement;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNodeImpl;
+import org.mvel3.parser.ast.expr.OOPathExpr;
 import org.mvel3.parser.ast.expr.RuleBody;
 import org.mvel3.parser.ast.expr.RuleDeclaration;
+import org.mvel3.parser.ast.expr.RulePattern;
 
 public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
 
@@ -43,6 +45,22 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
         name.setParentNode(ruleDecl);
         body.setParentNode(ruleDecl);
         return ruleDecl;
+    }
+
+    @Override
+    public Node visitNotElement(DrlxParser.NotElementContext ctx) {
+        // Silent-drop `not` so LSP completion keeps working while the user is typing
+        // inside the inner pattern. Wrap the inner OOPath in a RulePattern stand-in
+        // with placeholder type/bind so it slots into RuleBody.items (NodeList<RuleItem>);
+        // the tokenIdJPNodeMap stays populated via the inner oopath walk.
+        SimpleName type = new SimpleName("var");
+        SimpleName bind = new SimpleName("_");
+        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
+        RulePattern pattern = new RulePattern(null, type, bind, expr);
+        type.setParentNode(pattern);
+        bind.setParentNode(pattern);
+        expr.setParentNode(pattern);
+        return pattern;
     }
 
     @Override

@@ -519,4 +519,40 @@ class TolerantDrlxToJavaParserVisitorTest {
         // Now we can suggest completions for System.* by getting all public static fields
         // This would be where code completion suggestions would come from
     }
+
+    @Test
+    void incompleteRule_WithNot() {
+        // LSP scenario: DRLX unit with a `not` pattern and an unfinished consequence.
+        // Tolerant visitor must silent-drop the `not` wrapper so completion still works
+        // inside the inner OOPath — DrlxToJavaParserVisitor.visitNotElement throws,
+        // and the LSP code-completion flow inherits that throw without this override.
+        String compilationUnitString = """
+                unit MyUnit;
+
+                rule R1 {
+                   not /persons[ age > 18 ],
+                   do { System.
+                """;
+
+        DrlxHelper.TolerantParseResult<CompilationUnit> parseResult =
+                parseDrlxCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
+        CompilationUnit compilationUnit = parseResult.getResultNode();
+
+        assertThat(compilationUnit.getTypes()).hasSize(1);
+        assertThat(compilationUnit.getType(0)).isInstanceOf(RuleDeclaration.class);
+
+        RuleDeclaration ruleDecl = (RuleDeclaration) compilationUnit.getType(0);
+        assertThat(ruleDecl.getName().asString()).isEqualTo("R1");
+
+        // Rule body still parsed and completion marker still reachable.
+        org.mvel3.parser.ast.expr.RuleBody ruleBody = ruleDecl.getRuleBody();
+        assertThat(ruleBody).isNotNull();
+        RuleConsequence consequence = (RuleConsequence) ruleBody.getItems().get(ruleBody.getItems().size() - 1);
+        BlockStmt consequenceBlock = (BlockStmt) consequence.getStatement();
+        Statement stmt = consequenceBlock.getStatements().get(0);
+        ExpressionStmt exprStmt = (ExpressionStmt) stmt;
+        FieldAccessExpr fieldAccess = (FieldAccessExpr) exprStmt.getExpression();
+        assertThat(fieldAccess.getName().asString()).isEqualTo("__COMPLETION_FIELD__");
+        assertThat(((NameExpr) fieldAccess.getScope()).getName().asString()).isEqualTo("System");
+    }
 }
