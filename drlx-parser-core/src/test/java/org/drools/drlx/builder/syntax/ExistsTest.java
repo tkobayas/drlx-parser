@@ -11,6 +11,7 @@ import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ExistsTest extends DrlxBuilderTestSupport {
 
@@ -154,5 +155,29 @@ class ExistsTest extends DrlxBuilderTestSupport {
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
             assertThat(fired).containsExactly("HasAdultWithHighValueOrder");
         });
+    }
+
+    @Test
+    void existsWithInnerBinding_failsParse() {
+        // `exists var p : /persons[...]` — bindings inside `exists` can never
+        // escape to the outer scope. The grammar does not accept `var p :`
+        // inside existsElement, so the parser rejects at that level.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule IllegalInnerExistsBinding {
+                    exists var p : /persons[ age >= 18 ],
+                    do { System.out.println("should not compile"); }
+                }
+                """;
+
+        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+                .hasMessageContaining("parse error")
+                .hasMessageContaining("var");
     }
 }
