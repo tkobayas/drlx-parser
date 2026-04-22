@@ -46,6 +46,7 @@ import org.mvel3.parser.ast.expr.RuleItem;
 import org.mvel3.parser.ast.expr.RulePattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.drools.drlx.util.DrlxHelper.parseCompilationUnitAsJavaParserAST;
 import static org.drools.drlx.util.DrlxHelper.parseDrlxCompilationUnitAsJavaParserAST;
 
@@ -288,5 +289,21 @@ class DrlxToJavaParserVisitorTest {
         assertThat(blockStmt.getStatements()).hasSize(1);
         assertThat(blockStmt.getStatement(0).toString()).contains("System.out.println(p)");
 
+    }
+
+    @Test
+    void javaParserVisitor_throwsOnNot() {
+        String cu = """
+                unit MyUnit;
+
+                rule R1 {
+                    not /persons[ age < 18 ],
+                    do {}
+                }
+                """;
+
+        assertThatThrownBy(() -> parseDrlxCompilationUnitAsJavaParserAST(cu))
+                .isInstanceOf(UnsupportedOperationException.class)
+                .hasMessageContaining("`not` is not supported in DrlxToJavaParserVisitor");
     }
 }

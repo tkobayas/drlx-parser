@@ -393,8 +393,18 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
             return visit(ctx.rulePattern());
         } else if (ctx.ruleConsequence() != null) {
             return visit(ctx.ruleConsequence());
+        } else if (ctx.notElement() != null) {
+            return visit(ctx.notElement());
         }
         throw new IllegalArgumentException("Unknown rule item type: " + ctx.getText());
+    }
+
+    @Override
+    public Node visitNotElement(DrlxParser.NotElementContext ctx) {
+        throw new UnsupportedOperationException(
+                "`not` is not supported in DrlxToJavaParserVisitor — "
+                + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                + "Note: this visitor is frozen for new DRLX syntax.");
     }
 
     @Override
