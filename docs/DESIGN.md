@@ -187,6 +187,15 @@ KieBase
 |-------|------|
 | `DrlxHelper` | Parsing helpers, type resolution, expression extraction. |
 
+## LHS Tree Shape
+
+`RuleIR.lhs` is a `List<LhsItemIR>` where `LhsItemIR` is sealed and permits
+`PatternIR | GroupElementIR`. `GroupElementIR.Kind` currently supports only
+`NOT`; `EXISTS`, `AND`, `OR` enum slots are reserved for follow-up issues
+(#9, #11). The proto schema likewise reserves their field numbers. The
+runtime builder maps `Kind.NOT` to `GroupElementFactory.newNotInstance()`
+and recurses into the group's children for constraint generation.
+
 ## Constraint Types
 
 Alpha and beta constraints differ in how they receive fact data:
