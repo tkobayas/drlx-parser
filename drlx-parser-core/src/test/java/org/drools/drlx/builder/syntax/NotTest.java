@@ -164,6 +164,57 @@ class NotTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void notMultiElement_crossProduct() {
+        // `not(/persons[age<18], /orders[amount>1000])` — NOT-with-AND semantics:
+        // suppresses when BOTH an under-18 person AND a high-value order exist;
+        // re-fires when either is removed.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule NoUnderageHighValuePair {
+                    not(/persons[ age < 18 ], /orders[ amount > 1000 ]),
+                    do { System.out.println("no risky pair"); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final List<String> fired = new ArrayList<>();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fired.add(event.getMatch().getRule().getName());
+                }
+            });
+
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+            final EntryPoint orders = kieSession.getEntryPoint("orders");
+
+            // Neither side present → NOT satisfied, rule fires once.
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(fired).containsExactly("NoUnderageHighValuePair");
+
+            // Only under-18 person → NOT still satisfied (no order match), no new firing.
+            fired.clear();
+            persons.insert(new Person("Charlie", 10));
+            assertThat(kieSession.fireAllRules()).isZero();
+
+            // Add high-value order → both sides match, NOT unsatisfied, still no firing.
+            orders.insert(new Order("O1", 99, 5000));
+            assertThat(kieSession.fireAllRules()).isZero();
+
+            // Add orphan adult person — doesn't affect NOT state.
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isZero();
+        });
+    }
+
+    @Test
     void notMultiElementForm_failsParse() {
         // Multi-element `not(/a, /b)` is spec'd (DRLX §'not'/'exists' line 597)
         // but deferred to a follow-up issue. Grammar in this landing rejects it.
