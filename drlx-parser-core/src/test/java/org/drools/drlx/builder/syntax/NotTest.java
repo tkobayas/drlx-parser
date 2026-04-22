@@ -164,6 +164,45 @@ class NotTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void notParens_singleElement() {
+        // Spec Decision #1 — single-element in parens is accepted and behaves
+        // identically to the bare form. `not(/persons[age<18])` ≡ `not /persons[age<18]`.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule OnlyAdultsParen {
+                    not(/persons[ age < 18 ]),
+                    do { System.out.println("only adults"); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final List<String> fired = new ArrayList<>();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fired.add(event.getMatch().getRule().getName());
+                }
+            });
+
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(fired).containsExactly("OnlyAdultsParen");
+
+            fired.clear();
+            persons.insert(new Person("Charlie", 10));
+            assertThat(kieSession.fireAllRules()).isZero();
+        });
+    }
+
+    @Test
     void notMultiElement_crossProduct() {
         // `not(/persons[age<18], /orders[amount>1000])` — NOT-with-AND semantics:
         // suppresses when BOTH an under-18 person AND a high-value order exist;
