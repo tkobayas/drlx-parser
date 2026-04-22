@@ -179,7 +179,8 @@ public final class DrlxRuleAstParseResult {
 
     private static GroupElementIR.Kind fromProtoGroupKind(DrlxRuleAstProto.GroupElementKind k) {
         return switch (k) {
-            case GROUP_ELEMENT_KIND_NOT -> GroupElementIR.Kind.NOT;
+            case GROUP_ELEMENT_KIND_NOT    -> GroupElementIR.Kind.NOT;
+            case GROUP_ELEMENT_KIND_EXISTS -> GroupElementIR.Kind.EXISTS;
             case GROUP_ELEMENT_KIND_UNSPECIFIED, UNRECOGNIZED ->
                     throw new IllegalStateException("Unknown proto group-element kind: " + k);
         };
@@ -187,7 +188,8 @@ public final class DrlxRuleAstParseResult {
 
     private static DrlxRuleAstProto.GroupElementKind toProtoGroupKind(GroupElementIR.Kind k) {
         return switch (k) {
-            case NOT -> DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_NOT;
+            case NOT    -> DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_NOT;
+            case EXISTS -> DrlxRuleAstProto.GroupElementKind.GROUP_ELEMENT_KIND_EXISTS;
         };
     }
 

@@ -60,5 +60,6 @@ enum AnnotationKind {
 enum GroupElementKind {
   GROUP_ELEMENT_KIND_UNSPECIFIED = 0;
   GROUP_ELEMENT_KIND_NOT = 1;
-  // 2, 3, 4 reserved for EXISTS, AND, OR
+  GROUP_ELEMENT_KIND_EXISTS = 2;
+  // 3, 4 reserved for AND, OR
 }

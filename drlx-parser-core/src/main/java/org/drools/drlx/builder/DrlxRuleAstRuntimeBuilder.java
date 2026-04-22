@@ -236,12 +236,16 @@ public class DrlxRuleAstRuntimeBuilder {
                 }
             } else if (item instanceof GroupElementIR group) {
                 GroupElement ge = switch (group.kind()) {
-                    case NOT -> GroupElementFactory.newNotInstance();
+                    case NOT    -> GroupElementFactory.newNotInstance();
+                    case EXISTS -> GroupElementFactory.newExistsInstance();
                 };
-                // Drools' NOT requires a single child. For multi-element
-                // not(/a, /b) wrap the children in an AND so the NOT has
-                // exactly one child that represents the conjunction.
-                if (group.kind() == GroupElementIR.Kind.NOT && group.children().size() > 1) {
+                // Drools enforces exactly one child on both NOT and EXISTS
+                // (GroupElement.addChild). For multi-element forms wrap the
+                // children in an AND so the group element has exactly one
+                // child that represents the conjunction.
+                if ((group.kind() == GroupElementIR.Kind.NOT
+                        || group.kind() == GroupElementIR.Kind.EXISTS)
+                        && group.children().size() > 1) {
                     GroupElement andInstance = GroupElementFactory.newAndInstance();
                     buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, boundVariables);
                     ge.addChild(andInstance);

@@ -5,6 +5,7 @@ lexer grammar DrlxLexer;
 import Mvel3Lexer;
 
 // DRLX-specific keywords
-UNIT : 'unit';
-RULE : 'rule';
-NOT  : 'not';
+UNIT   : 'unit';
+RULE   : 'rule';
+NOT    : 'not';
+EXISTS : 'exists';

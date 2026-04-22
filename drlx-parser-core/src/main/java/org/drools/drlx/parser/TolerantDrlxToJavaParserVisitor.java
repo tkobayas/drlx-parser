@@ -64,6 +64,21 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
     }
 
     @Override
+    public Node visitExistsElement(DrlxParser.ExistsElementContext ctx) {
+        // Silent-drop `exists` so LSP completion keeps working while the user
+        // is typing inside the inner pattern. Same strategy as visitNotElement:
+        // wrap the (first) inner OOPath in a RulePattern stand-in.
+        SimpleName type = new SimpleName("var");
+        SimpleName bind = new SimpleName("_");
+        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression(0));
+        RulePattern pattern = new RulePattern(null, type, bind, expr);
+        type.setParentNode(pattern);
+        bind.setParentNode(pattern);
+        expr.setParentNode(pattern);
+        return pattern;
+    }
+
+    @Override
     public Node visitBlock(DrlxParser.BlockContext ctx) {
         BlockStmt blockStmt = new BlockStmt();
         blockStmt.setTokenRange(createTokenRange(ctx));

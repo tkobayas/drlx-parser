@@ -42,8 +42,9 @@ public final class DrlxRuleAstModel {
 
     public record GroupElementIR(Kind kind, List<LhsItemIR> children) implements LhsItemIR {
         public enum Kind {
-            NOT
-            // EXISTS, AND, OR — reserved for follow-up issues #9, #11.
+            NOT,
+            EXISTS
+            // AND, OR — reserved for follow-up issue #11.
         }
     }
 

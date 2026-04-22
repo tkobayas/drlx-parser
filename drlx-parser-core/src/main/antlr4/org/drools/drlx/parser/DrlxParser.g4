@@ -47,10 +47,11 @@ ruleBody
     : ruleItem*
     ;
 
-// Rule item can be a pattern, a `not` group element, or a consequence
+// Rule item can be a pattern, a `not` / `exists` group element, or a consequence
 ruleItem
     : rulePattern
     | notElement
+    | existsElement
     | ruleConsequence
     ;
 
@@ -61,6 +62,16 @@ ruleItem
 notElement
     : NOT oopathExpression ','
     | NOT '(' oopathExpression (',' oopathExpression)* ')' ','
+    ;
+
+// 'exists' group element. Structurally identical to notElement —
+// bare `exists /a,` for single child; paren `exists(/a[, /b, ...]),`
+// for single-in-parens or multi-element. Both NOT and EXISTS are
+// scope-delimiter ALWAYS in Drools. DRLX spec §"'not' / 'exists'"
+// line 597.
+existsElement
+    : EXISTS oopathExpression ','
+    | EXISTS '(' oopathExpression (',' oopathExpression)* ')' ','
     ;
 
 // Pattern: type bind : oopathExpression ,

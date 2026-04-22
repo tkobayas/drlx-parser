@@ -408,6 +408,14 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitExistsElement(DrlxParser.ExistsElementContext ctx) {
+        throw new UnsupportedOperationException(
+                "`exists` is not supported in DrlxToJavaParserVisitor — "
+                + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                + "Note: this visitor is frozen for new DRLX syntax.");
+    }
+
+    @Override
     public Node visitRulePattern(DrlxParser.RulePatternContext ctx) {
         // Get type and bind identifiers (fall back to placeholders when incomplete)
         String typeText = ctx.identifier().size() > 0 ? ctx.identifier(0).getText() : "var";
