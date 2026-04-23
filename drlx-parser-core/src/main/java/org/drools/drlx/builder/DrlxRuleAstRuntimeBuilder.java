@@ -238,6 +238,8 @@ public class DrlxRuleAstRuntimeBuilder {
                 GroupElement ge = switch (group.kind()) {
                     case NOT    -> GroupElementFactory.newNotInstance();
                     case EXISTS -> GroupElementFactory.newExistsInstance();
+                    case AND    -> GroupElementFactory.newAndInstance();
+                    case OR     -> GroupElementFactory.newOrInstance();
                 };
                 // Drools enforces exactly one child on both NOT and EXISTS
                 // (GroupElement.addChild). For multi-element forms wrap the
