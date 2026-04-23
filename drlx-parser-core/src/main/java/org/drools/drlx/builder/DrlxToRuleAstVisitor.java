@@ -102,6 +102,10 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     lhs.add(buildNotElement(itemCtx.notElement()));
                 } else if (itemCtx.existsElement() != null) {
                     lhs.add(buildExistsElement(itemCtx.existsElement()));
+                } else if (itemCtx.andElement() != null) {
+                    lhs.add(buildAndElement(itemCtx.andElement()));
+                } else if (itemCtx.orElement() != null) {
+                    lhs.add(buildOrElement(itemCtx.orElement()));
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
@@ -202,21 +206,48 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private GroupElementIR buildNotElement(DrlxParser.NotElementContext ctx) {
-        return buildGroupElementFromOopaths(ctx.oopathExpression(), GroupElementIR.Kind.NOT);
+        if (ctx.oopathExpression() != null) {
+            // bare form: not /x
+            return new GroupElementIR(GroupElementIR.Kind.NOT,
+                    List.of(buildPatternFromOopath(ctx.oopathExpression())));
+        }
+        // paren form: not ( groupChild, ... )
+        return buildGroupElementFromChildren(ctx.groupChild(), GroupElementIR.Kind.NOT);
     }
 
     private GroupElementIR buildExistsElement(DrlxParser.ExistsElementContext ctx) {
-        return buildGroupElementFromOopaths(ctx.oopathExpression(), GroupElementIR.Kind.EXISTS);
+        if (ctx.oopathExpression() != null) {
+            return new GroupElementIR(GroupElementIR.Kind.EXISTS,
+                    List.of(buildPatternFromOopath(ctx.oopathExpression())));
+        }
+        return buildGroupElementFromChildren(ctx.groupChild(), GroupElementIR.Kind.EXISTS);
     }
 
-    private GroupElementIR buildGroupElementFromOopaths(
-            List<DrlxParser.OopathExpressionContext> oopathCtxs,
+    private GroupElementIR buildAndElement(DrlxParser.AndElementContext ctx) {
+        return buildGroupElementFromChildren(ctx.groupChild(), GroupElementIR.Kind.AND);
+    }
+
+    private GroupElementIR buildOrElement(DrlxParser.OrElementContext ctx) {
+        return buildGroupElementFromChildren(ctx.groupChild(), GroupElementIR.Kind.OR);
+    }
+
+    private GroupElementIR buildGroupElementFromChildren(
+            List<DrlxParser.GroupChildContext> childCtxs,
             GroupElementIR.Kind kind) {
         List<LhsItemIR> children = new ArrayList<>();
-        for (DrlxParser.OopathExpressionContext oopathCtx : oopathCtxs) {
-            children.add(buildPatternFromOopath(oopathCtx));
+        for (DrlxParser.GroupChildContext c : childCtxs) {
+            children.add(buildGroupChild(c));
         }
         return new GroupElementIR(kind, List.copyOf(children));
+    }
+
+    private LhsItemIR buildGroupChild(DrlxParser.GroupChildContext c) {
+        if (c.oopathExpression() != null) return buildPatternFromOopath(c.oopathExpression());
+        if (c.notElement() != null)       return buildNotElement(c.notElement());
+        if (c.existsElement() != null)    return buildExistsElement(c.existsElement());
+        if (c.andElement() != null)       return buildAndElement(c.andElement());
+        if (c.orElement() != null)        return buildOrElement(c.orElement());
+        throw new IllegalArgumentException("Unsupported group child: " + c.getText());
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
