@@ -1,6 +1,7 @@
 package org.drools.drlx.parser;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.github.javaparser.ast.Node;
@@ -49,13 +50,42 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
 
     @Override
     public Node visitNotElement(DrlxParser.NotElementContext ctx) {
-        // Silent-drop `not` so LSP completion keeps working while the user is typing
-        // inside the inner pattern. Wrap the inner OOPath in a RulePattern stand-in
-        // with placeholder type/bind so it slots into RuleBody.items (NodeList<RuleItem>);
-        // the tokenIdJPNodeMap stays populated via the inner oopath walk.
+        // Silent-drop `not` so LSP completion keeps working while the user
+        // is typing inside the inner pattern.
+        if (ctx.oopathExpression() != null) {
+            // bare form: not /x
+            return buildRulePatternStandIn(ctx.oopathExpression());
+        }
+        // paren form: not ( groupChild, ... ) — first-child only
+        return visitFirstGroupChild(ctx.groupChild());
+    }
+
+    @Override
+    public Node visitExistsElement(DrlxParser.ExistsElementContext ctx) {
+        // Silent-drop `exists` so LSP completion keeps working while the user
+        // is typing inside the inner pattern.
+        if (ctx.oopathExpression() != null) {
+            return buildRulePatternStandIn(ctx.oopathExpression());
+        }
+        return visitFirstGroupChild(ctx.groupChild());
+    }
+
+    @Override
+    public Node visitAndElement(DrlxParser.AndElementContext ctx) {
+        // Silent-drop `and`, recurse into first child for completion tokens.
+        return visitFirstGroupChild(ctx.groupChild());
+    }
+
+    @Override
+    public Node visitOrElement(DrlxParser.OrElementContext ctx) {
+        // Silent-drop `or`, recurse into first child for completion tokens.
+        return visitFirstGroupChild(ctx.groupChild());
+    }
+
+    private RulePattern buildRulePatternStandIn(DrlxParser.OopathExpressionContext oopathCtx) {
         SimpleName type = new SimpleName("var");
         SimpleName bind = new SimpleName("_");
-        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression(0));
+        OOPathExpr expr = (OOPathExpr) visit(oopathCtx);
         RulePattern pattern = new RulePattern(null, type, bind, expr);
         type.setParentNode(pattern);
         bind.setParentNode(pattern);
@@ -63,19 +93,17 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
         return pattern;
     }
 
-    @Override
-    public Node visitExistsElement(DrlxParser.ExistsElementContext ctx) {
-        // Silent-drop `exists` so LSP completion keeps working while the user
-        // is typing inside the inner pattern. Same strategy as visitNotElement:
-        // wrap the (first) inner OOPath in a RulePattern stand-in.
-        SimpleName type = new SimpleName("var");
-        SimpleName bind = new SimpleName("_");
-        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression(0));
-        RulePattern pattern = new RulePattern(null, type, bind, expr);
-        type.setParentNode(pattern);
-        bind.setParentNode(pattern);
-        expr.setParentNode(pattern);
-        return pattern;
+    private Node visitFirstGroupChild(List<DrlxParser.GroupChildContext> children) {
+        if (children == null || children.isEmpty()) {
+            return buildRulePatternStandIn(null);
+        }
+        DrlxParser.GroupChildContext first = children.get(0);
+        if (first.oopathExpression() != null) return buildRulePatternStandIn(first.oopathExpression());
+        if (first.notElement() != null)       return visit(first.notElement());
+        if (first.existsElement() != null)    return visit(first.existsElement());
+        if (first.andElement() != null)       return visit(first.andElement());
+        if (first.orElement() != null)        return visit(first.orElement());
+        return buildRulePatternStandIn(null);
     }
 
     @Override
