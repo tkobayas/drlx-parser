@@ -9,3 +9,5 @@ UNIT   : 'unit';
 RULE   : 'rule';
 NOT    : 'not';
 EXISTS : 'exists';
+AND    : 'and';
+OR     : 'or';
