@@ -47,31 +47,52 @@ ruleBody
     : ruleItem*
     ;
 
-// Rule item can be a pattern, a `not` / `exists` group element, or a consequence
+// Rule item can be a pattern, a `not` / `exists` / `and` / `or` group
+// element, or a consequence. CE terminator `,` is owned here.
 ruleItem
     : rulePattern
-    | notElement
-    | existsElement
+    | notElement ','
+    | existsElement ','
+    | andElement ','
+    | orElement ','
     | ruleConsequence
     ;
 
-// 'not' group element. Bare form `not /a,` for a single child; paren
-// form `not(/a[, /b, ...]),` for either single-in-parens or multi-element.
-// DRLX spec §"'not' / 'exists'" line 597. Trailing ',' after the closing
-// ')' (or after the bare oopath) is the ruleItem terminator.
-notElement
-    : NOT oopathExpression ','
-    | NOT '(' oopathExpression (',' oopathExpression)* ')' ','
+// Unified child for any group element. No trailing `,` — the parent
+// group (paren form) uses `,` as a list separator, and the top-level
+// `ruleItem` owns the CE terminator `,`.
+groupChild
+    : oopathExpression
+    | notElement
+    | existsElement
+    | andElement
+    | orElement
     ;
 
-// 'exists' group element. Structurally identical to notElement —
-// bare `exists /a,` for single child; paren `exists(/a[, /b, ...]),`
-// for single-in-parens or multi-element. Both NOT and EXISTS are
-// scope-delimiter ALWAYS in Drools. DRLX spec §"'not' / 'exists'"
+// 'not' group element. Bare form `not /a` for a single child; paren
+// form `not(groupChild[, groupChild, ...])` for single-in-parens or
+// multi-element, now allowing nested CEs. DRLX spec §"'not' / 'exists'"
 // line 597.
+notElement
+    : NOT oopathExpression
+    | NOT '(' groupChild (',' groupChild)* ')'
+    ;
+
+// 'exists' group element. Structurally identical to notElement.
 existsElement
-    : EXISTS oopathExpression ','
-    | EXISTS '(' oopathExpression (',' oopathExpression)* ')' ','
+    : EXISTS oopathExpression
+    | EXISTS '(' groupChild (',' groupChild)* ')'
+    ;
+
+// 'and' group element. Parentheses required (no paren-omission sugar
+// per DRLXXXX §"'and' / 'or' structures"). DRL10 symmetry.
+andElement
+    : DRLX_AND '(' groupChild (',' groupChild)* ')'
+    ;
+
+// 'or' group element. Parentheses required.
+orElement
+    : DRLX_OR '(' groupChild (',' groupChild)* ')'
     ;
 
 // Pattern: type bind : oopathExpression ,
