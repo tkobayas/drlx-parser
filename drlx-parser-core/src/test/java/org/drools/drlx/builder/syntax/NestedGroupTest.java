@@ -145,4 +145,49 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
             assertThat(fired).hasSize(1);
         });
     }
+
+    @Test
+    void andWithNestedNotCarryingBinding() {
+        // `and(var p : /persons1, not(/persons2[name == p.name]))` —
+        // binding `p` from outer AND is visible to the nested NOT's
+        // oopath condition. Fires when some p in persons1 has no
+        // same-named match in persons2. Confirms bindings survive
+        // nesting across groupChild boundaries.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule NoSameNameInOther {
+                    and(var p : /persons1, not(/persons2[ name == p.name ])),
+                    do { System.out.println("unique to persons1"); }
+                }
+                """;
+
+        withSession(rule, kieSession -> {
+            final List<String> fired = new ArrayList<>();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fired.add(event.getMatch().getRule().getName());
+                }
+            });
+
+            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
+            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
+
+            // Alice and Bob in persons1; only Alice in persons2.
+            // → For Bob, no match in persons2 → fires.
+            // → For Alice, match in persons2 → does not fire.
+            persons1.insert(new Person("Alice", 30));
+            persons1.insert(new Person("Bob", 40));
+            persons2.insert(new Person("Alice", 25));
+
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(fired).hasSize(1);
+        });
+    }
 }
