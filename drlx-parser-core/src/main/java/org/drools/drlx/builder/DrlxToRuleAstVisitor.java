@@ -242,12 +242,24 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private LhsItemIR buildGroupChild(DrlxParser.GroupChildContext c) {
+        if (c.boundOopath() != null)      return buildPatternFromBoundOopath(c.boundOopath());
         if (c.oopathExpression() != null) return buildPatternFromOopath(c.oopathExpression());
         if (c.notElement() != null)       return buildNotElement(c.notElement());
         if (c.existsElement() != null)    return buildExistsElement(c.existsElement());
         if (c.andElement() != null)       return buildAndElement(c.andElement());
         if (c.orElement() != null)        return buildOrElement(c.orElement());
         throw new IllegalArgumentException("Unsupported group child: " + c.getText());
+    }
+
+    private PatternIR buildPatternFromBoundOopath(DrlxParser.BoundOopathContext ctx) {
+        String typeName = ctx.identifier(0).getText();
+        String bindName = ctx.identifier(1).getText();
+        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
+        String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
+        String castTypeName = extractCastType(oopathCtx);
+        List<String> conditions = extractConditions(oopathCtx);
+        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
+        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
@@ -259,14 +271,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
-        String typeName = ctx.identifier(0).getText();
-        String bindName = ctx.identifier(1).getText();
-        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
-        String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
-        String castTypeName = extractCastType(oopathCtx);
-        List<String> conditions = extractConditions(oopathCtx);
-        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs);
+        return buildPatternFromBoundOopath(ctx.boundOopath());
     }
 
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {

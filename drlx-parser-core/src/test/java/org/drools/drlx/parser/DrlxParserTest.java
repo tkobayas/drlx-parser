@@ -80,9 +80,9 @@ class DrlxParserTest {
         DrlxParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
         assertThat(firstItem.rulePattern()).isNotNull();
         DrlxParser.RulePatternContext pattern = firstItem.rulePattern();
-        assertThat(pattern.identifier(0).getText()).isEqualTo("var"); // type
-        assertThat(pattern.identifier(1).getText()).isEqualTo("a"); // bind
-        assertThat(pattern.oopathExpression().getText()).isEqualTo("/as");
+        assertThat(pattern.boundOopath().identifier(0).getText()).isEqualTo("var"); // type
+        assertThat(pattern.boundOopath().identifier(1).getText()).isEqualTo("a"); // bind
+        assertThat(pattern.boundOopath().oopathExpression().getText()).isEqualTo("/as");
 
         // Verify consequence structure (second rule item)
         DrlxParser.RuleItemContext secondItem = ruleBody.ruleItem(1);
@@ -123,9 +123,9 @@ class DrlxParserTest {
         DrlxParser.RuleItemContext firstItem = ruleBody.ruleItem(0);
         assertThat(firstItem.rulePattern()).isNotNull();
         DrlxParser.RulePatternContext pattern = firstItem.rulePattern();
-        assertThat(pattern.identifier(0).getText()).isEqualTo("Person"); // type
-        assertThat(pattern.identifier(1).getText()).isEqualTo("p"); // bind
-        assertThat(pattern.oopathExpression().getText()).isEqualTo("/persons[age>18]");
+        assertThat(pattern.boundOopath().identifier(0).getText()).isEqualTo("Person"); // type
+        assertThat(pattern.boundOopath().identifier(1).getText()).isEqualTo("p"); // bind
+        assertThat(pattern.boundOopath().oopathExpression().getText()).isEqualTo("/persons[age>18]");
 
         // Verify consequence structure (second rule item)
         DrlxParser.RuleItemContext secondItem = ruleBody.ruleItem(1);

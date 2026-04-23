@@ -61,8 +61,12 @@ ruleItem
 // Unified child for any group element. No trailing `,` — the parent
 // group (paren form) uses `,` as a list separator, and the top-level
 // `ruleItem` owns the CE terminator `,`.
+// `boundOopath` MUST come before `oopathExpression`: ANTLR picks first
+// match, and a bound form (identifier identifier ':' ...) has a strictly
+// more constrained prefix than a bare oopath (which starts with '/').
 groupChild
-    : oopathExpression
+    : boundOopath
+    | oopathExpression
     | notElement
     | existsElement
     | andElement
@@ -95,10 +99,17 @@ orElement
     : DRLX_OR '(' groupChild (',' groupChild)* ')'
     ;
 
-// Pattern: type bind : oopathExpression ,
+// Bound pattern body without trailing `,`. Reused by `rulePattern`
+// (top-level, with terminator `,`) and by `groupChild` (inside a CE
+// paren form, where `,` is the sibling separator).
+boundOopath
+    : identifier identifier (':' | '=') oopathExpression
+    ;
+
+// Top-level pattern: `boundOopath ,`. CE terminator owned by ruleItem.
 // Aligns with: RulePattern(SimpleName type, SimpleName bind, OOPathExpr expr)
 rulePattern
-    : identifier identifier (':' | '=') oopathExpression ','
+    : boundOopath ','
     ;
 
 // Consequence: do statement

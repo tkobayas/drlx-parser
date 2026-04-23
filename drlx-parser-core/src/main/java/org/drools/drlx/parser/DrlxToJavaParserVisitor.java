@@ -433,6 +433,11 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
     @Override
     public Node visitRulePattern(DrlxParser.RulePatternContext ctx) {
+        return visit(ctx.boundOopath());
+    }
+
+    @Override
+    public Node visitBoundOopath(DrlxParser.BoundOopathContext ctx) {
         // Get type and bind identifiers (fall back to placeholders when incomplete)
         String typeText = ctx.identifier().size() > 0 ? ctx.identifier(0).getText() : "var";
         String bindText = ctx.identifier().size() > 1 ? ctx.identifier(1).getText() : "_";
@@ -440,14 +445,14 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
         SimpleName type = new SimpleName(typeText);
         SimpleName bind = new SimpleName(bindText);
         OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
-        
+
         RulePattern pattern = new RulePattern(null, type, bind, expr);
-        
+
         // Set parent relationships
         type.setParentNode(pattern);
         bind.setParentNode(pattern);
         expr.setParentNode(pattern);
-        
+
         return pattern;
     }
 
