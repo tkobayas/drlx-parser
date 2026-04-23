@@ -416,6 +416,22 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
     }
 
     @Override
+    public Node visitAndElement(DrlxParser.AndElementContext ctx) {
+        throw new UnsupportedOperationException(
+                "`and` is not supported in DrlxToJavaParserVisitor — "
+                + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                + "Note: this visitor is frozen for new DRLX syntax.");
+    }
+
+    @Override
+    public Node visitOrElement(DrlxParser.OrElementContext ctx) {
+        throw new UnsupportedOperationException(
+                "`or` is not supported in DrlxToJavaParserVisitor — "
+                + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "
+                + "Note: this visitor is frozen for new DRLX syntax.");
+    }
+
+    @Override
     public Node visitRulePattern(DrlxParser.RulePatternContext ctx) {
         // Get type and bind identifiers (fall back to placeholders when incomplete)
         String typeText = ctx.identifier().size() > 0 ? ctx.identifier(0).getText() : "var";
