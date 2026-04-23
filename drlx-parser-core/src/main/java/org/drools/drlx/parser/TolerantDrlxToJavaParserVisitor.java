@@ -82,6 +82,21 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
         return visitFirstGroupChild(ctx.groupChild());
     }
 
+    @Override
+    public Node visitBoundOopath(DrlxParser.BoundOopathContext ctx) {
+        // Tolerant stand-in: build a RulePattern with the actual type + bind names
+        // from the bound form. Preserves completion token population for the
+        // inner oopath while the user is typing inside a `var l : /foo` inside a group.
+        SimpleName type = new SimpleName(ctx.identifier(0).getText());
+        SimpleName bind = new SimpleName(ctx.identifier(1).getText());
+        OOPathExpr expr = (OOPathExpr) visit(ctx.oopathExpression());
+        RulePattern pattern = new RulePattern(null, type, bind, expr);
+        type.setParentNode(pattern);
+        bind.setParentNode(pattern);
+        expr.setParentNode(pattern);
+        return pattern;
+    }
+
     private RulePattern buildRulePatternStandIn(DrlxParser.OopathExpressionContext oopathCtx) {
         SimpleName type = new SimpleName("var");
         SimpleName bind = new SimpleName("_");
@@ -98,6 +113,7 @@ public class TolerantDrlxToJavaParserVisitor extends DrlxToJavaParserVisitor {
             return buildRulePatternStandIn(null);
         }
         DrlxParser.GroupChildContext first = children.get(0);
+        if (first.boundOopath() != null)      return visit(first.boundOopath());
         if (first.oopathExpression() != null) return buildRulePatternStandIn(first.oopathExpression());
         if (first.notElement() != null)       return visit(first.notElement());
         if (first.existsElement() != null)    return visit(first.existsElement());
