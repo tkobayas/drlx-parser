@@ -1,12 +1,7 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,14 +29,6 @@ class AndTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             assertThat(kieSession.fireAllRules()).isZero();
@@ -54,7 +41,7 @@ class AndTest extends DrlxBuilderTestSupport {
             // AND satisfied; rule fires.
             persons.insert(new Person("Bob", 10));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("AdultAndBob");
+            assertThat(listener.getAfterMatchFired()).containsExactly("AdultAndBob");
         });
     }
 
@@ -78,21 +65,13 @@ class AndTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             assertThat(kieSession.fireAllRules()).isZero();
 
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("SingleChildAnd");
+            assertThat(listener.getAfterMatchFired()).containsExactly("SingleChildAnd");
         });
     }
 
