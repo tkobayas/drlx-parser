@@ -173,4 +173,52 @@ class DrlxParserTest {
         assertThat(oopath).isNotNull();
         assertThat(oopath.QUESTION()).isNotNull();
     }
+
+    @Test
+    void testParseWatchListOnOopathRoot() {
+        String rule = """
+                class Foo {
+                    rule R1 {
+                       var e : /reactiveEmployees[salary > 0][basePay, !bonusPay],
+                       do { }
+                    }
+                }
+                """;
+
+        DrlxParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
+
+        assertThat(compilationUnitContext).isNotNull();
+    }
+
+    @Test
+    void testParseWatchListWithEmptyConditions() {
+        String rule = """
+                class Foo {
+                    rule R1 {
+                       var e : /reactiveEmployees[][basePay],
+                       do { }
+                    }
+                }
+                """;
+
+        DrlxParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
+
+        assertThat(compilationUnitContext).isNotNull();
+    }
+
+    @Test
+    void testParseWatchListWildcard() {
+        String rule = """
+                class Foo {
+                    rule R1 {
+                       var e : /reactiveEmployees[][*],
+                       do { }
+                    }
+                }
+                """;
+
+        DrlxParser.CompilationUnitContext compilationUnitContext = parseCompilationUnitAsAntlrAST(rule);
+
+        assertThat(compilationUnitContext).isNotNull();
+    }
 }

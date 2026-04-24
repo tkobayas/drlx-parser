@@ -128,11 +128,14 @@ oopathExpression
     : QUESTION? '/' oopathRoot ('/' oopathChunk)*
     ;
 
-// OOPath root chunk - the only place positional (...) is grammatically valid
+// OOPath root chunk - the only place positional (...) is grammatically valid.
+// Second [...] block is the property-reactive watch list. First block may
+// be empty to allow `[][watch]` form.
 oopathRoot
     : identifier (HASH identifier)?
       ('(' expression (',' expression)* ')')?
-      ('[' drlxExpression (',' drlxExpression)* ']')?
+      ('[' (drlxExpression (',' drlxExpression)*)? ']')?
+      ('[' watchItem (',' watchItem)* ']')?
     ;
 
 // OOPath chunk - navigation segments after the root; no positional
@@ -145,4 +148,12 @@ oopathChunk
 drlxExpression
     : identifier ':' expression
     | expression
+    ;
+
+// Watch-list item on property-reactive pattern:
+//   '*'         → watch all
+//   '!' '*'     → watch none
+//   '!'? name   → include / exclude one property
+watchItem
+    : '!'? ('*' | identifier)
     ;
