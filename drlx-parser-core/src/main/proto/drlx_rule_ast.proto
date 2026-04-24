@@ -41,6 +41,7 @@ message PatternParseResult {
   string cast_type_name = 5;
   repeated string positional_args = 6;
   bool passive = 7;
+  repeated string watched_properties = 8;
 }
 
 message ConsequenceParseResult {

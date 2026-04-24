@@ -108,7 +108,7 @@ public final class DrlxRuleAstParseResult {
                         castTypeName,
                         List.copyOf(pattern.getPositionalArgsList()),
                         pattern.getPassive(),
-                        List.of());
+                        List.copyOf(pattern.getWatchedPropertiesList()));
             }
             case GROUP -> {
                 DrlxRuleAstProto.GroupElementParseResult group = item.getGroup();
@@ -152,6 +152,7 @@ public final class DrlxRuleAstParseResult {
             }
             p.conditions().forEach(pb::addConditions);
             p.positionalArgs().forEach(pb::addPositionalArgs);
+            p.watchedProperties().forEach(pb::addWatchedProperties);
             builder.setPattern(pb);
         } else if (item instanceof GroupElementIR g) {
             DrlxRuleAstProto.GroupElementParseResult.Builder gb = DrlxRuleAstProto.GroupElementParseResult.newBuilder()
