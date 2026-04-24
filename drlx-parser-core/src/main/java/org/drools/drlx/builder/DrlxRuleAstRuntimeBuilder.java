@@ -3,6 +3,7 @@ package org.drools.drlx.builder;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
@@ -295,6 +297,12 @@ public class DrlxRuleAstRuntimeBuilder {
             pattern.addConstraint(constraint);
         }
 
+        if (!parseResult.watchedProperties().isEmpty()) {
+            List<String> validated = validateWatchedProperties(
+                    parseResult.watchedProperties(), patternClass, parseResult.typeName());
+            pattern.addWatchedProperties(validated);
+        }
+
         return pattern;
     }
 
@@ -305,5 +313,34 @@ public class DrlxRuleAstRuntimeBuilder {
                 case DESCRIPTION -> rule.addMetaAttribute("Description", ann.rawValue());
             }
         }
+    }
+
+    private static List<String> validateWatchedProperties(List<String> raw,
+                                                          Class<?> patternClass,
+                                                          String typeLabel) {
+        List<String> accessible = PropertyReactivityUtil.getAccessibleProperties(patternClass);
+        List<String> result = new ArrayList<>();
+        for (String item : raw) {
+            if (item.equals("*") || item.equals("!*")) {
+                if (result.contains("*") || result.contains("!*")) {
+                    throw new RuntimeException("Duplicate usage of wildcard " + item
+                            + " in watch list on " + typeLabel);
+                }
+                result.add(item);
+                continue;
+            }
+            boolean neg = item.startsWith("!");
+            String name = neg ? item.substring(1) : item;
+            if (!accessible.contains(name)) {
+                throw new RuntimeException("Unknown property '" + name
+                        + "' in watch list on " + typeLabel);
+            }
+            if (result.contains(name) || result.contains("!" + name)) {
+                throw new RuntimeException("Duplicate property '" + name
+                        + "' in watch list on " + typeLabel);
+            }
+            result.add(item);
+        }
+        return result;
     }
 }
