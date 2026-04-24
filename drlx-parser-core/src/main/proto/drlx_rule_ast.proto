@@ -40,6 +40,7 @@ message PatternParseResult {
   repeated string conditions = 4;
   string cast_type_name = 5;
   repeated string positional_args = 6;
+  bool passive = 7;
 }
 
 message ConsequenceParseResult {

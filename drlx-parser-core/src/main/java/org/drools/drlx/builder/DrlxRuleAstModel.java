@@ -37,7 +37,8 @@ public final class DrlxRuleAstModel {
                             String entryPoint,
                             List<String> conditions,
                             String castTypeName,
-                            List<String> positionalArgs) implements LhsItemIR {
+                            List<String> positionalArgs,
+                            boolean passive) implements LhsItemIR {
     }
 
     public record GroupElementIR(Kind kind, List<LhsItemIR> children) implements LhsItemIR {

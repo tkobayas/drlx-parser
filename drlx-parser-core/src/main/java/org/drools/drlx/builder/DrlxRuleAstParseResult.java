@@ -95,7 +95,7 @@ public final class DrlxRuleAstParseResult {
                 List.copyOf(rules));
     }
 
-    private static LhsItemIR fromProtoLhs(DrlxRuleAstProto.LhsItemParseResult item, Path file) {
+    static LhsItemIR fromProtoLhs(DrlxRuleAstProto.LhsItemParseResult item, Path file) {
         return switch (item.getKindCase()) {
             case PATTERN -> {
                 DrlxRuleAstProto.PatternParseResult pattern = item.getPattern();
@@ -106,7 +106,8 @@ public final class DrlxRuleAstParseResult {
                         pattern.getEntryPoint(),
                         List.copyOf(pattern.getConditionsList()),
                         castTypeName,
-                        List.copyOf(pattern.getPositionalArgsList()));
+                        List.copyOf(pattern.getPositionalArgsList()),
+                        pattern.getPassive());
             }
             case GROUP -> {
                 DrlxRuleAstProto.GroupElementParseResult group = item.getGroup();
@@ -137,13 +138,14 @@ public final class DrlxRuleAstParseResult {
         return builder.build();
     }
 
-    private static DrlxRuleAstProto.LhsItemParseResult toProtoLhs(LhsItemIR item) {
+    static DrlxRuleAstProto.LhsItemParseResult toProtoLhs(LhsItemIR item) {
         DrlxRuleAstProto.LhsItemParseResult.Builder builder = DrlxRuleAstProto.LhsItemParseResult.newBuilder();
         if (item instanceof PatternIR p) {
             DrlxRuleAstProto.PatternParseResult.Builder pb = DrlxRuleAstProto.PatternParseResult.newBuilder()
                     .setTypeName(p.typeName())
                     .setBindName(p.bindName())
-                    .setEntryPoint(p.entryPoint());
+                    .setEntryPoint(p.entryPoint())
+                    .setPassive(p.passive());
             if (p.castTypeName() != null) {
                 pb.setCastTypeName(p.castTypeName());
             }
