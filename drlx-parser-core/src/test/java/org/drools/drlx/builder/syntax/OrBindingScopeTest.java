@@ -1,12 +1,7 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,14 +32,6 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
             final EntryPoint persons3 = kieSession.getEntryPoint("persons3");
@@ -58,7 +45,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
 
             // Each branch fires once (Drools OR-expansion).
             assertThat(kieSession.fireAllRules()).isEqualTo(2);
-            assertThat(fired).hasSize(2);
+            assertThat(listener.getAfterMatchFired()).containsExactly("BranchLocalJoin", "BranchLocalJoin");
         });
     }
 
@@ -82,14 +69,6 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -98,7 +77,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
 
             // Each branch fires once — both matched.
             assertThat(kieSession.fireAllRules()).isEqualTo(2);
-            assertThat(fired).hasSize(2);
+            assertThat(listener.getAfterMatchFired()).containsExactly("DirectBranchLocal", "DirectBranchLocal");
         });
     }
 
