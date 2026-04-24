@@ -270,6 +270,7 @@ public class DrlxRuleAstRuntimeBuilder {
         ObjectType objectType = new ClassObjectType(type, false);
 
         Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, parseResult.bindName(), false);
+        pattern.setPassive(parseResult.passive());
         pattern.setSource(new EntryPointId(parseResult.entryPoint()));
 
         Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
