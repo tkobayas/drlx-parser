@@ -1,12 +1,7 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,14 +30,6 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -53,7 +40,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
             // Second branch unsatisfied (no senior in persons1, no kid in persons3).
             // First branch fires once.
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("OrOfAnds");
         });
     }
 
@@ -77,14 +64,6 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             // Adult with no Bob → fires.
@@ -96,7 +75,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
             assertThat(kieSession.fireAllRules()).isZero();
 
             // Still one total firing.
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("AdultWithoutBob");
         });
     }
 
@@ -120,14 +99,6 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             // Empty — NOT satisfied (vacuously), rule fires once.
@@ -142,7 +113,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isZero();
 
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("NoAliceNoBob");
         });
     }
 
@@ -168,14 +139,6 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -187,7 +150,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
             persons2.insert(new Person("Alice", 25));
 
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("NoSameNameInOther");
         });
     }
 }
