@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import org.drools.core.event.TrackingAgendaEventListener;
 import org.drools.drlx.builder.DrlxBuildCacheStrategy;
 import org.drools.drlx.builder.DrlxLambdaMetadata;
 import org.drools.drlx.builder.DrlxRuleAstParseResult;
@@ -55,11 +56,14 @@ class DrlxCompilerTest {
 
             KieBase kieBase = compiler.build(rule);
             KieSession kieSession = kieBase.newKieSession();
+            TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+            kieSession.addEventListener(listener);
             kieSession.getEntryPoint("seniors").insert(new Person("Alice", 40));
             kieSession.getEntryPoint("juniors").insert(new Person("Bob", 25));
 
             int fired = kieSession.fireAllRules();
             assertThat(fired).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("JoinRule");
 
             kieSession.dispose();
         } finally {
@@ -109,11 +113,14 @@ class DrlxCompilerTest {
         KieBase kieBase = compiler.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
         kieSession.getEntryPoint("persons").insert(new Person("John", 25));
         kieSession.getEntryPoint("addresses").insert(new Address("Tokyo"));
 
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(2);
+        assertThat(listener.getAfterMatchFired()).containsExactlyInAnyOrder("CheckAge1", "CheckAge2");
 
         kieSession.dispose();
     }
@@ -146,11 +153,14 @@ class DrlxCompilerTest {
         KieBase kieBase = compiler.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
         kieSession.getEntryPoint("seniors").insert(new Person("Alice", 40));
         kieSession.getEntryPoint("juniors").insert(new Person("Bob", 25));
 
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(1);
+        assertThat(listener.getAfterMatchFired()).containsExactly("JoinRule");
 
         kieSession.dispose();
     }
@@ -184,6 +194,8 @@ class DrlxCompilerTest {
         KieBase kieBase = compiler.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
         // p1: age 40, p2: age 25 (< 40), p3: age 20
         // p3 constraint: age > p1.age - p2.age => 20 > 40 - 25 => 20 > 15 => true
         kieSession.getEntryPoint("persons1").insert(new Person("Alice", 40));
@@ -192,11 +204,13 @@ class DrlxCompilerTest {
 
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(1);
+        assertThat(listener.getAfterMatchFired()).containsExactly("MultiLevelJoinRule");
 
         // Insert a person that should NOT match: age 10 > 15 => false
         kieSession.getEntryPoint("persons3").insert(new Person("Dave", 10));
         int fired2 = kieSession.fireAllRules();
         assertThat(fired2).isEqualTo(0);
+        assertThat(listener.getAfterMatchFired()).containsExactly("MultiLevelJoinRule");
 
         kieSession.dispose();
     }
@@ -256,12 +270,15 @@ class DrlxCompilerTest {
         KieBase kieBase = compiler.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
         kieSession.getEntryPoint("persons1").insert(new Person("Alice", 40));
         kieSession.getEntryPoint("persons2").insert(new Person("Bob", 25));
 
         // All 3 rules should fire: Bob.age(25) < Alice.age(40) for all, and Alice.age(40) > 0, 1, 2
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(3);
+        assertThat(listener.getAfterMatchFired()).containsExactlyInAnyOrder("Rule_0", "Rule_1", "Rule_2");
 
         kieSession.dispose();
     }
@@ -289,10 +306,13 @@ class DrlxCompilerTest {
         KieBase kieBase = compiler.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
         kieSession.getEntryPoint("persons").insert(new Person("John", 25));
 
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(1);
+        assertThat(listener.getAfterMatchFired()).containsExactly("CheckAge");
 
         kieSession.dispose();
     }
