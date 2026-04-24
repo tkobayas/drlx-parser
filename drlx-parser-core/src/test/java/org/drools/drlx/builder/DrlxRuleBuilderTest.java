@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.reteoo.NodeTypeEnums;
+import org.drools.core.event.TrackingAgendaEventListener;
 import org.drools.core.reteoo.AlphaNode;
 import org.drools.core.reteoo.ReteDumper;
 import org.drools.drlx.domain.Address;
@@ -48,6 +49,8 @@ class DrlxRuleBuilderTest {
         KieBase kieBase = builder.build(rule);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
 
         EntryPoint entryPoint = kieSession.getEntryPoint("persons");
         Person person = new Person("John", 25);
@@ -55,6 +58,7 @@ class DrlxRuleBuilderTest {
         int fired = kieSession.fireAllRules();
 
         assertThat(fired).isEqualTo(1);
+        assertThat(listener.getAfterMatchFired()).containsExactly("CheckAge");
 
         kieSession.dispose();
     }
@@ -107,6 +111,8 @@ class DrlxRuleBuilderTest {
                 .isEqualTo(stripHiddenClassNameSuffix(consequences.get(1).getEvaluator().getClass().getName()));
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
 
         EntryPoint personsEntryPoint = kieSession.getEntryPoint("persons");
         Person person = new Person("John", 25);
@@ -118,6 +124,7 @@ class DrlxRuleBuilderTest {
         int fired = kieSession.fireAllRules();
 
         assertThat(fired).isEqualTo(2);
+        assertThat(listener.getAfterMatchFired()).containsExactlyInAnyOrder("CheckAge1", "CheckAge2");
 
         kieSession.dispose();
     }
@@ -225,6 +232,8 @@ class DrlxRuleBuilderTest {
         KieBase kieBase = builder.build(rule, metadata);
 
         KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
 
         EntryPoint personsEntryPoint = kieSession.getEntryPoint("persons");
         personsEntryPoint.insert(new Person("John", 25));
@@ -233,6 +242,7 @@ class DrlxRuleBuilderTest {
 
         int fired = kieSession.fireAllRules();
         assertThat(fired).isEqualTo(2);
+        assertThat(listener.getAfterMatchFired()).containsExactlyInAnyOrder("CheckAge1", "CheckAge2");
 
         kieSession.dispose();
     }
@@ -266,12 +276,15 @@ class DrlxRuleBuilderTest {
         try {
             KieBase kieBase = builder.build(rule, emptyMetadata);
             KieSession kieSession = kieBase.newKieSession();
+            TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+            kieSession.addEventListener(listener);
 
             EntryPoint entryPoint = kieSession.getEntryPoint("persons");
             entryPoint.insert(new Person("John", 25));
             int fired = kieSession.fireAllRules();
 
             assertThat(fired).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("CheckAge");
             kieSession.dispose();
         } finally {
             System.clearProperty(DrlxMetadataMismatchMode.PROPERTY);
