@@ -120,9 +120,12 @@ ruleConsequence
 
 // OOPath expression - starts with / followed by a root chunk that may carry
 // positional args; subsequent chunks are navigation-only and cannot carry positional.
-// Aligns with: OOPathExpr(NodeList<OOPathChunk> chunks)
+// Optional leading '?' marks the pattern as passive (DRLXXXX §"Passive elements"):
+// the pattern does not wake the rule on its own insertions; only prior reactive
+// data pushed into it causes propagation.
+// Aligns with: OOPathExpr(NodeList<OOPathChunk> chunks) + Pattern.setPassive(bool)
 oopathExpression
-    : '/' oopathRoot ('/' oopathChunk)*
+    : QUESTION? '/' oopathRoot ('/' oopathChunk)*
     ;
 
 // OOPath root chunk - the only place positional (...) is grammatically valid

@@ -134,4 +134,43 @@ class DrlxParserTest {
         assertThat(consequence.statement()).isNotNull();
         assertThat(consequence.statement().getText()).isEqualTo("{System.out.println(p);}");
     }
+
+    @Test
+    void parsesPassiveBoundPattern() {
+        String source = """
+                package org.drools.drlx.parser;
+                unit MyUnit;
+                rule R1 {
+                    var p : ?/persons[age > 18],
+                    do {}
+                }
+                """;
+        DrlxParser.DrlxCompilationUnitContext cu = parseDrlxCompilationUnitAsAntlrAST(source);
+        DrlxParser.RuleItemContext firstItem = cu.ruleDeclaration(0).ruleBody().ruleItem(0);
+        assertThat(firstItem.rulePattern()).isNotNull();
+        DrlxParser.OopathExpressionContext oopath =
+                firstItem.rulePattern().boundOopath().oopathExpression();
+        assertThat(oopath.QUESTION()).isNotNull();
+        assertThat(oopath.getText()).startsWith("?/persons");
+    }
+
+    @Test
+    void parsesPassiveBarePatternInsideAnd() {
+        String source = """
+                package org.drools.drlx.parser;
+                unit MyUnit;
+                rule R1 {
+                    and(/locations[ city == "paris" ], ?/persons[ age > 18 ]),
+                    do {}
+                }
+                """;
+        DrlxParser.DrlxCompilationUnitContext cu = parseDrlxCompilationUnitAsAntlrAST(source);
+        DrlxParser.RuleItemContext firstItem = cu.ruleDeclaration(0).ruleBody().ruleItem(0);
+        assertThat(firstItem.andElement()).isNotNull();
+        // Second child of the `and` group is the bare `?/persons[...]`.
+        DrlxParser.GroupChildContext second = firstItem.andElement().groupChild(1);
+        DrlxParser.OopathExpressionContext oopath = second.oopathExpression();
+        assertThat(oopath).isNotNull();
+        assertThat(oopath.QUESTION()).isNotNull();
+    }
 }
