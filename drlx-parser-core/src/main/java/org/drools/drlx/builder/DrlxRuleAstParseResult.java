@@ -107,7 +107,8 @@ public final class DrlxRuleAstParseResult {
                         List.copyOf(pattern.getConditionsList()),
                         castTypeName,
                         List.copyOf(pattern.getPositionalArgsList()),
-                        pattern.getPassive());
+                        pattern.getPassive(),
+                        List.of());
             }
             case GROUP -> {
                 DrlxRuleAstProto.GroupElementParseResult group = item.getGroup();

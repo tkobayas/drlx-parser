@@ -18,7 +18,8 @@ class DrlxRuleAstParseResultTest {
                 List.of("age > 18"),
                 null,
                 List.of(),
-                true);
+                true,
+                List.of());
 
         // Serialise.
         DrlxRuleAstProto.LhsItemParseResult lhsItem = DrlxRuleAstParseResult.toProtoLhs(ir);
