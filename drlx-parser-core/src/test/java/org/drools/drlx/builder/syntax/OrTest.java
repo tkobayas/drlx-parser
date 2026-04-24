@@ -1,12 +1,7 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,21 +28,13 @@ class OrTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint seniors = kieSession.getEntryPoint("seniors");
 
             assertThat(kieSession.fireAllRules()).isZero();
 
             seniors.insert(new Person("Grandpa", 75));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("SeniorOrJunior");
         });
     }
 
@@ -71,14 +58,6 @@ class OrTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint seniors = kieSession.getEntryPoint("seniors");
             final EntryPoint juniors = kieSession.getEntryPoint("juniors");
 
@@ -89,7 +68,7 @@ class OrTest extends DrlxBuilderTestSupport {
             // into two rule instances. Each instance's conditions are
             // satisfied once by the single matching fact on its branch.
             assertThat(kieSession.fireAllRules()).isEqualTo(2);
-            assertThat(fired).hasSize(2);
+            assertThat(listener.getAfterMatchFired()).containsExactly("SeniorOrJunior", "SeniorOrJunior");
         });
     }
 
@@ -111,14 +90,6 @@ class OrTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint seniors = kieSession.getEntryPoint("seniors");
             final EntryPoint juniors = kieSession.getEntryPoint("juniors");
 
@@ -127,7 +98,7 @@ class OrTest extends DrlxBuilderTestSupport {
             juniors.insert(new Person("Middle2", 40));
 
             assertThat(kieSession.fireAllRules()).isZero();
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
 
