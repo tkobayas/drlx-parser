@@ -1,13 +1,8 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -47,14 +42,6 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint locations = kieSession.getEntryPoint("locations");
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
@@ -67,7 +54,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
             //    pattern is passive, this insertion MUST NOT wake the rule.
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(0);
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
 
@@ -93,14 +80,6 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint locations = kieSession.getEntryPoint("locations");
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
@@ -112,7 +91,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
             // Reactive-side insertion wakes the rule — one match fires.
             locations.insert(new Location("paris", "centre"));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }
 
@@ -136,14 +115,6 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint locations = kieSession.getEntryPoint("locations");
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
@@ -153,7 +124,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
             // Passive-side insertion — must not wake.
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(0);
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
 }
