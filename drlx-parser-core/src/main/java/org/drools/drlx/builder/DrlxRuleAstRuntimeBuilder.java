@@ -5,9 +5,11 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
@@ -20,9 +22,11 @@ import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
 import org.drools.base.rule.Pattern;
+import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
+import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
@@ -58,10 +62,62 @@ public class DrlxRuleAstRuntimeBuilder {
                                               pkg.getTypeResolver());
         Map<String, Class<?>> entryPointTypes = buildEntryPointTypeMap(unitClass);
 
+        Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
+        registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
+
         parseResult.rules().forEach(rule ->
                 pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass)));
 
-        return List.of(pkg);
+        List<KiePackage> out = new ArrayList<>();
+        out.add(pkg);
+        out.addAll(typeDeclPackages.values());
+        return out;
+    }
+
+    // Register a TypeDeclaration per pattern class so property reactivity
+    // (watch list) works at runtime. Mirrors KiePackagesBuilder (executable
+    // model): the declaration goes into the class's OWN package, defaults to
+    // PropertySpecificOption.ALWAYS.
+    private static void registerTypeDeclarations(Map<String, KnowledgePackageImpl> typeDeclPackages,
+                                                 CompilationUnitIR parseResult,
+                                                 TypeResolver typeResolver,
+                                                 Map<String, Class<?>> entryPointTypes,
+                                                 Class<?> unitClass) {
+        Set<Class<?>> patternClasses = new HashSet<>();
+        for (RuleIR rule : parseResult.rules()) {
+            collectPatternClasses(rule.lhs(), patternClasses, typeResolver, entryPointTypes, unitClass);
+        }
+        for (Class<?> cls : patternClasses) {
+            if (cls.getPackage() == null) {
+                continue;
+            }
+            String pkgName = cls.getPackage().getName();
+            KnowledgePackageImpl cls_pkg = typeDeclPackages.computeIfAbsent(pkgName, n -> {
+                KnowledgePackageImpl p = new KnowledgePackageImpl(n);
+                p.setClassLoader(Thread.currentThread().getContextClassLoader());
+                return p;
+            });
+            if (cls_pkg.getExactTypeDeclaration(cls) != null) {
+                continue;
+            }
+            TypeDeclaration td = TypeDeclaration.createTypeDeclarationForBean(
+                    cls, PropertySpecificOption.ALWAYS);
+            cls_pkg.addTypeDeclaration(td);
+        }
+    }
+
+    private static void collectPatternClasses(List<LhsItemIR> items,
+                                              Set<Class<?>> classes,
+                                              TypeResolver typeResolver,
+                                              Map<String, Class<?>> entryPointTypes,
+                                              Class<?> unitClass) {
+        for (LhsItemIR item : items) {
+            if (item instanceof PatternIR p) {
+                classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+            } else if (item instanceof GroupElementIR g) {
+                collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+            }
+        }
     }
 
     private static Class<?> resolveUnitClass(String unitName,
