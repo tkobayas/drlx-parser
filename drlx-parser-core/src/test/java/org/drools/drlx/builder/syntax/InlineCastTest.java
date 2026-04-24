@@ -28,7 +28,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
             // Insert a plain Person — should NOT match
             entryPoint.insert(new Person("Alice", 30));
@@ -61,7 +61,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
             entryPoint.insert(new Person("Alice", 30));
             entryPoint.insert(new Employee("Bob", 25, "Engineering"));

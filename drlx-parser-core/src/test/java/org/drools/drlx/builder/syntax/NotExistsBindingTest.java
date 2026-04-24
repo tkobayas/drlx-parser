@@ -32,7 +32,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -71,7 +71,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override

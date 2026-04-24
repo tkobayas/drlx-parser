@@ -28,7 +28,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
             entryPoint.insert(new Location("paris", "Belleville"));
             entryPoint.insert(new Location("paris", "Montmartre"));
@@ -57,7 +57,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
             entryPoint.insert(new Location("paris", "Belleville"));
             entryPoint.insert(new Location("paris", "Montmartre"));
@@ -86,7 +86,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
             entryPoint.insert(new Location("paris", "Belleville"));
             entryPoint.insert(new Location("paris", "Montmartre"));
@@ -142,7 +142,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             final EntryPoint locations = kieSession.getEntryPoint("locations");
             persons.insert(new Person("paris", 30));

@@ -32,7 +32,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -74,7 +74,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -113,7 +113,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -153,7 +153,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override

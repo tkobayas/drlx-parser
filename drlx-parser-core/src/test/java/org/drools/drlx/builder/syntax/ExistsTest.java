@@ -33,7 +33,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -85,7 +85,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -130,7 +130,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -176,7 +176,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error")
                 .hasMessageContaining("var");
     }
@@ -199,7 +199,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

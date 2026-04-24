@@ -36,7 +36,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -81,7 +81,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -126,7 +126,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, ks -> { /* never runs */ }))
+        assertThatThrownBy(() -> withSession(rule, (ks, listener) -> { /* never runs */ }))
                 .isInstanceOf(RuntimeException.class);
     }
 }

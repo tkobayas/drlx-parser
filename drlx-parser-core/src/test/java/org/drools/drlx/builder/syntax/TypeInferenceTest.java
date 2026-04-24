@@ -26,7 +26,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             persons.insert(new Person("Alice", 30));
             persons.insert(new Person("Charlie", 10));
@@ -50,7 +50,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
@@ -74,7 +74,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final EntryPoint objects = kieSession.getEntryPoint("objects");
             objects.insert(new Car("ABC", 120));
             objects.insert(new Car("XYZ", 40));
@@ -95,7 +95,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("'unit'");
     }
 
@@ -114,7 +114,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("Unit class 'MyUnit' not found")
                 .hasMessageContaining("import");
     }
@@ -135,7 +135,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("not on classpath");
     }
 
@@ -155,7 +155,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("raw DataSource")
                 .hasMessageContaining("persons");
     }
@@ -176,7 +176,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("entry point 'strangers' is not declared")
                 .hasMessageContaining("MyUnit");
     }
@@ -198,7 +198,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("does not match unit-class declaration");
     }
 }

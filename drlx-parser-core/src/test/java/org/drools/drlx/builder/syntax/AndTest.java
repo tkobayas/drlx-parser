@@ -33,7 +33,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -77,7 +77,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, kieSession -> {
+        withSession(rule, (kieSession, listener) -> {
             final List<String> fired = new ArrayList<>();
             kieSession.addEventListener(new DefaultAgendaEventListener() {
                 @Override
@@ -113,7 +113,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 
@@ -135,7 +135,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, kieSession -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }
