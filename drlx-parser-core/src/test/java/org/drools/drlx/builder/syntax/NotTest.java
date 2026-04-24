@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
@@ -14,8 +13,6 @@ import org.drools.drlx.builder.DrlxRuleAstParseResult;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,26 +38,17 @@ class NotTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             // No under-18 → rule fires once.
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("OnlyAdults");
+            assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdults");
 
             // Insert an under-18 → the NOT becomes unsatisfied; no further firings.
-            fired.clear();
             persons.insert(new Person("Charlie", 10));
             assertThat(kieSession.fireAllRules()).isZero();
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdults");
         });
     }
 
@@ -90,22 +78,13 @@ class NotTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             final EntryPoint orders = kieSession.getEntryPoint("orders");
 
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("OrphanedPerson");
+            assertThat(listener.getAfterMatchFired()).containsExactly("OrphanedPerson");
 
-            fired.clear();
             orders.insert(new Order("O1", 30, 100));
             assertThat(kieSession.fireAllRules()).isZero();
         });
@@ -182,21 +161,12 @@ class NotTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("OnlyAdultsParen");
+            assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdultsParen");
 
-            fired.clear();
             persons.insert(new Person("Charlie", 10));
             assertThat(kieSession.fireAllRules()).isZero();
         });
@@ -223,23 +193,14 @@ class NotTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             final EntryPoint orders = kieSession.getEntryPoint("orders");
 
             // Neither side present → NOT satisfied, rule fires once.
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("NoUnderageHighValuePair");
+            assertThat(listener.getAfterMatchFired()).containsExactly("NoUnderageHighValuePair");
 
             // Only under-18 person → NOT still satisfied (no order match), no new firing.
-            fired.clear();
             persons.insert(new Person("Charlie", 10));
             assertThat(kieSession.fireAllRules()).isZero();
 
