@@ -1,12 +1,7 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -33,14 +28,6 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -51,7 +38,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
             // Exactly one pair joins: (Alice/persons1, Alice/persons2).
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("JoinByName");
         });
     }
 
@@ -75,14 +62,6 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -90,7 +69,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
             persons2.insert(new Person("Alice", 25));
 
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("JoinByNameExplicitType");
         });
     }
 
@@ -114,14 +93,6 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -131,7 +102,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
             // One matching pair: (Alice, Alice).
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("BothBound");
         });
     }
 
@@ -154,14 +125,6 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
             final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
 
@@ -170,7 +133,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
             // No join constraint — fires once per Cartesian match (1×1 = 1).
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).hasSize(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("BareOopathsInAnd");
         });
     }
 }
