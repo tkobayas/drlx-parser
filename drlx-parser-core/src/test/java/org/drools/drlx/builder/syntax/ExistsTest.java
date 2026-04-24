@@ -1,13 +1,8 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,19 +29,11 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
 
             // No facts → EXISTS unsatisfied, rule does not fire.
             assertThat(kieSession.fireAllRules()).isZero();
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
 
             // Insert a child → still no adult, EXISTS unsatisfied.
             persons.insert(new Person("Charlie", 10));
@@ -55,7 +42,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
             // Insert an adult → EXISTS satisfied, rule fires once.
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("HasAdult");
+            assertThat(listener.getAfterMatchFired()).containsExactly("HasAdult");
         });
     }
 
@@ -86,26 +73,18 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             final EntryPoint orders = kieSession.getEntryPoint("orders");
 
             // Person but no order → EXISTS unsatisfied, no firing.
             persons.insert(new Person("Alice", 30));
             assertThat(kieSession.fireAllRules()).isZero();
-            assertThat(fired).isEmpty();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
 
             // Add a matching order (customerId == Alice.age = 30) → fires.
             orders.insert(new Order("O1", 30, 100));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("ConfirmedPerson");
+            assertThat(listener.getAfterMatchFired()).containsExactly("ConfirmedPerson");
         });
     }
 
@@ -131,14 +110,6 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint persons = kieSession.getEntryPoint("persons");
             final EntryPoint orders = kieSession.getEntryPoint("orders");
 
@@ -153,7 +124,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
             // rule fires once.
             orders.insert(new Order("O1", 99, 5000));
             assertThat(kieSession.fireAllRules()).isEqualTo(1);
-            assertThat(fired).containsExactly("HasAdultWithHighValueOrder");
+            assertThat(listener.getAfterMatchFired()).containsExactly("HasAdultWithHighValueOrder");
         });
     }
 
