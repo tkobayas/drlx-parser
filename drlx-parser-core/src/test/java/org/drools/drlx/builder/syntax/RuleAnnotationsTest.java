@@ -1,15 +1,10 @@
 package org.drools.drlx.builder.syntax;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.definition.rule.Rule;
-import org.kie.api.event.rule.AfterMatchFiredEvent;
-import org.kie.api.event.rule.DefaultAgendaEventListener;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -44,21 +39,13 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         withSession(rule, (kieSession, listener) -> {
-            final List<String> fired = new ArrayList<>();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
-                @Override
-                public void afterMatchFired(AfterMatchFiredEvent event) {
-                    fired.add(event.getMatch().getRule().getName());
-                }
-            });
-
             final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
             entryPoint.insert(new Person("Alice", 30));
 
             final int firedCount = kieSession.fireAllRules();
 
             assertThat(firedCount).isEqualTo(2);
-            assertThat(fired).containsExactly("HighSalience", "LowSalience");
+            assertThat(listener.getAfterMatchFired()).containsExactly("HighSalience", "LowSalience");
         });
     }
 
