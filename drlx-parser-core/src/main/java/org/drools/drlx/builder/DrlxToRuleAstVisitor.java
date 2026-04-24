@@ -260,7 +260,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> conditions = extractConditions(oopathCtx);
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = ctx.oopathExpression().QUESTION() != null;
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs, passive, List.of());
+        List<String> watchedProperties = extractWatchedProperties(ctx.oopathExpression());
+        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs, passive, watchedProperties);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
@@ -269,7 +270,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> conditions = extractConditions(oopathCtx);
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
-        return new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs, passive, List.of());
+        List<String> watchedProperties = extractWatchedProperties(oopathCtx);
+        return new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs, passive, watchedProperties);
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
@@ -310,6 +312,16 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             return List.of();
         }
         return root.expression().stream()
+                .map(ParserRuleContext::getText)
+                .toList();
+    }
+
+    private static List<String> extractWatchedProperties(DrlxParser.OopathExpressionContext ctx) {
+        DrlxParser.OopathRootContext root = ctx.oopathRoot();
+        if (root == null || root.watchItem() == null || root.watchItem().isEmpty()) {
+            return List.of();
+        }
+        return root.watchItem().stream()
                 .map(ParserRuleContext::getText)
                 .toList();
     }
