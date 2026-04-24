@@ -7,6 +7,7 @@ import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.domain.PlainLocation;
+import org.drools.drlx.domain.ReactiveEmployee;
 import org.drools.drlx.domain.Vehicle;
 import org.drools.ruleunits.api.DataStore;
 
@@ -24,4 +25,5 @@ public class MyUnit {
     public DataStore<PlainLocation> plainLocations;
     public DataStore<Vehicle> objects;
     public DataStore<Order> orders;
+    public DataStore<ReactiveEmployee> reactiveEmployees;
 }
