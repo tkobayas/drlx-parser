@@ -55,6 +55,7 @@ ruleItem
     | existsElement ','
     | andElement ','
     | orElement ','
+    | testElement ','
     | ruleConsequence
     ;
 
@@ -97,6 +98,12 @@ andElement
 // 'or' group element. Parentheses required.
 orElement
     : DRLX_OR '(' groupChild (',' groupChild)* ')'
+    ;
+
+// 'test' element — DRLXXXX § "test" line 720. Carries a boolean expression
+// equivalent to legacy `eval`. CE terminator `,` owned by ruleItem.
+testElement
+    : TEST expression
     ;
 
 // Bound pattern body without trailing `,`. Reused by `rulePattern`

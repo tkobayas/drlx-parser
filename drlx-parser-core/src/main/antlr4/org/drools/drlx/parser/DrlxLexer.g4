@@ -11,3 +11,4 @@ NOT      : 'not';
 EXISTS   : 'exists';
 DRLX_AND : 'and';
 DRLX_OR  : 'or';
+TEST     : 'test';
