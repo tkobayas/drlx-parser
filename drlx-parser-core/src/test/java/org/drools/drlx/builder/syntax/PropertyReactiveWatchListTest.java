@@ -8,11 +8,6 @@ import org.kie.api.runtime.rule.FactHandle;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-// MVP scope: watch list fully restricts modification re-evaluation only when
-// the pattern has no alpha constraints. With conditions present, modifications
-// still propagate through the alpha because DrlxLambdaConstraint does not yet
-// override getListenedPropertyMask. See follow-up issue on DrlxLambdaConstraint
-// property-mask reporting.
 class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
     @Test
