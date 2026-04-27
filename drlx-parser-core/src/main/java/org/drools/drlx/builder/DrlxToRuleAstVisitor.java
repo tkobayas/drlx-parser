@@ -10,6 +10,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
@@ -106,6 +107,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     lhs.add(buildAndElement(itemCtx.andElement()));
                 } else if (itemCtx.orElement() != null) {
                     lhs.add(buildOrElement(itemCtx.orElement()));
+                } else if (itemCtx.testElement() != null) {
+                    lhs.add(buildTestElement(itemCtx.testElement()));
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
@@ -229,6 +232,25 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
     private GroupElementIR buildOrElement(DrlxParser.OrElementContext ctx) {
         return buildGroupElementFromChildren(ctx.groupChild(), GroupElementIR.Kind.OR);
+    }
+
+    private EvalIR buildTestElement(DrlxParser.TestElementContext ctx) {
+        String expression = getText(ctx.expression());
+        return new EvalIR(expression, extractIdentifiers(expression));
+    }
+
+    /**
+     * Extract candidate binding identifiers from an expression text via word-boundary regex.
+     * Over-collects (Java keywords, type names) but that's harmless — the runtime builder
+     * filters against the live boundVariables map and silently drops names that don't resolve.
+     */
+    private static List<String> extractIdentifiers(String expression) {
+        java.util.regex.Pattern idRegex =
+                java.util.regex.Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b");
+        java.util.regex.Matcher m = idRegex.matcher(expression);
+        java.util.LinkedHashSet<String> identifiers = new java.util.LinkedHashSet<>();
+        while (m.find()) identifiers.add(m.group(1));
+        return List.copyOf(identifiers);
     }
 
     private GroupElementIR buildGroupElementFromChildren(
