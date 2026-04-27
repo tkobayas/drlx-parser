@@ -14,6 +14,7 @@ import java.util.List;
 
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
@@ -118,6 +119,12 @@ public final class DrlxRuleAstParseResult {
                 }
                 yield new GroupElementIR(fromProtoGroupKind(group.getKind()), List.copyOf(children));
             }
+            case EVAL -> {
+                DrlxRuleAstProto.EvalParseResult eval = item.getEval();
+                yield new EvalIR(
+                        eval.getExpression(),
+                        List.copyOf(eval.getReferencedBindingsList()));
+            }
             case KIND_NOT_SET -> throw new IllegalStateException("LHS item without payload in " + file);
         };
     }
@@ -159,6 +166,11 @@ public final class DrlxRuleAstParseResult {
                     .setKind(toProtoGroupKind(g.kind()));
             g.children().forEach(child -> gb.addChildren(toProtoLhs(child)));
             builder.setGroup(gb);
+        } else if (item instanceof EvalIR e) {
+            DrlxRuleAstProto.EvalParseResult.Builder eb = DrlxRuleAstProto.EvalParseResult.newBuilder()
+                    .setExpression(e.expression());
+            e.referencedBindings().forEach(eb::addReferencedBindings);
+            builder.setEval(eb);
         } else {
             throw new IllegalArgumentException("Unsupported LHS item: " + item);
         }

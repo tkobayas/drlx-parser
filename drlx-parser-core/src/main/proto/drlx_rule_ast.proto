@@ -25,7 +25,13 @@ message LhsItemParseResult {
   oneof kind {
     PatternParseResult pattern = 1;
     GroupElementParseResult group = 2;
+    EvalParseResult eval = 3;
   }
+}
+
+message EvalParseResult {
+  string expression = 1;
+  repeated string referenced_bindings = 2;
 }
 
 message GroupElementParseResult {

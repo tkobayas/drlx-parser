@@ -3,6 +3,9 @@ package org.drools.drlx.builder;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.proto.DrlxRuleAstProto;
 import org.junit.jupiter.api.Test;
@@ -10,6 +13,36 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class DrlxRuleAstParseResultTest {
+
+    @Test
+    void evalIrRoundTripsThroughProto() {
+        EvalIR original = new EvalIR("p.age > 30", List.of("p"));
+        GroupElementIR andGroup = new GroupElementIR(
+                GroupElementIR.Kind.AND,
+                List.of(original));
+
+        DrlxRuleAstProto.LhsItemParseResult proto = DrlxRuleAstParseResult.toProtoLhs(andGroup);
+        LhsItemIR roundTripped = DrlxRuleAstParseResult.fromProtoLhs(proto, Path.of("test.drlx"));
+
+        assertThat(roundTripped).isInstanceOf(GroupElementIR.class);
+        GroupElementIR g = (GroupElementIR) roundTripped;
+        assertThat(g.children()).hasSize(1);
+        assertThat(g.children().get(0)).isInstanceOf(EvalIR.class);
+        EvalIR e = (EvalIR) g.children().get(0);
+        assertThat(e.expression()).isEqualTo("p.age > 30");
+        assertThat(e.referencedBindings()).containsExactly("p");
+    }
+
+    @Test
+    void evalIrWithMultipleBindingsRoundTrips() {
+        EvalIR original = new EvalIR("p.age > q.age", List.of("p", "q"));
+        DrlxRuleAstProto.LhsItemParseResult proto = DrlxRuleAstParseResult.toProtoLhs(
+                new GroupElementIR(GroupElementIR.Kind.AND, List.of(original)));
+        GroupElementIR g = (GroupElementIR) DrlxRuleAstParseResult.fromProtoLhs(
+                proto, Path.of("test.drlx"));
+        EvalIR e = (EvalIR) g.children().get(0);
+        assertThat(e.referencedBindings()).containsExactly("p", "q");
+    }
 
     @Test
     void passiveFlagRoundTripsThroughProto() {
