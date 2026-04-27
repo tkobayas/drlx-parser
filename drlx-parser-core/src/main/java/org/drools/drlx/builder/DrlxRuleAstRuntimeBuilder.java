@@ -28,6 +28,7 @@ import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
@@ -313,10 +314,38 @@ public class DrlxRuleAstRuntimeBuilder {
                     buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, boundVariables);
                 }
                 parent.addChild(ge);
+            } else if (item instanceof EvalIR evalIr) {
+                buildEvalCondition(evalIr, parent, boundVariables);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
         }
+    }
+
+    private void buildEvalCondition(EvalIR evalIr,
+                                    GroupElement parent,
+                                    Map<String, BoundVariable> boundVariables) {
+        // Resolve referenced binding names against the live boundVariables map.
+        // Names that don't resolve are silently dropped (e.g., Java keywords or
+        // type names picked up by the visitor's identifier regex).
+        List<BoundVariable> referenced = new ArrayList<>();
+        List<Declaration> declarations = new ArrayList<>();
+        for (String name : evalIr.referencedBindings()) {
+            BoundVariable bv = boundVariables.get(name);
+            if (bv != null) {
+                referenced.add(bv);
+                declarations.add(bv.pattern().getDeclaration());
+            }
+        }
+
+        DrlxEvalExpression evalExpression =
+                lambdaCompiler.createEvalExpression(evalIr.expression(), referenced);
+
+        org.drools.base.rule.EvalCondition evalCondition =
+                new org.drools.base.rule.EvalCondition(
+                        evalExpression,
+                        declarations.toArray(new Declaration[0]));
+        parent.addChild(evalCondition);
     }
 
     private Pattern buildPattern(PatternIR parseResult,
