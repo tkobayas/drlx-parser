@@ -193,6 +193,38 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void conditionPlusWatchList_doesNotFireOnUnrelated() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.ReactiveEmployee;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule R1 {
+                    var e : /reactiveEmployees[salary > 0][basePay],
+                    do { }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            EntryPoint ep = kieSession.getEntryPoint("reactiveEmployees");
+            ReactiveEmployee emp = new ReactiveEmployee(6000, 4000, 1000);
+            FactHandle fh = ep.insert(emp);
+
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            listener.getAfterMatchFired().clear();
+
+            // bonusPay neither in watch list nor read by constraint → must NOT re-fire.
+            emp.setBonusPay(2000);
+            ep.update(fh, emp, "bonusPay");
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            assertThat(listener.getAfterMatchFired()).isEmpty();
+        });
+    }
+
+    @Test
     void duplicateWildcard_throwsAtBuild() {
         final String rule = """
                 package org.drools.drlx.parser;

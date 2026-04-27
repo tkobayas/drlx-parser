@@ -3,17 +3,25 @@ package org.drools.drlx.builder;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.List;
+import java.util.Optional;
 
+import org.drools.base.base.ObjectType;
 import org.drools.base.base.ValueResolver;
 import org.drools.base.reteoo.BaseTuple;
+import org.drools.base.reteoo.PropertySpecificUtil;
 import org.drools.base.rule.ContextEntry;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.MutableTypeConstraint;
+import org.drools.base.rule.Pattern;
+import org.drools.util.bitmask.BitMask;
 import org.kie.api.runtime.rule.FactHandle;
 import org.mvel3.ClassManager;
 import org.mvel3.CompilerParameters;
 import org.mvel3.Evaluator;
 import org.mvel3.MVEL;
+
+import static org.drools.base.reteoo.PropertySpecificUtil.getEmptyPropertyReactiveMask;
 
 public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> implements EvaluatorSink {
 
@@ -80,6 +88,24 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
     @Override
     public void replaceDeclaration(Declaration declaration, Declaration declaration1) {
         throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public BitMask getListenedPropertyMask(Optional<Pattern> pattern,
+                                           ObjectType objectType,
+                                           List<String> settableProperties) {
+        String[] reads = evaluator.getReadProperties();
+        if (reads.length == 0) {
+            return super.getListenedPropertyMask(pattern, objectType, settableProperties);
+        }
+        BitMask mask = getEmptyPropertyReactiveMask(settableProperties.size());
+        for (String prop : reads) {
+            int pos = settableProperties.indexOf(prop);
+            if (pos >= 0) { // ignore properties that aren't settable on the pattern type
+                mask = mask.set(pos + PropertySpecificUtil.CUSTOM_BITS_OFFSET);
+            }
+        }
+        return mask;
     }
 
     @Override
