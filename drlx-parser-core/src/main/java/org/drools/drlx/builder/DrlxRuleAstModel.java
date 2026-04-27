@@ -28,8 +28,8 @@ public final class DrlxRuleAstModel {
         public enum Kind { SALIENCE, DESCRIPTION }
     }
 
-    /** LHS tree node — either a pattern leaf or a nested group element. */
-    public sealed interface LhsItemIR permits PatternIR, GroupElementIR {
+    /** LHS tree node — pattern leaf, nested group element, or eval-style guard. */
+    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR {
     }
 
     public record PatternIR(String typeName,
@@ -52,5 +52,11 @@ public final class DrlxRuleAstModel {
     }
 
     public record ConsequenceIR(String block) {
+    }
+
+    public record EvalIR(String expression, List<String> referencedBindings) implements LhsItemIR {
+        public EvalIR {
+            referencedBindings = List.copyOf(referencedBindings);
+        }
     }
 }
