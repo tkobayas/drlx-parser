@@ -185,6 +185,52 @@ public class DrlxLambdaCompiler {
         return constraint;
     }
 
+    /**
+     * Compile a boolean MVEL expression into a {@link DrlxEvalExpression} suitable for
+     * plugging into a drools-base {@link org.drools.base.rule.EvalCondition}. Used by the
+     * EvalIR runtime mapping (DRLXXXX 'test' construct).
+     *
+     * <p>Mirrors {@link #createBetaLambdaConstraint}: tries the pre-compiled cache first,
+     * otherwise registers a {@link PendingLambda} with {@link #batchCompiler} for deferred
+     * resolution by {@link #compileBatch(ClassLoader)}.
+     */
+    public DrlxEvalExpression createEvalExpression(String expression,
+                                                   List<BoundVariable> referencedBindings) {
+        int counter = lambdaCounter++;
+
+        org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations =
+                referencedBindings.stream()
+                        .map(bv -> org.mvel3.transpiler.context.Declaration.of(bv.name(), bv.type()))
+                        .toArray(org.mvel3.transpiler.context.Declaration[]::new);
+
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, Boolean> preCompiled =
+                (Evaluator<Map<String, Object>, Void, Boolean>) tryLoadPreCompiled(counter, expression, "test eval");
+        if (preCompiled != null) {
+            return new DrlxEvalExpression(expression, preCompiled);
+        }
+
+        DrlxEvalExpression deferred = createBatchEvalExpression(expression, mvelDeclarations);
+        onLambdaCreated(counter, expression);
+        return deferred;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private DrlxEvalExpression createBatchEvalExpression(String expression,
+                                                         org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations) {
+        CompilerParameters<Map<String, Object>, Void, Boolean> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(mvelDeclarations)
+                        .<Boolean>out(Boolean.class)
+                        .expression(expression)
+                        .classManager(batchCompiler.getClassManager())
+                        .generatedClassName("GeneratorEvaluator__")
+                        .build();
+        MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+        DrlxEvalExpression evalExpression = new DrlxEvalExpression(expression, null);
+        pendingLambdas.add(new PendingLambda(handle, evalExpression));
+        return evalExpression;
+    }
+
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
         int counter = lambdaCounter++;
         @SuppressWarnings("unchecked")
