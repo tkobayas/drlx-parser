@@ -186,6 +186,49 @@ class IfElseTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void ifElse_refiresOnOuterScopePropertyUpdate() {
+        // DRLX uses PropertySpecificOption.ALWAYS (DrlxRuleAstRuntimeBuilder
+        // line: TypeDeclaration.createTypeDeclarationForBean(cls, ALWAYS)), so
+        // every property is watched by default. An if-guard like
+        // `c.creditRating == Rating.LOW` re-evaluates naturally on creditRating
+        // updates — no explicit watch list required (mirrors #23's
+        // TestElementTest.test_refiresOnPropertyUpdate).
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R1 {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p : /products[ rate == Rates.HIGH ]
+                    } else {
+                        var p : /products[ rate == Rates.LOW ]
+                    },
+                    do { System.out.println(c + " " + p); }
+                }
+                """;
+        withSession(rule, (session, listener) -> {
+            EntryPoint customers = session.getEntryPoint("customers");
+            EntryPoint products = session.getEntryPoint("products");
+            Customer alice = new Customer("Alice", Rating.HIGH);   // initial: else branch
+            org.kie.api.runtime.rule.FactHandle handle = customers.insert(alice);
+            products.insert(new Product("luxury", Rates.HIGH));
+            products.insert(new Product("budget", Rates.LOW));
+            assertThat(session.fireAllRules()).isEqualTo(1);
+            listener.getAfterMatchFired().clear();
+
+            alice.setCreditRating(Rating.LOW);
+            customers.update(handle, alice);
+            // ALWAYS-mode property reactivity — re-evaluates without explicit watch list.
+            assertThat(session.fireAllRules()).isEqualTo(1);
+        });
+    }
+
+    @Test
     void noFinalElse_doesNotFireWhenNoBranchMatches() {
         String rule = """
                 package org.drools.drlx.parser;
