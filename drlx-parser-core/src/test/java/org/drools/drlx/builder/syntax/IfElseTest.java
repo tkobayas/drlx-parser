@@ -90,6 +90,102 @@ class IfElseTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void multiElementBranch_implicitAnd() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R1 {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p1 : /products[ rate == Rates.HIGH ],
+                        var p2 : /products[ rate == Rates.MEDIUM ]
+                    } else {
+                        var p1 : /products[ rate == Rates.LOW ],
+                        var p2 : /products[ rate == Rates.LOW ]
+                    },
+                    do { System.out.println(c + " " + p1 + " " + p2); }
+                }
+                """;
+        withSession(rule, (session, listener) -> {
+            EntryPoint customers = session.getEntryPoint("customers");
+            EntryPoint products = session.getEntryPoint("products");
+            customers.insert(new Customer("Alice", Rating.LOW));
+            products.insert(new Product("luxury", Rates.HIGH));
+            products.insert(new Product("standard", Rates.MEDIUM));
+            assertThat(session.fireAllRules()).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void groupElementInsideBranch_not() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R1 {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        not /products[ rate == Rates.HIGH ],
+                        var p : /products[ rate == Rates.MEDIUM ]
+                    } else {
+                        var p : /products[ rate == Rates.LOW ]
+                    },
+                    do { System.out.println(c + " " + p); }
+                }
+                """;
+        withSession(rule, (session, listener) -> {
+            EntryPoint customers = session.getEntryPoint("customers");
+            EntryPoint products = session.getEntryPoint("products");
+            customers.insert(new Customer("Alice", Rating.LOW));
+            products.insert(new Product("standard", Rates.MEDIUM));
+            assertThat(session.fireAllRules()).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void nestedIfElseInsideBranch() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R1 {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        if (c.name == "Alice") {
+                            var p : /products[ rate == Rates.HIGH ]
+                        } else {
+                            var p : /products[ rate == Rates.MEDIUM ]
+                        }
+                    } else {
+                        var p : /products[ rate == Rates.LOW ]
+                    },
+                    do { System.out.println(c + " " + p); }
+                }
+                """;
+        withSession(rule, (session, listener) -> {
+            EntryPoint customers = session.getEntryPoint("customers");
+            EntryPoint products = session.getEntryPoint("products");
+            customers.insert(new Customer("Alice", Rating.LOW));
+            products.insert(new Product("luxury", Rates.HIGH));
+            products.insert(new Product("standard", Rates.MEDIUM));
+            assertThat(session.fireAllRules()).isEqualTo(1);
+        });
+    }
+
+    @Test
     void noFinalElse_doesNotFireWhenNoBranchMatches() {
         String rule = """
                 package org.drools.drlx.parser;
