@@ -56,6 +56,7 @@ ruleItem
     | andElement ','
     | orElement ','
     | testElement ','
+    | conditionalBranch ','
     | ruleConsequence
     ;
 
@@ -104,6 +105,37 @@ orElement
 // equivalent to legacy `eval`. CE terminator `,` owned by ruleItem.
 testElement
     : TEST expression
+    ;
+
+// 'if' / 'else if' / 'else' branching, Form A — DRLXXXX §"if/else".
+// Single trailing `do` consequence owned by the enclosing rule. CE
+// terminator `,` (after the whole construct) owned by ruleItem.
+conditionalBranch
+    : IF '(' expression ')' branchBody
+      ( ELSE IF '(' expression ')' branchBody )*
+      ( ELSE branchBody )?
+    ;
+
+// Branch body uses `,` as item *separator* (no trailing `,`), unlike the
+// top-level `ruleItem*` which terminates each item. This allows
+// `if (...) { var s : /seniors[...] } else {...}` to parse without
+// requiring a trailing `,` on a single-item branch.
+branchBody
+    : '{' (branchItem (',' branchItem)*)? '}'
+    ;
+
+// Branch items mirror `ruleItem` minus the trailing `,` and minus
+// `ruleConsequence` (single trailing `do` lives at the rule level for
+// Form A). `boundOopath` stands in for `rulePattern` (which would carry
+// a comma).
+branchItem
+    : boundOopath
+    | notElement
+    | existsElement
+    | andElement
+    | orElement
+    | testElement
+    | conditionalBranch
     ;
 
 // Bound pattern body without trailing `,`. Reused by `rulePattern`
