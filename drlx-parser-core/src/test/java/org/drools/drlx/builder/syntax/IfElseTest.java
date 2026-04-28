@@ -43,6 +43,37 @@ class IfElseTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void noFinalElse_doesNotFireWhenNoBranchMatches() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R1 {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p : /products[ rate == Rates.HIGH ]
+                    } else if (c.creditRating == Rating.MEDIUM) {
+                        var p : /products[ rate == Rates.MEDIUM ]
+                    },
+                    do { System.out.println(c + " " + p); }
+                }
+                """;
+        withSession(rule, (session, listener) -> {
+            EntryPoint customers = session.getEntryPoint("customers");
+            EntryPoint products = session.getEntryPoint("products");
+            customers.insert(new Customer("Carol", Rating.HIGH));    // matches no branch
+            products.insert(new Product("luxury", Rates.HIGH));
+            products.insert(new Product("standard", Rates.MEDIUM));
+            assertThat(session.fireAllRules()).isZero();
+            assertThat(listener.getAfterMatchFired()).isEmpty();
+        });
+    }
+
+    @Test
     void elseIfChain_threeRatings() {
         String rule = """
                 package org.drools.drlx.parser;
