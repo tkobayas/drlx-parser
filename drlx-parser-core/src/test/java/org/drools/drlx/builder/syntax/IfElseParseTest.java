@@ -158,6 +158,25 @@ class IfElseParseTest {
         assertThat(b3.children().get(2)).isInstanceOf(PatternIR.class);
     }
 
+    @Test
+    void emptyBranchBodyIsRejected() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R {
+                    var p : /persons,
+                    if (p.age > 30) { } else { var j : /juniors[ age == p.age ] },
+                    do { System.out.println(p); }
+                }
+                """;
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                () -> parseSingleRule(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("empty branch body");
+    }
+
     private static RuleIR parseSingleRule(String source) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(source));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
