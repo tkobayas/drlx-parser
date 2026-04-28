@@ -138,9 +138,12 @@ public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry
 
     @Override
     public DrlxLambdaBetaConstraint clone() {
-        DrlxLambdaBetaConstraint cloned = new DrlxLambdaBetaConstraint(this.expression, this.patternType,
-                this.mvelDeclarations, this.requiredDeclarations.clone());
-        return cloned;
+        // Drools' LogicTransformer clones constraints when expanding OR-trees into
+        // sibling AND sub-rules. Re-running initializeLambdaConstraint() would NPE
+        // on the deferred-compile path (mvelDeclarations is null until bindEvaluator
+        // fires). Reuse the already-bound evaluator — MVEL3 evaluators are stateless.
+        return new DrlxLambdaBetaConstraint(this.expression, this.patternType,
+                this.evaluator, this.requiredDeclarations.clone());
     }
 
     @Override

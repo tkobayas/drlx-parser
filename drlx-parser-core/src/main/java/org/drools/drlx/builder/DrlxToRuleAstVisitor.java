@@ -269,7 +269,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
             List<LhsItemIR> andChildren = new ArrayList<>();
             for (String prior : priorConditions) {
-                String negated = "!(" + prior + ")";
+                // Use `(cond) == false` rather than `!(cond)` to side-step an MVEL3
+                // limitation: property access inside `!(...)` doesn't get rewritten to
+                // a getter call (e.g. `c.creditRating` stays as direct field access),
+                // which fails for private fields. The `== false` form keeps property
+                // access at the top level and compiles correctly.
+                String negated = "(" + prior + ") == false";
                 andChildren.add(new EvalIR(negated, extractIdentifiers(negated)));
             }
             andChildren.add(new EvalIR(condition, extractIdentifiers(condition)));
@@ -284,7 +289,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             DrlxParser.BranchBodyContext elseBody = ctx.branchBody(bodyCount - 1);
             List<LhsItemIR> andChildren = new ArrayList<>();
             for (String prior : priorConditions) {
-                String negated = "!(" + prior + ")";
+                // Use `(cond) == false` rather than `!(cond)` to side-step an MVEL3
+                // limitation: property access inside `!(...)` doesn't get rewritten to
+                // a getter call (e.g. `c.creditRating` stays as direct field access),
+                // which fails for private fields. The `== false` form keeps property
+                // access at the top level and compiles correctly.
+                String negated = "(" + prior + ") == false";
                 andChildren.add(new EvalIR(negated, extractIdentifiers(negated)));
             }
             for (DrlxParser.BranchItemContext bi : elseBody.branchItem()) {

@@ -126,11 +126,25 @@ public class DrlxLambdaCompiler {
     protected final MVELBatchCompiler batchCompiler;
     protected final List<PendingLambda> pendingLambdas = new ArrayList<>();
 
+    /**
+     * Imports declared in the current DRLX compilation unit. Seeded from
+     * {@link DrlxRuleAstRuntimeBuilder} via {@link #addImports(java.util.Collection)};
+     * passed into MVEL3's {@code .imports(...)} when batch-compiling
+     * eval expressions and consequences so external types referenced in
+     * those expressions (e.g. enum constants like {@code Rating.LOW}) resolve.
+     * Pattern compilation already gets imports via {@link MVEL#pojo(Class, ...)}.
+     */
+    private final java.util.Set<String> imports = new java.util.LinkedHashSet<>();
+
     private ClassManager preBuildClassManager;
     private final Map<String, Class<?>> loadedClassCache = new HashMap<>();
 
     public DrlxLambdaCompiler(MVELBatchCompiler batchCompiler) {
         this.batchCompiler = batchCompiler;
+    }
+
+    public void addImports(java.util.Collection<String> additional) {
+        imports.addAll(additional);
     }
 
     public void setPreBuildMetadata(DrlxLambdaMetadata preBuildMetadata) {
@@ -222,6 +236,7 @@ public class DrlxLambdaCompiler {
                 (CompilerParameters) MVEL.<Object>map(mvelDeclarations)
                         .<Boolean>out(Boolean.class)
                         .expression(expression)
+                        .imports(new HashSet<>(imports))
                         .classManager(batchCompiler.getClassManager())
                         .generatedClassName("GeneratorEvaluator__")
                         .build();
@@ -315,6 +330,7 @@ public class DrlxLambdaCompiler {
                         declarations[0], Arrays.copyOfRange(declarations, 1, declarations.length))
                 .<Boolean>out(Boolean.class)
                 .expression(expression)
+                .imports(new HashSet<>(imports))
                 .classManager(batchCompiler.getClassManager())
                 .generatedClassName("GeneratorEvaluator__")
                 .build();
@@ -332,6 +348,7 @@ public class DrlxLambdaCompiler {
                 (CompilerParameters) MVEL.<Object>map(mvelDeclarations)
                         .<Boolean>out(Boolean.class)
                         .expression(expression)
+                        .imports(new HashSet<>(imports))
                         .classManager(batchCompiler.getClassManager())
                         .generatedClassName("GeneratorEvaluator__")
                         .build();
@@ -348,7 +365,7 @@ public class DrlxLambdaCompiler {
                 (CompilerParameters) MVEL.<Object>map(org.mvel3.transpiler.context.Declaration.from(declarationTypes))
                         .<String>out(String.class)
                         .block(consequenceBlock + RETURN_NULL)
-                        .imports(new HashSet<>())
+                        .imports(new HashSet<>(imports))
                         .classManager(batchCompiler.getClassManager())
                         .generatedClassName("GeneratorEvaluator__")
                         .build();
@@ -395,12 +412,28 @@ public class DrlxLambdaCompiler {
 
     public Map<String, Type<?>> getTypeMap(GroupElement ge) {
         Map<String, Type<?>> types = new LinkedHashMap<>();
-        ge.getChildren().stream().filter(element -> element instanceof Pattern).forEach(pattern -> {
-            Pattern p = (Pattern) pattern;
-            Class<?> patternClass = ((ClassObjectType) p.getObjectType()).getClassType();
-            Declaration declaration = p.getDeclaration();
-            types.put(declaration.getIdentifier(), Type.type(patternClass));
-        });
+        collectPatternTypes(ge, types);
         return types;
+    }
+
+    /**
+     * Recursively gather binding name → pattern type from every Pattern reachable
+     * under {@code ge}, descending into nested GroupElements (OR / AND emitted by
+     * the conditional-branch / 'or' / 'and' desugar). Same-name bindings in
+     * sibling branches unify into a single entry (last write wins; the type is
+     * identical when bindings share a name).
+     */
+    private static void collectPatternTypes(GroupElement ge, Map<String, Type<?>> types) {
+        for (Object child : ge.getChildren()) {
+            if (child instanceof Pattern p) {
+                Class<?> patternClass = ((ClassObjectType) p.getObjectType()).getClassType();
+                Declaration declaration = p.getDeclaration();
+                if (declaration != null) {
+                    types.put(declaration.getIdentifier(), Type.type(patternClass));
+                }
+            } else if (child instanceof GroupElement nested) {
+                collectPatternTypes(nested, types);
+            }
+        }
     }
 }

@@ -110,7 +110,11 @@ public class DrlxLambdaConstraint extends MutableTypeConstraint<ContextEntry[]> 
 
     @Override
     public DrlxLambdaConstraint clone() {
-        return new DrlxLambdaConstraint(this.expression, this.patternType, this.declarations);
+        // Drools' LogicTransformer clones constraints when expanding OR-trees into
+        // sibling AND sub-rules. Re-running initializeLambdaConstraint() would NPE
+        // on the deferred-compile path (declarations is null until bindEvaluator
+        // fires). Reuse the already-bound evaluator — MVEL3 evaluators are stateless.
+        return new DrlxLambdaConstraint(this.expression, this.patternType, this.evaluator);
     }
 
     @Override

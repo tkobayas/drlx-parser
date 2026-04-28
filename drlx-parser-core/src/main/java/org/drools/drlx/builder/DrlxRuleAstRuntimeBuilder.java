@@ -57,6 +57,10 @@ public class DrlxRuleAstRuntimeBuilder {
         pkg.setClassLoader(Thread.currentThread().getContextClassLoader());
 
         parseResult.imports().forEach(importName -> pkg.addImport(new ImportDeclaration(importName)));
+        // Mirror the same imports into the lambda compiler so MVEL3's eval/consequence
+        // batch compilation can resolve external types (e.g. enum constants) that the
+        // pattern path resolves implicitly via MVEL.pojo(patternType, ...).
+        lambdaCompiler.addImports(parseResult.imports());
 
         Class<?> unitClass = resolveUnitClass(parseResult.unitName(),
                                               parseResult.imports(),
