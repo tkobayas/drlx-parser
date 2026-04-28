@@ -109,6 +109,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     lhs.add(buildOrElement(itemCtx.orElement()));
                 } else if (itemCtx.testElement() != null) {
                     lhs.add(buildTestElement(itemCtx.testElement()));
+                } else if (itemCtx.conditionalBranch() != null) {
+                    lhs.add(buildConditionalBranch(itemCtx.conditionalBranch()));
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
@@ -237,6 +239,72 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private EvalIR buildTestElement(DrlxParser.TestElementContext ctx) {
         String expression = getText(ctx.expression());
         return new EvalIR(expression, extractIdentifiers(expression));
+    }
+
+    /**
+     * Desugar `if (c1) { B1 } else if (c2) { B2 } else { B3 }` to
+     * `OR(AND(EvalIR(c1), B1...), AND(EvalIR(!(c1)), EvalIR(c2), B2...),
+     *     AND(EvalIR(!(c1)), EvalIR(!(c2)), B3...))`. Cumulative guards
+     * split into separate sequential EvalIR nodes; semantically equivalent
+     * to a compound `&&` but simpler to construct.
+     */
+    private GroupElementIR buildConditionalBranch(DrlxParser.ConditionalBranchContext ctx) {
+        int conditionCount = ctx.expression().size();
+        int bodyCount = ctx.branchBody().size();
+        boolean hasFinalElse = bodyCount > conditionCount;
+
+        // Reject empty bodies (matches no useful semantics).
+        for (int i = 0; i < bodyCount; i++) {
+            if (ctx.branchBody(i).branchItem().isEmpty()) {
+                throw new RuntimeException("empty branch body");
+            }
+        }
+
+        List<LhsItemIR> orChildren = new ArrayList<>();
+        List<String> priorConditions = new ArrayList<>();
+
+        for (int i = 0; i < conditionCount; i++) {
+            String condition = getText(ctx.expression(i));
+            DrlxParser.BranchBodyContext body = ctx.branchBody(i);
+
+            List<LhsItemIR> andChildren = new ArrayList<>();
+            for (String prior : priorConditions) {
+                String negated = "!(" + prior + ")";
+                andChildren.add(new EvalIR(negated, extractIdentifiers(negated)));
+            }
+            andChildren.add(new EvalIR(condition, extractIdentifiers(condition)));
+            for (DrlxParser.BranchItemContext bi : body.branchItem()) {
+                andChildren.add(buildBranchItem(bi));
+            }
+            orChildren.add(new GroupElementIR(GroupElementIR.Kind.AND, List.copyOf(andChildren)));
+            priorConditions.add(condition);
+        }
+
+        if (hasFinalElse) {
+            DrlxParser.BranchBodyContext elseBody = ctx.branchBody(bodyCount - 1);
+            List<LhsItemIR> andChildren = new ArrayList<>();
+            for (String prior : priorConditions) {
+                String negated = "!(" + prior + ")";
+                andChildren.add(new EvalIR(negated, extractIdentifiers(negated)));
+            }
+            for (DrlxParser.BranchItemContext bi : elseBody.branchItem()) {
+                andChildren.add(buildBranchItem(bi));
+            }
+            orChildren.add(new GroupElementIR(GroupElementIR.Kind.AND, List.copyOf(andChildren)));
+        }
+
+        return new GroupElementIR(GroupElementIR.Kind.OR, List.copyOf(orChildren));
+    }
+
+    private LhsItemIR buildBranchItem(DrlxParser.BranchItemContext ctx) {
+        if (ctx.boundOopath() != null)        return buildPatternFromBoundOopath(ctx.boundOopath());
+        if (ctx.notElement() != null)         return buildNotElement(ctx.notElement());
+        if (ctx.existsElement() != null)      return buildExistsElement(ctx.existsElement());
+        if (ctx.andElement() != null)         return buildAndElement(ctx.andElement());
+        if (ctx.orElement() != null)          return buildOrElement(ctx.orElement());
+        if (ctx.testElement() != null)        return buildTestElement(ctx.testElement());
+        if (ctx.conditionalBranch() != null)  return buildConditionalBranch(ctx.conditionalBranch());
+        throw new IllegalArgumentException("Unsupported branch item: " + ctx.getText());
     }
 
     /**
