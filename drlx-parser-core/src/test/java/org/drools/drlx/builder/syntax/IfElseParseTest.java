@@ -114,11 +114,11 @@ class IfElseParseTest {
                 e -> assertThat(e.expression()).contains("p.age").contains(">").contains("30"));
         assertThat(b1.children().get(1)).isInstanceOf(PatternIR.class);
 
-        // Branch 2 (final else): AND of [EvalIR("(p.age > 30) == false"), Pattern(j)]
+        // Branch 2 (final else): AND of [EvalIR("!(p.age > 30)"), Pattern(j)]
         GroupElementIR b2 = (GroupElementIR) or.children().get(1);
         assertThat(b2.kind()).isEqualTo(GroupElementIR.Kind.AND);
         assertThat(b2.children().get(0)).isInstanceOfSatisfying(EvalIR.class,
-                e -> assertThat(e.expression()).contains("p.age").contains("30").endsWith("== false"));
+                e -> assertThat(e.expression()).contains("p.age").contains("30").startsWith("!("));
         assertThat(b2.children().get(1)).isInstanceOf(PatternIR.class);
     }
 
@@ -141,20 +141,20 @@ class IfElseParseTest {
         GroupElementIR or = (GroupElementIR) ruleIr.lhs().get(1);
         assertThat(or.children()).hasSize(3);
 
-        // Branch 2: [EvalIR("(p.age > 60) == false"), EvalIR("p.age > 30"), Pattern(a)]
+        // Branch 2: [EvalIR("!(p.age > 60)"), EvalIR("p.age > 30"), Pattern(a)]
         GroupElementIR b2 = (GroupElementIR) or.children().get(1);
         assertThat(b2.children().get(0)).isInstanceOfSatisfying(EvalIR.class,
-                e -> assertThat(e.expression()).contains("60").endsWith("== false"));
+                e -> assertThat(e.expression()).contains("60").startsWith("!("));
         assertThat(b2.children().get(1)).isInstanceOfSatisfying(EvalIR.class,
-                e -> assertThat(e.expression()).contains("30").doesNotEndWith("== false"));
+                e -> assertThat(e.expression()).contains("30").doesNotStartWith("!("));
         assertThat(b2.children().get(2)).isInstanceOf(PatternIR.class);
 
-        // Branch 3 (final else): [EvalIR("(p.age > 60) == false"), EvalIR("(p.age > 30) == false"), Pattern(j)]
+        // Branch 3 (final else): [EvalIR("!(p.age > 60)"), EvalIR("!(p.age > 30)"), Pattern(j)]
         GroupElementIR b3 = (GroupElementIR) or.children().get(2);
         assertThat(b3.children().get(0)).isInstanceOfSatisfying(EvalIR.class,
-                e -> assertThat(e.expression()).contains("60").endsWith("== false"));
+                e -> assertThat(e.expression()).contains("60").startsWith("!("));
         assertThat(b3.children().get(1)).isInstanceOfSatisfying(EvalIR.class,
-                e -> assertThat(e.expression()).contains("30").endsWith("== false"));
+                e -> assertThat(e.expression()).contains("30").startsWith("!("));
         assertThat(b3.children().get(2)).isInstanceOf(PatternIR.class);
     }
 
