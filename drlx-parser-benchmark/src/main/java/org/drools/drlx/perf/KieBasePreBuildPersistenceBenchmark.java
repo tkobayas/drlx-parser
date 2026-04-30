@@ -61,8 +61,8 @@ public class KieBasePreBuildPersistenceBenchmark {
 
     @Setup(Level.Trial)
     public void setup() {
-        drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount, ruleType);
-        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
+        drlSource = DrlxSourceGenerator.generateDrl(ruleCount, ruleType);
+        drlxSource = DrlxSourceGenerator.generateDrlx(ruleCount, ruleType);
     }
 
     @Setup(Level.Invocation)

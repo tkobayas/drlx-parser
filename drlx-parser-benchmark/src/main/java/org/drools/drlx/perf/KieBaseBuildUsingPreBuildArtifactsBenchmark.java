@@ -92,7 +92,7 @@ public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
                     .forEach(File::delete);
         }
 
-        drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
+        drlxSource = DrlxSourceGenerator.generateDrlx(ruleCount, ruleType);
         kjarDir = Files.createTempDirectory("prebuild-kjar-");
         kjarPath = kjarDir.resolve("rules.kjar");
 

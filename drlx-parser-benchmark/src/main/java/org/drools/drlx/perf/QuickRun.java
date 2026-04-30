@@ -31,7 +31,7 @@ public class QuickRun {
 
     private static void runDrl() {
         // ---- DRL
-        String drl = KieBaseBuildNoPersistenceBenchmark.generateDrl(10, "multiJoin");
+        String drl = DrlxSourceGenerator.generateDrl(10, "multiJoin");
         System.out.println(drl);
         KieBase kieBase = new KieHelper()
                 .addContent(drl, ResourceType.DRL)
@@ -46,7 +46,7 @@ public class QuickRun {
 
     private static void runDrlx() throws IOException {
         // ---- DRLX
-        String drl = KieBaseBuildNoPersistenceBenchmark.generateDrlx(10, "multiJoin");
+        String drl = DrlxSourceGenerator.generateDrlx(10, "multiJoin");
         System.out.println(drl);
         DrlxCompiler compiler = DrlxCompiler.noPersist();
         KieBase kieBase = compiler.build(drl);
@@ -61,7 +61,7 @@ public class QuickRun {
     private static void runDrlxTwoStep() throws IOException {
         // ---- DRLX two-step (pre-build + build from pre-compiled artifacts)
         Path preBuildDir = Files.createTempDirectory("quickrun-prebuild-");
-        String drlx = KieBaseBuildNoPersistenceBenchmark.generateDrlx(10, "join");
+        String drlx = DrlxSourceGenerator.generateDrlx(10, "join");
         System.out.println(drlx);
 
         // Step 1: pre-build (compile lambdas and persist metadata/classes to disk)

@@ -26,8 +26,9 @@ drlx-parser/                        (parent POM)
 │        +-- domain/     Test POJOs (Person, Address)
 └── drlx-parser-benchmark/          (JMH benchmarks)
     └── src/main: org.drools.drlx
-         +-- perf/       JMH benchmarks + PreBuildRunner
+         +-- perf/       JMH benchmarks + PreBuildRunner + DrlxSourceGenerator
          +-- domain/     Domain POJOs (Person, Address) -- duplicated from core test
+         +-- ruleunit/   RuleUnit definitions (MyUnit)
 ```
 
 ## DRLX Language
@@ -346,5 +347,7 @@ dependencies out of the core artifact):
 | `KieBasePreBuildPersistenceBenchmark` | Pre-build phase timing |
 | `KieBaseBuildUsingPreBuildArtifactsBenchmark` | Warm build using pre-built artifacts |
 | `PreBuildRunner` | Separate-JVM pre-compilation for UsingPreBuild benchmark |
+| `DrlxSourceGenerator` | Utility for generating DRL/DRLX rule sources (alpha, join, multiJoin, multiAlpha patterns) |
+| `MyUnit` | RuleUnit definition declaring `DataStore<Person>` entry points for benchmark rules |
 
 Build the benchmark fat jar: `mvn package -DskipTests -Pbenchmark -pl drlx-parser-benchmark -am`

@@ -56,13 +56,13 @@ public class PreBuildRunner {
         System.out.println("Pre-building " + ruleCount + " " + ruleType + " rules to: " + drlxOutputDir);
 
         // Pre-build DRLX
-        String drlxSource = KieBaseBuildNoPersistenceBenchmark.generateDrlx(ruleCount, ruleType);
+        String drlxSource = DrlxSourceGenerator.generateDrlx(ruleCount, ruleType);
         DrlxCompiler compiler = new DrlxCompiler(drlxOutputDir);
         compiler.preBuild(drlxSource);
         System.out.println("DRLX pre-build complete.");
 
         // Pre-build executable-model kjar
-        String drlSource = KieBaseBuildNoPersistenceBenchmark.generateDrl(ruleCount, ruleType);
+        String drlSource = DrlxSourceGenerator.generateDrl(ruleCount, ruleType);
         KieServices ks = KieServices.Factory.get();
         KieFileSystem kfs = ks.newKieFileSystem();
         kfs.write("src/main/resources/rules.drl", drlSource);
