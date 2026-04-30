@@ -346,6 +346,7 @@ dependencies out of the core artifact):
 | `KieBaseBuildNoPersistenceBenchmark` | Cold-start build (no pre-built artifacts) |
 | `KieBasePreBuildPersistenceBenchmark` | Pre-build phase timing |
 | `KieBaseBuildUsingPreBuildArtifactsBenchmark` | Warm build using pre-built artifacts |
+| `KieSessionFireAllRulesBenchmark` | Runtime execution (fireAllRules) — isolates execution performance from compilation overhead |
 | `PreBuildRunner` | Separate-JVM pre-compilation for UsingPreBuild benchmark |
 | `DrlxSourceGenerator` | Utility for generating DRL/DRLX rule sources (alpha, join, multiJoin, multiAlpha patterns) |
 | `MyUnit` | RuleUnit definition declaring `DataStore<Person>` entry points for benchmark rules |
