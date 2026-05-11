@@ -48,4 +48,64 @@ class DataStoreCrudTest {
             assertThat(obs.inserted()).containsExactly(alice);
         }
     }
+
+    @Test
+    void removeByObjectViaDataStore() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule RemoveAdults {
+                    Person p : /persons[ age > 30 ],
+                    do { persons.remove(p); }
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            TestDataObserver<Person> obs = TestDataObserver.subscribeTo(unit.persons);
+
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(obs.removed()).hasSize(1);
+        }
+    }
+
+    @Test
+    void consequenceCanReferenceMultipleUnitFields() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule FanOut {
+                    Person p : /persons[ age > 30 ],
+                    do { persons1.add(p); persons2.add(p); }
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            TestDataObserver<Person> obs1 = TestDataObserver.subscribeTo(unit.persons1);
+            TestDataObserver<Person> obs2 = TestDataObserver.subscribeTo(unit.persons2);
+
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(obs1.inserted()).containsExactly(alice);
+            assertThat(obs2.inserted()).containsExactly(alice);
+        }
+    }
 }
