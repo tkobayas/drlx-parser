@@ -1,6 +1,7 @@
 package org.drools.drlx.builder;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
@@ -167,6 +168,18 @@ public class DrlxRuleAstRuntimeBuilder {
                         + "' is a raw DataSource — must be parameterised (e.g. DataStore<Person>)");
             }
             map.put(field.getName(), element);
+        }
+        return map;
+    }
+
+    static Map<String, java.lang.reflect.Type> buildGlobalTypeMap(Class<?> unitClass) {
+        Map<String, java.lang.reflect.Type> map = new LinkedHashMap<>();
+        for (Field field : unitClass.getDeclaredFields()) {
+            int mods = field.getModifiers();
+            if (!Modifier.isPublic(mods) || Modifier.isStatic(mods)) {
+                continue;
+            }
+            map.put(field.getName(), field.getGenericType());
         }
         return map;
     }
