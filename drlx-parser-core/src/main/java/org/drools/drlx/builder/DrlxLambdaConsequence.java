@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
@@ -23,17 +24,29 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper>, Eval
 
     private Map<String, Type<?>> declarationTypes;
 
+    private Set<String> globalNames;
+
     public DrlxLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+        this(consequenceBlock, declarationTypes, Set.of());
+    }
+
+    public DrlxLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, Set<String> globalNames) {
         this.consequenceBlock = consequenceBlock;
         this.declarationTypes = declarationTypes;
+        this.globalNames = globalNames;
 
         initializeLambdaConsequence();
     }
 
     public DrlxLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, Evaluator<Map<String, Object>, Void, String> preCompiledEvaluator) {
+        this(consequenceBlock, declarationTypes, preCompiledEvaluator, Set.of());
+    }
+
+    public DrlxLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, Evaluator<Map<String, Object>, Void, String> preCompiledEvaluator, Set<String> globalNames) {
         this.consequenceBlock = consequenceBlock;
         this.declarationTypes = declarationTypes;
         this.evaluator = preCompiledEvaluator;
+        this.globalNames = globalNames;
     }
 
     public Evaluator<Map<String, Object>, Void, String> getEvaluator() {
@@ -67,6 +80,7 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper>, Eval
         Map<String, Object> vars = new HashMap<>();
         List<String> declarationIds = knowledgeHelper.getMatch().getDeclarationIds();
         declarationIds.forEach(declarationId -> vars.put(declarationId, knowledgeHelper.getMatch().getDeclarationValue(declarationId)));
+        globalNames.forEach(name -> vars.put(name, valueResolver.getGlobal(name)));
 
         evaluator.eval(vars);
     }

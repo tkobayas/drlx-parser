@@ -67,12 +67,15 @@ public class DrlxRuleAstRuntimeBuilder {
                                               parseResult.imports(),
                                               pkg.getTypeResolver());
         Map<String, Class<?>> entryPointTypes = buildEntryPointTypeMap(unitClass);
+        entryPointTypes.keySet().forEach(pkg::addEntryPointId);
+        Map<String, java.lang.reflect.Type> globalTypes = buildGlobalTypeMap(unitClass);
+        globalTypes.forEach(pkg::addGlobal);
 
         Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
         registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
 
         parseResult.rules().forEach(rule ->
-                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass)));
+                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass, globalTypes)));
 
         List<KiePackage> out = new ArrayList<>();
         out.add(pkg);
@@ -184,6 +187,16 @@ public class DrlxRuleAstRuntimeBuilder {
         return map;
     }
 
+    private static Class<?> erasure(java.lang.reflect.Type t) {
+        if (t instanceof Class<?> c) {
+            return c;
+        }
+        if (t instanceof ParameterizedType pt && pt.getRawType() instanceof Class<?> c) {
+            return c;
+        }
+        return null;
+    }
+
     private static Class<?> resolveDataSourceTypeArg(java.lang.reflect.Type type) {
         if (!(type instanceof ParameterizedType pt)) {
             return null;
@@ -273,7 +286,8 @@ public class DrlxRuleAstRuntimeBuilder {
     private RuleImpl buildRule(RuleIR parseResult,
                                TypeResolver typeResolver,
                                Map<String, Class<?>> entryPointTypes,
-                               Class<?> unitClass) {
+                               Class<?> unitClass,
+                               Map<String, java.lang.reflect.Type> globalTypes) {
         lambdaCompiler.beginRule(parseResult.name());
 
         RuleImpl rule = new RuleImpl(parseResult.name());
@@ -287,7 +301,13 @@ public class DrlxRuleAstRuntimeBuilder {
 
         if (parseResult.rhs() != null) {
             Map<String, Type<?>> types = lambdaCompiler.getTypeMap(root);
-            rule.setConsequence(lambdaCompiler.createLambdaConsequence(parseResult.rhs().block(), types));
+            for (Map.Entry<String, java.lang.reflect.Type> e : globalTypes.entrySet()) {
+                Class<?> raw = erasure(e.getValue());
+                if (raw != null) {
+                    types.put(e.getKey(), Type.type(raw));
+                }
+            }
+            rule.setConsequence(lambdaCompiler.createLambdaConsequence(parseResult.rhs().block(), types, globalTypes.keySet()));
         }
 
         rule.setLhs(root);

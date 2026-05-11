@@ -247,14 +247,18 @@ public class DrlxLambdaCompiler {
     }
 
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+        return createLambdaConsequence(consequenceBlock, declarationTypes, java.util.Set.of());
+    }
+
+    public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, java.util.Set<String> globalNames) {
         int counter = lambdaCounter++;
         @SuppressWarnings("unchecked")
         Evaluator<Map<String, Object>, Void, String> preCompiled =
                 (Evaluator<Map<String, Object>, Void, String>) tryLoadPreCompiled(counter, consequenceBlock, "consequence");
         if (preCompiled != null) {
-            return new DrlxLambdaConsequence(consequenceBlock, declarationTypes, preCompiled);
+            return new DrlxLambdaConsequence(consequenceBlock, declarationTypes, preCompiled, globalNames);
         }
-        DrlxLambdaConsequence consequence = createBatchConsequence(consequenceBlock, declarationTypes);
+        DrlxLambdaConsequence consequence = createBatchConsequence(consequenceBlock, declarationTypes, globalNames);
         onLambdaCreated(counter, consequenceBlock);
         return consequence;
     }
@@ -359,7 +363,7 @@ public class DrlxLambdaCompiler {
         return constraint;
     }
 
-    private DrlxLambdaConsequence createBatchConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
+    private DrlxLambdaConsequence createBatchConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes, java.util.Set<String> globalNames) {
         @SuppressWarnings({"unchecked", "rawtypes"})
         CompilerParameters<Map<String, Object>, Void, String> evalInfo =
                 (CompilerParameters) MVEL.<Object>map(org.mvel3.transpiler.context.Declaration.from(declarationTypes))
@@ -370,7 +374,7 @@ public class DrlxLambdaCompiler {
                         .generatedClassName("GeneratorEvaluator__")
                         .build();
         MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
-        DrlxLambdaConsequence consequence = new DrlxLambdaConsequence(consequenceBlock, declarationTypes, (Evaluator<Map<String, Object>, Void, String>) null);
+        DrlxLambdaConsequence consequence = new DrlxLambdaConsequence(consequenceBlock, declarationTypes, (Evaluator<Map<String, Object>, Void, String>) null, globalNames);
         pendingLambdas.add(new PendingLambda(handle, consequence));
         return consequence;
     }
