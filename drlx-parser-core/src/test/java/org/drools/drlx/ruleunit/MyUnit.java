@@ -9,21 +9,23 @@ import org.drools.drlx.domain.Person;
 import org.drools.drlx.domain.PlainLocation;
 import org.drools.drlx.domain.ReactiveEmployee;
 import org.drools.drlx.domain.Vehicle;
+import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
+import org.drools.ruleunits.api.RuleUnitData;
 
-public class MyUnit {
-    public DataStore<Person> persons;
-    public DataStore<Address> addresses;
-    public DataStore<Person> seniors;
-    public DataStore<Person> juniors;
-    public DataStore<Location> locations;
-    public DataStore<Person> persons1;
-    public DataStore<Person> persons2;
-    public DataStore<Person> persons3;
-    public DataStore<ChildPositioned> childPositionedThings;
-    public DataStore<DuplicatePositionLocation> duplicateLocations;
-    public DataStore<PlainLocation> plainLocations;
-    public DataStore<Vehicle> objects;
-    public DataStore<Order> orders;
-    public DataStore<ReactiveEmployee> reactiveEmployees;
+public class MyUnit implements RuleUnitData {
+    public DataStore<Person> persons = DataSource.createStore();
+    public DataStore<Address> addresses = DataSource.createStore();
+    public DataStore<Person> seniors = DataSource.createStore();
+    public DataStore<Person> juniors = DataSource.createStore();
+    public DataStore<Location> locations = DataSource.createStore();
+    public DataStore<Person> persons1 = DataSource.createStore();
+    public DataStore<Person> persons2 = DataSource.createStore();
+    public DataStore<Person> persons3 = DataSource.createStore();
+    public DataStore<ChildPositioned> childPositionedThings = DataSource.createStore();
+    public DataStore<DuplicatePositionLocation> duplicateLocations = DataSource.createStore();
+    public DataStore<PlainLocation> plainLocations = DataSource.createStore();
+    public DataStore<Vehicle> objects = DataSource.createStore();
+    public DataStore<Order> orders = DataSource.createStore();
+    public DataStore<ReactiveEmployee> reactiveEmployees = DataSource.createStore();
 }
