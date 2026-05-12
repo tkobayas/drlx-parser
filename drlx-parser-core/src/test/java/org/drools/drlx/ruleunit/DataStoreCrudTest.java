@@ -7,6 +7,7 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * End-to-end tests for issues #37 and #45 (DataStore CRUD): each rule
@@ -140,6 +141,33 @@ class DataStoreCrudTest {
             assertThat(instance.fire()).isEqualTo(1);
             assertThat(obs.updated()).hasSize(1);
             assertThat(alice.getAge()).isEqualTo(0);
+        }
+    }
+
+    @Test
+    void updateOfMissingFactThrows() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule UpdateMissing {
+                    Person p : /persons[ age > 30 ],
+                    do { Person stranger = new Person("Stranger", 99); persons.update(stranger); }
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            assertThatThrownBy(instance::fire)
+                    .hasMessageContaining("DataStore 'persons' has no DataHandle for the given fact");
         }
     }
 }
