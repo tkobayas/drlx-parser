@@ -9,11 +9,12 @@ import org.kie.api.KieBase;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-end tests for issue #37 (DataStore CRUD): each rule consequence
- * calls a {@code DataStore} method on a unit-field reference (e.g.
- * {@code persons1.add(p)}), and {@link DrlxRuleUnitInstance} provides the
- * runtime surface. The class is intentionally named after the broader
- * #37 scope; it will grow as additional sub-pieces (update, with-block) land.
+ * End-to-end tests for issues #37 and #45 (DataStore CRUD): each rule
+ * consequence calls a {@code DataStore} method on a unit-field reference
+ * (e.g. {@code persons1.add(p)}, {@code persons.update(p)}), and
+ * {@link DrlxRuleUnitInstance} provides the runtime surface. The class
+ * covers add / remove(T) / update(T); the with-block compact update
+ * (#34) is not yet covered.
  */
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DataStoreCrudTest {
@@ -106,6 +107,39 @@ class DataStoreCrudTest {
             assertThat(instance.fire()).isEqualTo(1);
             assertThat(obs1.inserted()).containsExactly(alice);
             assertThat(obs2.inserted()).containsExactly(alice);
+        }
+    }
+
+    @Test
+    void updateByObjectViaDataStore() {
+        // Reset age so the pattern no longer matches after the update — otherwise
+        // the rule re-fires in an infinite loop (the update notifies the engine,
+        // age > 30 is still true, etc.).
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule ResetAdults {
+                    Person p : /persons[ age > 30 ],
+                    do { p.setAge(0); persons.update(p); }
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            TestDataObserver<Person> obs = TestDataObserver.subscribeTo(unit.persons);
+
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(obs.updated()).hasSize(1);
+            assertThat(alice.getAge()).isEqualTo(0);
         }
     }
 }

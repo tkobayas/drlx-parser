@@ -35,7 +35,7 @@ class DataStoreUpdateRewriterTest {
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
         assertThat(result).contains("alerts.update(");
-        assertThat(result).contains("java.util.Objects.requireNonNull(alerts.lookup(t)");
+        assertThat(result).contains("java.util.Objects.requireNonNull(org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
         assertThat(result).contains("DataStore 'alerts' has no DataHandle");
         assertThat(result.replaceAll("\\s+", "")).contains(",t);");
     }
@@ -45,7 +45,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(this.t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("alerts.lookup(this.t)");
+        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, this.t)");
         assertThat(result.replaceAll("\\s+", "")).contains(",this.t);");
     }
 

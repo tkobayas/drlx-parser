@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
@@ -36,7 +37,10 @@ import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.ruleunits.api.DataSource;
+import org.drools.ruleunits.api.DataStore;
 import org.drools.util.TypeResolver;
+
+import com.github.javaparser.JavaParser;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.Type;
 
@@ -71,11 +75,20 @@ public class DrlxRuleAstRuntimeBuilder {
         Map<String, java.lang.reflect.Type> globalTypes = buildGlobalTypeMap(unitClass);
         globalTypes.forEach(pkg::addGlobal);
 
+        Set<String> dataStoreGlobalNames = globalTypes.entrySet().stream()
+                .filter(e -> {
+                    Class<?> raw = erasure(e.getValue());
+                    return raw != null && DataStore.class.isAssignableFrom(raw);
+                })
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toSet());
+        DataStoreUpdateRewriter updateRewriter = new DataStoreUpdateRewriter(new JavaParser());
+
         Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
         registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
 
         parseResult.rules().forEach(rule ->
-                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass, globalTypes)));
+                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass, globalTypes, dataStoreGlobalNames, updateRewriter)));
 
         List<KiePackage> out = new ArrayList<>();
         out.add(pkg);
@@ -287,7 +300,9 @@ public class DrlxRuleAstRuntimeBuilder {
                                TypeResolver typeResolver,
                                Map<String, Class<?>> entryPointTypes,
                                Class<?> unitClass,
-                               Map<String, java.lang.reflect.Type> globalTypes) {
+                               Map<String, java.lang.reflect.Type> globalTypes,
+                               Set<String> dataStoreGlobalNames,
+                               DataStoreUpdateRewriter updateRewriter) {
         lambdaCompiler.beginRule(parseResult.name());
 
         RuleImpl rule = new RuleImpl(parseResult.name());
@@ -307,7 +322,8 @@ public class DrlxRuleAstRuntimeBuilder {
                     types.put(e.getKey(), Type.type(raw));
                 }
             }
-            rule.setConsequence(lambdaCompiler.createLambdaConsequence(parseResult.rhs().block(), types, globalTypes.keySet()));
+            String body = updateRewriter.rewrite(parseResult.rhs().block(), dataStoreGlobalNames);
+            rule.setConsequence(lambdaCompiler.createLambdaConsequence(body, types, globalTypes.keySet()));
         }
 
         rule.setLhs(root);

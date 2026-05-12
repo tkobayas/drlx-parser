@@ -101,7 +101,8 @@ public final class DataStoreUpdateRewriter {
         String message = "\"DataStore '" + globalName + "' has no DataHandle for the given fact\"";
         Expression requireNonNullCall = StaticJavaParser.parseExpression(
                 "java.util.Objects.requireNonNull("
-                        + globalName + ".lookup(" + argText + "), "
+                        + "org.drools.drlx.builder.DataStoreSupport.lookup("
+                        + globalName + ", " + argText + "), "
                         + message + ")");
 
         NodeList<Expression> newArgs = new NodeList<>();
