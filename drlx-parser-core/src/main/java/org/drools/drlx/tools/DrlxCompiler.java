@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import org.drools.drlx.builder.DrlxLambdaMetadata;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.kie.api.KieBase;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +47,7 @@ public class DrlxCompiler {
      * {@code mvel3.compiler.lambda.persistence.path}).
      */
     public DrlxCompiler() {
-        this(LambdaRegistry.DEFAULT_PERSISTENCE_PATH);
+        this(LambdaRuntime.defaultPersistencePath());
     }
 
     /**
@@ -73,12 +73,12 @@ public class DrlxCompiler {
      * <p>Requires the JVM-wide system property
      * {@code -Dmvel3.compiler.lambda.persistence=false} to be set before class loading.
      *
-     * @throws IllegalStateException if {@code LambdaRegistry.PERSISTENCE_ENABLED} is {@code true}
+     * @throws IllegalStateException if {@code LambdaRuntime.isPersistenceEnabled()} is {@code true}
      */
     public static DrlxCompiler noPersist() {
-        if (LambdaRegistry.PERSISTENCE_ENABLED) {
+        if (LambdaRuntime.isPersistenceEnabled()) {
             throw new IllegalStateException(
-                    "Cannot create no-persist DrlxCompiler: LambdaRegistry.PERSISTENCE_ENABLED is true. " +
+                    "Cannot create no-persist DrlxCompiler: LambdaRuntime.isPersistenceEnabled() is true. " +
                     "Set -Dmvel3.compiler.lambda.persistence=false before JVM startup.");
         }
         return new DrlxCompiler(false);

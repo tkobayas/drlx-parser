@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  *
  * <p>This test class must be run in a JVM with
  * {@code -Dmvel3.compiler.lambda.persistence=false} so that
- * {@code LambdaRegistry.PERSISTENCE_ENABLED} is {@code false}.
+ * {@code LambdaRuntime.isPersistenceEnabled()} is {@code false}.
  * The Maven surefire plugin is configured to run this class in a separate execution
  * with the required system property.
  */
@@ -94,7 +94,7 @@ class DrlxCompilerNoPersistTest {
         DrlxCompiler compiler = DrlxCompiler.noPersist();
         compiler.build(SINGLE_RULE);
 
-        Path defaultPath = LambdaRegistry.DEFAULT_PERSISTENCE_PATH;
+        Path defaultPath = LambdaRuntime.defaultPersistencePath();
         if (Files.exists(defaultPath)) {
             try (Stream<Path> files = Files.walk(defaultPath)) {
                 long classFileCount = files

@@ -24,7 +24,7 @@ import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.EntryPoint;
 import org.mvel3.ClassManager;
 import org.mvel3.MVELBatchCompiler;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,7 +75,7 @@ class EvalIRBuilderTest {
     }
 
     private static KieBase buildFromIr(CompilationUnitIR ast) {
-        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+        Path persistDir = LambdaRuntime.isPersistenceEnabled() ? LambdaRuntime.defaultPersistencePath() : null;
         MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
         DrlxLambdaCompiler lambdaCompiler = new DrlxLambdaCompiler(batchCompiler);
         DrlxRuleAstRuntimeBuilder builder = new DrlxRuleAstRuntimeBuilder(lambdaCompiler);

@@ -20,11 +20,10 @@ import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
 import org.kie.api.runtime.rule.EntryPoint;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mvel3.lambdaextractor.LambdaRegistry.DEFAULT_PERSISTENCE_PATH;
 
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DrlxRuleBuilderTest {
@@ -86,7 +85,7 @@ class DrlxRuleBuilderTest {
                 }
                 """; // placed /persons after /addresses to avoid node sharing, because this test is about lambda sharing
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxRuleBuilder builder = new DrlxRuleBuilder();
         KieBase kieBase = builder.build(rule);
@@ -176,10 +175,10 @@ class DrlxRuleBuilderTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxRuleBuilder builder = new DrlxRuleBuilder();
-        DrlxLambdaMetadata metadata = builder.preBuild(rule, DEFAULT_PERSISTENCE_PATH);
+        DrlxLambdaMetadata metadata = builder.preBuild(rule, LambdaRuntime.defaultPersistencePath());
 
         // CheckAge1: constraint(age > 18) -> 0, consequence(System.out.println(p);) -> 1
         // CheckAge2: constraint(city == "Tokyo") -> 0, constraint(age > 18) -> 1, consequence(System.out.println(p);) -> 2
@@ -194,7 +193,7 @@ class DrlxRuleBuilderTest {
         assertThat(metadata.get("CheckAge2", 2)).isNotNull();
 
         // metadata file exists on disk
-        Path metadataFile = DrlxLambdaMetadata.metadataFilePath(DEFAULT_PERSISTENCE_PATH);
+        Path metadataFile = DrlxLambdaMetadata.metadataFilePath(LambdaRuntime.defaultPersistencePath());
         assertThat(Files.exists(metadataFile)).isTrue();
     }
 
@@ -221,12 +220,12 @@ class DrlxRuleBuilderTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxRuleBuilder builder = new DrlxRuleBuilder();
 
         // Step 1: pre-build
-        DrlxLambdaMetadata metadata = builder.preBuild(rule, DEFAULT_PERSISTENCE_PATH);
+        DrlxLambdaMetadata metadata = builder.preBuild(rule, LambdaRuntime.defaultPersistencePath());
 
         // Step 2: runtime build with pre-compiled metadata
         KieBase kieBase = builder.build(rule, metadata);
@@ -292,7 +291,7 @@ class DrlxRuleBuilderTest {
     }
 
     private List<Path> listClassFiles() {
-        try (Stream<Path> walk = Files.walk(DEFAULT_PERSISTENCE_PATH)) {
+        try (Stream<Path> walk = Files.walk(LambdaRuntime.defaultPersistencePath())) {
             return walk
                     .filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".class"))

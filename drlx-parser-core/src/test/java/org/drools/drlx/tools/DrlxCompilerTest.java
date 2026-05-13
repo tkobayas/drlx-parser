@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.KieSession;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,7 +42,7 @@ class DrlxCompilerTest {
                     }
                     """;
 
-            LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+            LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
             Path outputDir = Files.createTempDirectory("drlx-rule-ast-");
             DrlxCompiler compiler = new DrlxCompiler(outputDir);
@@ -98,7 +98,7 @@ class DrlxCompilerTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxCompiler compiler = new DrlxCompiler();
 
@@ -142,7 +142,7 @@ class DrlxCompilerTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxCompiler compiler = new DrlxCompiler();
 
@@ -183,7 +183,7 @@ class DrlxCompilerTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxCompiler compiler = new DrlxCompiler();
 
@@ -250,7 +250,7 @@ class DrlxCompilerTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         DrlxCompiler compiler = new DrlxCompiler();
 
@@ -299,7 +299,7 @@ class DrlxCompilerTest {
                 }
                 """;
 
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
 
         // build without pre-build — should compile from scratch
         DrlxCompiler compiler = new DrlxCompiler();

@@ -10,7 +10,7 @@ import org.kie.api.KieBase;
 import org.kie.api.io.ResourceType;
 import org.kie.api.runtime.KieSession;
 import org.kie.internal.utils.KieHelper;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -59,7 +59,7 @@ public class KieBaseBuildNoPersistenceBenchmark {
 
     @Setup(Level.Invocation)
     public void resetState() {
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
     }
 
     // This method can be used to verify that the built KieBase is valid

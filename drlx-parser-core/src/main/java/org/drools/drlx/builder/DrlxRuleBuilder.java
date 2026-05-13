@@ -21,7 +21,7 @@ import org.kie.api.KieBase;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.ClassManager;
 import org.mvel3.MVELBatchCompiler;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 
 /**
  * Builder that creates KieBase from DRLX source through a single pipeline:
@@ -125,7 +125,7 @@ public class DrlxRuleBuilder {
     }
 
     private static DrlxLambdaCompiler newLambdaCompiler() {
-        Path persistDir = LambdaRegistry.PERSISTENCE_ENABLED ? LambdaRegistry.DEFAULT_PERSISTENCE_PATH : null;
+        Path persistDir = LambdaRuntime.isPersistenceEnabled() ? LambdaRuntime.defaultPersistencePath() : null;
         MVELBatchCompiler batchCompiler = new MVELBatchCompiler(new ClassManager(), persistDir);
         return new DrlxLambdaCompiler(batchCompiler);
     }

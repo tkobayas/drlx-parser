@@ -16,7 +16,7 @@ import org.drools.modelcompiler.CanonicalKieModule;
 import org.kie.api.KieServices;
 import org.kie.api.builder.KieFileSystem;
 import org.kie.internal.builder.InternalKieBuilder;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.LambdaRuntime;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
@@ -68,7 +68,7 @@ public class KieBasePreBuildPersistenceBenchmark {
     @Setup(Level.Invocation)
     public void setupInvocation() throws IOException {
         tempDir = Files.createTempDirectory("prebuild-bench-");
-        LambdaRegistry.INSTANCE.resetAndRemoveAllPersistedFiles();
+        LambdaRuntime.getInstance().resetAndRemoveAllPersistedFiles();
     }
 
     @TearDown(Level.Invocation)

@@ -62,8 +62,8 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 @Fork(value = 5)
 public class KieBaseBuildUsingPreBuildArtifactsBenchmark {
 
-    // Use the well-known default path directly to avoid triggering LambdaRegistry class init
-    // before pre-build artifacts exist. LambdaRegistry must initialize AFTER @Setup completes.
+    // Use the well-known default path directly to avoid triggering LambdaRuntime class init
+    // before pre-build artifacts exist. LambdaRuntime must initialize AFTER @Setup completes.
     private static final Path DEFAULT_OUTPUT_DIR = Path.of(
             System.getProperty("mvel3.compiler.lambda.persistence.path", "target/generated-classes/mvel"));
 
