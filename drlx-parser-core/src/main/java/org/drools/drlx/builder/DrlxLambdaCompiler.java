@@ -4,11 +4,8 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.lang.reflect.Field;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -28,7 +25,8 @@ import org.mvel3.Evaluator;
 import org.mvel3.MVEL;
 import org.mvel3.MVELBatchCompiler;
 import org.mvel3.Type;
-import org.mvel3.lambdaextractor.LambdaRegistry;
+import org.mvel3.lambdaextractor.ArtifactRef;
+import org.mvel3.lambdaextractor.LambdaArtifactLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -305,7 +303,7 @@ public class DrlxLambdaCompiler {
                     null);
         }
         try {
-            Object evaluator = loadPreCompiledEvaluator(entry.fqn(), entry.physicalId());
+            Object evaluator = loadPreCompiledEvaluator(entry.toArtifactRef());
             LOG.info("Loaded pre-compiled {} evaluator for {}.{}", kind, currentRuleName, counter);
             return evaluator;
         } catch (Exception e) {
@@ -379,20 +377,14 @@ public class DrlxLambdaCompiler {
         return consequence;
     }
 
-    protected Object loadPreCompiledEvaluator(String fqn, int physicalId) throws Exception {
-        Class<?> clazz = loadedClassCache.get(fqn);
+    protected Object loadPreCompiledEvaluator(ArtifactRef ref) throws Exception {
+        Class<?> clazz = loadedClassCache.get(ref.fqn());
         if (clazz == null) {
-            Path classFilePath = LambdaRegistry.INSTANCE.getPhysicalPath(physicalId);
-            if (classFilePath == null) {
-                throw new IllegalStateException("No persisted class file for physicalId " + physicalId);
-            }
-            byte[] bytes = Files.readAllBytes(classFilePath);
             if (preBuildClassManager == null) {
                 preBuildClassManager = new ClassManager();
             }
-            preBuildClassManager.define(Collections.singletonMap(fqn, bytes));
-            clazz = preBuildClassManager.getClass(fqn);
-            loadedClassCache.put(fqn, clazz);
+            clazz = LambdaArtifactLoader.loadOrDefinePersistedClass(preBuildClassManager, ref);
+            loadedClassCache.put(ref.fqn(), clazz);
         }
         return clazz.getConstructor().newInstance();
     }
