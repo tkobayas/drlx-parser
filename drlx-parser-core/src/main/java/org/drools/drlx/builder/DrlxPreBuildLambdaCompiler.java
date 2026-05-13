@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.mvel3.MVELBatchCompiler;
+import org.mvel3.lambdaextractor.ArtifactRef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,6 +12,9 @@ import org.slf4j.LoggerFactory;
  * Pre-build lambda compiler that extends {@link DrlxLambdaCompiler}.
  * Records metadata for each compiled lambda via the {@link #onLambdaCreated}
  * hook so that runtime builds can bypass MVEL compilation.
+ * <p>
+ * Records {@link ArtifactRef} (fqn + classFile) per lambda; no {@code physicalId}
+ * crosses the DRLX persistence boundary.
  */
 public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
 
@@ -45,11 +49,10 @@ public class DrlxPreBuildLambdaCompiler extends DrlxLambdaCompiler {
         super.compileBatch(classLoader);
 
         for (PendingPreBuildInfo info : pendingPreBuildInfos) {
-            MVELBatchCompiler.LambdaHandle handle = info.handle();
-            String fqn = batchCompiler.getFqn(handle);
-            int physicalId = batchCompiler.getPhysicalId(handle);
-            metadata.put(info.ruleName(), info.counterId(), fqn, physicalId, info.expression());
-            LOG.info("Recorded pre-build metadata: {}.{} -> {} (physicalId={})", info.ruleName(), info.counterId(), fqn, physicalId);
+            ArtifactRef ref = batchCompiler.getArtifactRef(info.handle());
+            metadata.put(info.ruleName(), info.counterId(), ref, info.expression());
+            LOG.info("Recorded pre-build metadata: {}.{} -> {} (classFile={})",
+                    info.ruleName(), info.counterId(), ref.fqn(), ref.classFile());
         }
 
         pendingPreBuildInfos.clear();
