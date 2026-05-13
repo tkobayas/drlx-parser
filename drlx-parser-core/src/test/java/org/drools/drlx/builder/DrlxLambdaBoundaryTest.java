@@ -77,6 +77,24 @@ class DrlxLambdaBoundaryTest {
     }
 
     @Test
+    void D3b_metadata_invalidClassFilePath_throws(@TempDir Path tmp) throws IOException {
+        // The backslash-u-0000 escape in the Properties file decodes to a NUL
+        // byte. Path.of() rejects that with the unchecked InvalidPathException,
+        // bypassing both the typed InvalidDrlxLambdaMetadataException and the
+        // DrlxMetadataMismatchMode routing that consumers depend on.
+        Files.writeString(DrlxLambdaMetadata.metadataFilePath(tmp),
+                String.join("\n",
+                        "format.version=2",
+                        "rule.X.0.expression=age > 18",
+                        "rule.X.0.fqn=org.mvel3.Gen",
+                        "rule.X.0.classFile=foo\\u0000bar.class",
+                        ""));
+        assertThatThrownBy(() -> DrlxLambdaMetadata.load(DrlxLambdaMetadata.metadataFilePath(tmp)))
+                .isInstanceOf(InvalidDrlxLambdaMetadataException.class)
+                .hasMessageContaining("classFile");
+    }
+
+    @Test
     void D4_metadata_staleClassFile_throws_inLoader(@TempDir Path tmp) {
         ArtifactRef stale = new ArtifactRef("org.example.Missing", tmp.resolve("does-not-exist.class"));
         assertThatThrownBy(() -> LambdaArtifactLoader.loadOrDefinePersistedClass(new ClassManager(), stale))

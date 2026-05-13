@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -92,7 +93,14 @@ public class DrlxLambdaMetadata {
             String expression = required(props, base + ".expression");
             String fqn = required(props, base + ".fqn");
             String classFile = required(props, base + ".classFile");
-            metadata.entries.put(base, new LambdaEntry(fqn, Path.of(classFile), expression));
+            Path classFilePath;
+            try {
+                classFilePath = Path.of(classFile);
+            } catch (InvalidPathException e) {
+                throw new InvalidDrlxLambdaMetadataException(
+                        "Invalid classFile path for " + base + ": " + classFile, e);
+            }
+            metadata.entries.put(base, new LambdaEntry(fqn, classFilePath, expression));
         }
         return metadata;
     }
