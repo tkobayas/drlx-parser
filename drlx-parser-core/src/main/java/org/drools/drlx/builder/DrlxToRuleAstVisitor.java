@@ -8,6 +8,8 @@ import java.util.Map;
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.TokenStream;
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
@@ -89,8 +91,26 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<RuleAnnotationIR> annotations = buildRuleAnnotations(ctx, annotationImports);
         List<LhsItemIR> lhs = new ArrayList<>();
         ConsequenceIR rhs = null;
+        // Fold state: a pending PatternIR and any AccumulatorIRs it has accrued.
+        // Adjacent `pattern, accumulateItem(s)` collapse into one AccumulatePatternIR;
+        // the fold is inline so no transient LhsItemIR subtype is introduced.
+        PatternIR pendingPattern = null;
+        List<AccumulatorIR> pendingAccs = new ArrayList<>();
         if (ctx.ruleBody() != null) {
             for (DrlxParser.RuleItemContext itemCtx : ctx.ruleBody().ruleItem()) {
+                if (itemCtx.accumulateItem() != null) {
+                    if (pendingPattern == null) {
+                        throw new RuntimeException(
+                                "accumulate item without a preceding pattern in rule '" + name + "'");
+                    }
+                    pendingAccs.add(buildAccumulator(itemCtx.accumulateItem()));
+                    continue;
+                }
+                // Any non-accumulate item flushes the pending pattern (with or without accs).
+                flushPending(lhs, pendingPattern, pendingAccs);
+                pendingPattern = null;
+                pendingAccs = new ArrayList<>();
+
                 if (itemCtx.ruleConsequence() != null) {
                     if (rhs != null) {
                         throw new RuntimeException(
@@ -98,7 +118,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     }
                     rhs = new ConsequenceIR(extractConsequence(itemCtx.ruleConsequence()));
                 } else if (itemCtx.rulePattern() != null) {
-                    lhs.add(buildPattern(itemCtx.rulePattern()));
+                    pendingPattern = buildPattern(itemCtx.rulePattern());
                 } else if (itemCtx.notElement() != null) {
                     lhs.add(buildNotElement(itemCtx.notElement()));
                 } else if (itemCtx.existsElement() != null) {
@@ -115,6 +135,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
             }
+            flushPending(lhs, pendingPattern, pendingAccs);
         }
         return new RuleIR(name, annotations, List.copyOf(lhs), rhs);
     }
@@ -239,6 +260,41 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private EvalIR buildTestElement(DrlxParser.TestElementContext ctx) {
         String expression = getText(ctx.expression());
         return new EvalIR(expression, extractIdentifiers(expression));
+    }
+
+    private AccumulatorIR buildAccumulator(DrlxParser.AccumulateItemContext ctx) {
+        String typeName = ctx.VAR() != null
+                ? "var"
+                : ctx.typeType().getText();
+        String bindName = ctx.identifier().getText();
+        DrlxParser.AccumulateCallContext call = ctx.accumulateCall();
+        String functionName = call.qualifiedName().getText();
+        List<String> args = call.expression() == null || call.expression().isEmpty()
+                ? List.of()
+                : call.expression().stream()
+                      .map(this::getText)
+                      .toList();
+        java.util.LinkedHashSet<String> refs = new java.util.LinkedHashSet<>();
+        for (String a : args) {
+            refs.addAll(extractIdentifiers(a));
+        }
+        return new AccumulatorIR(typeName, bindName, functionName, args, List.copyOf(refs));
+    }
+
+    private static void flushPending(List<LhsItemIR> lhs,
+                                     PatternIR pending,
+                                     List<AccumulatorIR> accs) {
+        if (pending == null) {
+            if (!accs.isEmpty()) {
+                throw new IllegalStateException("accumulator collected without a pending pattern");
+            }
+            return;
+        }
+        if (accs.isEmpty()) {
+            lhs.add(pending);
+        } else {
+            lhs.add(new AccumulatePatternIR(pending, List.copyOf(accs)));
+        }
     }
 
     /**
