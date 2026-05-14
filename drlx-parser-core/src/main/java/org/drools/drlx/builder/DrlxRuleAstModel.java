@@ -28,8 +28,8 @@ public final class DrlxRuleAstModel {
         public enum Kind { SALIENCE, DESCRIPTION }
     }
 
-    /** LHS tree node — pattern leaf, nested group element, or eval-style guard. */
-    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR {
+    /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
+    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR {
     }
 
     public record PatternIR(String typeName,
@@ -56,6 +56,24 @@ public final class DrlxRuleAstModel {
 
     public record EvalIR(String expression, List<String> referencedBindings) implements LhsItemIR {
         public EvalIR {
+            referencedBindings = List.copyOf(referencedBindings);
+        }
+    }
+
+    public record AccumulatePatternIR(PatternIR source,
+                                      List<AccumulatorIR> accumulators) implements LhsItemIR {
+        public AccumulatePatternIR {
+            accumulators = List.copyOf(accumulators);
+        }
+    }
+
+    public record AccumulatorIR(String resultTypeName,
+                                String resultBindName,
+                                String functionName,
+                                List<String> argExpressions,
+                                List<String> referencedBindings) {
+        public AccumulatorIR {
+            argExpressions     = List.copyOf(argExpressions);
             referencedBindings = List.copyOf(referencedBindings);
         }
     }
