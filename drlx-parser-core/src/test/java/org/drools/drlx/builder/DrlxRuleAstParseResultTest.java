@@ -117,4 +117,35 @@ class DrlxRuleAstParseResultTest {
         PatternIR back = (PatternIR) DrlxRuleAstParseResult.fromProtoLhs(lhsItem, Path.of("test"));
         assertThat(back.watchedProperties()).isEmpty();
     }
+
+    @Test
+    void accumulatePatternIrRoundTripsThroughProto() {
+        DrlxRuleAstModel.PatternIR src = new DrlxRuleAstModel.PatternIR(
+                "var", "p", "persons",
+                List.of(), null, List.of(), false, List.of());
+        DrlxRuleAstModel.AccumulatorIR acc1 = new DrlxRuleAstModel.AccumulatorIR(
+                "var", "avgAge", "avg", List.of("p.age"), List.of("p"));
+        DrlxRuleAstModel.AccumulatorIR acc2 = new DrlxRuleAstModel.AccumulatorIR(
+                "long", "n", "count", List.of(), List.of());
+        DrlxRuleAstModel.AccumulatePatternIR original =
+                new DrlxRuleAstModel.AccumulatePatternIR(src, List.of(acc1, acc2));
+
+        DrlxRuleAstProto.LhsItemParseResult proto = DrlxRuleAstParseResult.toProtoLhs(original);
+        LhsItemIR roundTripped = DrlxRuleAstParseResult.fromProtoLhs(proto, Path.of("test.drlx"));
+
+        assertThat(roundTripped).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
+        DrlxRuleAstModel.AccumulatePatternIR back =
+                (DrlxRuleAstModel.AccumulatePatternIR) roundTripped;
+        assertThat(back.source().bindName()).isEqualTo("p");
+        assertThat(back.accumulators()).hasSize(2);
+        assertThat(back.accumulators().get(0).functionName()).isEqualTo("avg");
+        assertThat(back.accumulators().get(0).resultBindName()).isEqualTo("avgAge");
+        assertThat(back.accumulators().get(0).resultTypeName()).isEqualTo("var");
+        assertThat(back.accumulators().get(0).argExpressions()).containsExactly("p.age");
+        assertThat(back.accumulators().get(0).referencedBindings()).containsExactly("p");
+        assertThat(back.accumulators().get(1).functionName()).isEqualTo("count");
+        assertThat(back.accumulators().get(1).resultTypeName()).isEqualTo("long");
+        assertThat(back.accumulators().get(1).argExpressions()).isEmpty();
+        assertThat(back.accumulators().get(1).referencedBindings()).isEmpty();
+    }
 }

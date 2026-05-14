@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
@@ -98,19 +100,7 @@ public final class DrlxRuleAstParseResult {
 
     static LhsItemIR fromProtoLhs(DrlxRuleAstProto.LhsItemParseResult item, Path file) {
         return switch (item.getKindCase()) {
-            case PATTERN -> {
-                DrlxRuleAstProto.PatternParseResult pattern = item.getPattern();
-                String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
-                yield new PatternIR(
-                        pattern.getTypeName(),
-                        pattern.getBindName(),
-                        pattern.getEntryPoint(),
-                        List.copyOf(pattern.getConditionsList()),
-                        castTypeName,
-                        List.copyOf(pattern.getPositionalArgsList()),
-                        pattern.getPassive(),
-                        List.copyOf(pattern.getWatchedPropertiesList()));
-            }
+            case PATTERN -> patternFromProto(item.getPattern());
             case GROUP -> {
                 DrlxRuleAstProto.GroupElementParseResult group = item.getGroup();
                 List<LhsItemIR> children = new ArrayList<>(group.getChildrenCount());
@@ -125,8 +115,35 @@ public final class DrlxRuleAstParseResult {
                         eval.getExpression(),
                         List.copyOf(eval.getReferencedBindingsList()));
             }
+            case ACCUMULATE_PATTERN -> {
+                DrlxRuleAstProto.AccumulatePatternParseResult accPat = item.getAccumulatePattern();
+                PatternIR srcIr = patternFromProto(accPat.getSource());
+                List<AccumulatorIR> accs = new ArrayList<>(accPat.getAccumulatorsCount());
+                for (DrlxRuleAstProto.AccumulatorParseResult a : accPat.getAccumulatorsList()) {
+                    accs.add(new AccumulatorIR(
+                            a.getResultTypeName(),
+                            a.getResultBindName(),
+                            a.getFunctionName(),
+                            List.copyOf(a.getArgExpressionsList()),
+                            List.copyOf(a.getReferencedBindingsList())));
+                }
+                yield new AccumulatePatternIR(srcIr, List.copyOf(accs));
+            }
             case KIND_NOT_SET -> throw new IllegalStateException("LHS item without payload in " + file);
         };
+    }
+
+    private static PatternIR patternFromProto(DrlxRuleAstProto.PatternParseResult pattern) {
+        String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
+        return new PatternIR(
+                pattern.getTypeName(),
+                pattern.getBindName(),
+                pattern.getEntryPoint(),
+                List.copyOf(pattern.getConditionsList()),
+                castTypeName,
+                List.copyOf(pattern.getPositionalArgsList()),
+                pattern.getPassive(),
+                List.copyOf(pattern.getWatchedPropertiesList()));
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {
@@ -149,18 +166,7 @@ public final class DrlxRuleAstParseResult {
     static DrlxRuleAstProto.LhsItemParseResult toProtoLhs(LhsItemIR item) {
         DrlxRuleAstProto.LhsItemParseResult.Builder builder = DrlxRuleAstProto.LhsItemParseResult.newBuilder();
         if (item instanceof PatternIR p) {
-            DrlxRuleAstProto.PatternParseResult.Builder pb = DrlxRuleAstProto.PatternParseResult.newBuilder()
-                    .setTypeName(p.typeName())
-                    .setBindName(p.bindName())
-                    .setEntryPoint(p.entryPoint())
-                    .setPassive(p.passive());
-            if (p.castTypeName() != null) {
-                pb.setCastTypeName(p.castTypeName());
-            }
-            p.conditions().forEach(pb::addConditions);
-            p.positionalArgs().forEach(pb::addPositionalArgs);
-            p.watchedProperties().forEach(pb::addWatchedProperties);
-            builder.setPattern(pb);
+            builder.setPattern(patternToProto(p));
         } else if (item instanceof GroupElementIR g) {
             DrlxRuleAstProto.GroupElementParseResult.Builder gb = DrlxRuleAstProto.GroupElementParseResult.newBuilder()
                     .setKind(toProtoGroupKind(g.kind()));
@@ -171,10 +177,40 @@ public final class DrlxRuleAstParseResult {
                     .setExpression(e.expression());
             e.referencedBindings().forEach(eb::addReferencedBindings);
             builder.setEval(eb);
+        } else if (item instanceof AccumulatePatternIR accPat) {
+            DrlxRuleAstProto.AccumulatePatternParseResult.Builder ab =
+                    DrlxRuleAstProto.AccumulatePatternParseResult.newBuilder()
+                            .setSource(patternToProto(accPat.source()));
+            for (AccumulatorIR acc : accPat.accumulators()) {
+                DrlxRuleAstProto.AccumulatorParseResult.Builder accB =
+                        DrlxRuleAstProto.AccumulatorParseResult.newBuilder()
+                                .setResultTypeName(acc.resultTypeName())
+                                .setResultBindName(acc.resultBindName())
+                                .setFunctionName(acc.functionName());
+                acc.argExpressions().forEach(accB::addArgExpressions);
+                acc.referencedBindings().forEach(accB::addReferencedBindings);
+                ab.addAccumulators(accB);
+            }
+            builder.setAccumulatePattern(ab);
         } else {
             throw new IllegalArgumentException("Unsupported LHS item: " + item);
         }
         return builder.build();
+    }
+
+    private static DrlxRuleAstProto.PatternParseResult patternToProto(PatternIR p) {
+        DrlxRuleAstProto.PatternParseResult.Builder pb = DrlxRuleAstProto.PatternParseResult.newBuilder()
+                .setTypeName(p.typeName())
+                .setBindName(p.bindName())
+                .setEntryPoint(p.entryPoint())
+                .setPassive(p.passive());
+        if (p.castTypeName() != null) {
+            pb.setCastTypeName(p.castTypeName());
+        }
+        p.conditions().forEach(pb::addConditions);
+        p.positionalArgs().forEach(pb::addPositionalArgs);
+        p.watchedProperties().forEach(pb::addWatchedProperties);
+        return pb.build();
     }
 
     private static RuleAnnotationIR.Kind fromProtoKind(DrlxRuleAstProto.AnnotationKind k) {
