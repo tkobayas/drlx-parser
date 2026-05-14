@@ -221,4 +221,90 @@ class DrlxParserTest {
 
         assertThat(compilationUnitContext).isNotNull();
     }
+
+    @Test
+    void parsesSingleAccumulateBindingWithVar() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    var avgAge = avg(p.age),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
+
+    @Test
+    void parsesAccumulateBindingWithExplicitType() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    int total = sum(p.age),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
+
+    @Test
+    void parsesAccumulateBindingWithGenericType() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    BigDecimal total = sum(p.amount),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
+
+    @Test
+    void parsesCountWithNoArgs() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    long n = count(),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
+
+    @Test
+    void parsesQualifiedAccumulateFunctionName() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    var avgAge = Func.avg(p.age),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
+
+    @Test
+    void parsesMultipleAccumulateItems() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons,
+                    var minAge = min(p.age),
+                    var maxAge = max(p.age),
+                    var avgAge = avg(p.age),
+                    do {}
+                }
+                """;
+        assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
+    }
 }

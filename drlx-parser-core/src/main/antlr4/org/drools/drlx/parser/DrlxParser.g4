@@ -51,6 +51,7 @@ ruleBody
 // element, or a consequence. CE terminator `,` is owned here.
 ruleItem
     : rulePattern
+    | accumulateItem ','
     | notElement ','
     | existsElement ','
     | andElement ','
@@ -195,4 +196,14 @@ drlxExpression
 //   '!'? name   → include / exclude one property
 watchItem
     : '!'? ('*' | identifier)
+    ;
+
+// Accumulate result binding — DRLXXXX §Accumulate. The argument list is
+// optional to admit `count()` (Drools' count() takes no argument).
+accumulateItem
+    : (VAR | typeType) identifier '=' accumulateCall
+    ;
+
+accumulateCall
+    : qualifiedName '(' (expression (',' expression)*)? ')'
     ;
