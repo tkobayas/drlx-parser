@@ -244,6 +244,52 @@ public class DrlxLambdaCompiler {
         return evalExpression;
     }
 
+    /**
+     * Compile an MVEL3 expression into a value-extractor lambda for an accumulate
+     * argument. Used by {@link DrlxRuleAstRuntimeBuilder} when an accumulate function
+     * (sum / avg / min / max) needs to project each fact through an arbitrary
+     * expression over the source binding (e.g. {@code sum(p.age + 1)}).
+     *
+     * <p>Mirrors {@link #createEvalExpression}: tries the pre-compiled cache first,
+     * otherwise registers a {@link PendingLambda} with {@link #batchCompiler} for
+     * deferred resolution by {@link #compileBatch(ClassLoader)}.
+     */
+    public DrlxValueExtractor createValueExtractor(String argExpr,
+                                                   Class<?> srcClass,
+                                                   String sourceBindingName) {
+        int counter = lambdaCounter++;
+
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, Object> preCompiled =
+                (Evaluator<Map<String, Object>, Void, Object>) tryLoadPreCompiled(counter, argExpr, "value extractor");
+        if (preCompiled != null) {
+            return new DrlxValueExtractor(argExpr, sourceBindingName, preCompiled);
+        }
+
+        DrlxValueExtractor deferred = createBatchValueExtractor(argExpr, srcClass, sourceBindingName);
+        onLambdaCreated(counter, argExpr);
+        return deferred;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private DrlxValueExtractor createBatchValueExtractor(String argExpr,
+                                                         Class<?> srcClass,
+                                                         String sourceBindingName) {
+        CompilerParameters<Map<String, Object>, Void, Object> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(
+                        org.mvel3.transpiler.context.Declaration.of(sourceBindingName, srcClass))
+                        .<Object>out(Object.class)
+                        .expression(argExpr)
+                        .imports(new HashSet<>(imports))
+                        .classManager(batchCompiler.getClassManager())
+                        .generatedClassName("GeneratorEvaluator__")
+                        .build();
+        MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+        DrlxValueExtractor extractor = new DrlxValueExtractor(argExpr, sourceBindingName, null);
+        pendingLambdas.add(new PendingLambda(handle, extractor));
+        return extractor;
+    }
+
     public DrlxLambdaConsequence createLambdaConsequence(String consequenceBlock, Map<String, Type<?>> declarationTypes) {
         return createLambdaConsequence(consequenceBlock, declarationTypes, java.util.Set.of());
     }
