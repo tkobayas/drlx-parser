@@ -1,5 +1,8 @@
 package org.drools.drlx.ruleunit;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.ChildPositioned;
 import org.drools.drlx.domain.DuplicatePositionLocation;
@@ -28,4 +31,5 @@ public class MyUnit implements RuleUnitData {
     public DataStore<Vehicle> objects = DataSource.createStore();
     public DataStore<Order> orders = DataSource.createStore();
     public DataStore<ReactiveEmployee> reactiveEmployees = DataSource.createStore();
+    public List<Object> results = new ArrayList<>();
 }

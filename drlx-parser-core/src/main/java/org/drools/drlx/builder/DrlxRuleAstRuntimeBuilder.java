@@ -13,9 +13,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.function.Function;
+
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
 import org.drools.base.base.SalienceInteger;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.Declaration;
@@ -24,11 +29,15 @@ import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
 import org.drools.base.rule.Pattern;
+import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
+import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.internal.builder.conf.PropertySpecificOption;
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
@@ -138,6 +147,8 @@ public class DrlxRuleAstRuntimeBuilder {
                 classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
             } else if (item instanceof GroupElementIR g) {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+            } else if (item instanceof AccumulatePatternIR accPat) {
+                classes.add(resolvePatternType(accPat.source(), typeResolver, entryPointTypes, unitClass));
             }
         }
     }
@@ -369,10 +380,178 @@ public class DrlxRuleAstRuntimeBuilder {
                 parent.addChild(ge);
             } else if (item instanceof EvalIR evalIr) {
                 buildEvalCondition(evalIr, parent, boundVariables);
+            } else if (item instanceof AccumulatePatternIR accPat) {
+                buildAccumulatePattern(accPat, parent, typeResolver, entryPointTypes,
+                                       unitClass, boundVariables);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
         }
+    }
+
+    /**
+     * Lower an {@link AccumulatePatternIR} into N independent {@link SingleAccumulate}s,
+     * each wrapped in a result Pattern that carries the accumulator's result binding.
+     * The source pattern's binding ({@code p}) is internal to the accumulate scope and
+     * is NOT added to {@code outerScope}; only the result bindings ({@code avgAge}) are.
+     */
+    private void buildAccumulatePattern(AccumulatePatternIR accPat,
+                                        GroupElement parent,
+                                        TypeResolver typeResolver,
+                                        Map<String, Class<?>> entryPointTypes,
+                                        Class<?> unitClass,
+                                        Map<String, BoundVariable> outerScope) {
+        PatternIR srcIr = accPat.source();
+        Pattern srcTemplate = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
+        Class<?> srcClass = ((ClassObjectType) srcTemplate.getObjectType()).getClassType();
+        Declaration srcDecl = srcTemplate.getDeclaration();
+
+        // Inner scope = outer ∪ source binding. Used only while compiling extractors;
+        // never escapes.
+        Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
+        if (srcDecl != null) {
+            innerScope.put(srcDecl.getIdentifier(),
+                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcTemplate));
+        }
+
+        int idx = 0;
+        for (AccumulatorIR acc : accPat.accumulators()) {
+            Pattern innerClone = (idx++ == 0) ? srcTemplate : srcTemplate.clone();
+            SingleAccumulate single = buildSingleAccumulate(acc, innerClone, srcClass, innerScope);
+            Pattern resultPattern = wrapResultPattern(acc, single);
+            parent.addChild(resultPattern);
+            Class<?> resultClass = resultClassFor(acc);
+            outerScope.put(acc.resultBindName(),
+                    new BoundVariable(acc.resultBindName(), resultClass, resultPattern));
+        }
+    }
+
+    private SingleAccumulate buildSingleAccumulate(AccumulatorIR acc,
+                                                   Pattern innerPattern,
+                                                   Class<?> srcClass,
+                                                   Map<String, BoundVariable> innerScope) {
+        AccumulateFunctionRegistry.Resolution resolved =
+                AccumulateFunctionRegistry.resolve(acc.functionName());
+
+        int argCount = acc.argExpressions().size();
+        if (resolved.acceptsZeroArgs()) {
+            if (argCount > 1) {
+                throw new RuntimeException("function '" + acc.functionName()
+                        + "' accepts 0 or 1 argument, got " + argCount);
+            }
+        } else if (argCount != 1) {
+            throw new RuntimeException("function '" + acc.functionName()
+                    + "' requires exactly 1 argument, got " + argCount);
+        }
+
+        Function<Object, Object> extractor = null;
+        if (argCount == 1 && !resolved.acceptsZeroArgs()) {
+            extractor = buildSimpleExtractor(acc.argExpressions().get(0), srcClass);
+        }
+
+        @SuppressWarnings("unchecked")
+        AccumulateFunction<Serializable> fn;
+        try {
+            fn = (AccumulateFunction<Serializable>) resolved.functionClass()
+                    .getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("cannot instantiate " + resolved.functionClass(), e);
+        }
+
+        DrlxLambdaAccumulator accumulator = new DrlxLambdaAccumulator(fn, extractor);
+        Declaration[] required = acc.referencedBindings().stream()
+                .map(innerScope::get)
+                .filter(java.util.Objects::nonNull)
+                .map(bv -> bv.pattern().getDeclaration())
+                .filter(java.util.Objects::nonNull)
+                .toArray(Declaration[]::new);
+        return new SingleAccumulate(innerPattern, required, accumulator);
+    }
+
+    private static Pattern wrapResultPattern(AccumulatorIR acc, SingleAccumulate single) {
+        Class<?> resultType = resultClassFor(acc);
+        Pattern p = new Pattern(0, new ClassObjectType(resultType), acc.resultBindName());
+        p.addDeclaration(new Declaration(acc.resultBindName(),
+                new SelfReferenceClassFieldReader(resultType), p, true));
+        p.setSource(single);
+        return p;
+    }
+
+    /**
+     * v1: extractor expressions must be a simple {@code binding.property} reference
+     * (the only forms exercised by the spec and tests). Arbitrary expressions are
+     * a fast-follow — when they land, this method will delegate to a new MVEL3
+     * value-extractor compile path on {@link DrlxLambdaCompiler}.
+     */
+    private static Function<Object, Object> buildSimpleExtractor(String argExpr, Class<?> srcClass) {
+        String trimmed = argExpr.trim();
+        int dot = trimmed.indexOf('.');
+        if (dot < 0 || trimmed.indexOf('.', dot + 1) >= 0
+                || !isIdentifier(trimmed.substring(0, dot))
+                || !isIdentifier(trimmed.substring(dot + 1))) {
+            throw new RuntimeException(
+                    "v1 accumulate supports only simple <binding>.<property> arguments, got '"
+                            + argExpr + "'");
+        }
+        String property = trimmed.substring(dot + 1);
+        Method getter = findGetter(srcClass, property);
+        return obj -> {
+            try {
+                return getter.invoke(obj);
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("failed to read '" + property + "' on " + obj, e);
+            }
+        };
+    }
+
+    private static boolean isIdentifier(String s) {
+        if (s.isEmpty() || !Character.isJavaIdentifierStart(s.charAt(0))) {
+            return false;
+        }
+        for (int i = 1; i < s.length(); i++) {
+            if (!Character.isJavaIdentifierPart(s.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static Method findGetter(Class<?> cls, String property) {
+        String cap = Character.toUpperCase(property.charAt(0)) + property.substring(1);
+        for (String name : new String[]{"get" + cap, "is" + cap, property}) {
+            try {
+                Method m = cls.getMethod(name);
+                if (m.getParameterCount() == 0) {
+                    return m;
+                }
+            } catch (NoSuchMethodException ignored) { /* try next */ }
+        }
+        throw new RuntimeException("no getter for property '" + property + "' on " + cls.getName());
+    }
+
+    private static Class<?> resultClassFor(AccumulatorIR acc) {
+        AccumulateFunctionRegistry.Resolution r =
+                AccumulateFunctionRegistry.resolve(acc.functionName());
+        if ("var".equals(acc.resultTypeName())) {
+            return r.resultType();
+        }
+        return switch (acc.resultTypeName()) {
+            case "int"     -> Integer.class;
+            case "long"    -> Long.class;
+            case "double"  -> Double.class;
+            case "float"   -> Float.class;
+            case "short"   -> Short.class;
+            case "byte"    -> Byte.class;
+            case "boolean" -> Boolean.class;
+            case "char"    -> Character.class;
+            default        -> {
+                try {
+                    yield Class.forName(acc.resultTypeName());
+                } catch (ClassNotFoundException primitiveOrUnqualified) {
+                    yield r.resultType();
+                }
+            }
+        };
     }
 
     private void buildEvalCondition(EvalIR evalIr,
