@@ -331,4 +331,28 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         });
         assertThat(observed).containsExactly(41.0);  // avg(21, 41, 61) = 41.0
     }
+
+    @Test
+    void extractorExpressionWithUnknownPropertyFailsAtBuild() {
+        // An extractor expression that references a non-existent property must
+        // fail at build time (MVEL3 raises during batch compile). We assert on
+        // RuntimeException only — not on MVEL3's specific message, which would
+        // be brittle across MVEL3 versions.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var total = sum(p.notAField),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
 }
