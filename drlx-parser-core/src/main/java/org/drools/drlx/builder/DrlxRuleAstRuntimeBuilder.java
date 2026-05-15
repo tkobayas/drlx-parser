@@ -14,7 +14,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.function.Function;
 
 import org.drools.base.base.ClassObjectType;
@@ -446,7 +445,15 @@ public class DrlxRuleAstRuntimeBuilder {
 
         Function<Object, Object> extractor = null;
         if (argCount == 1 && !resolved.acceptsZeroArgs()) {
-            extractor = buildSimpleExtractor(acc.argExpressions().get(0), srcClass);
+            Declaration innerDecl = innerPattern.getDeclaration();
+            String sourceBindingName = innerDecl != null ? innerDecl.getIdentifier() : null;
+            if (sourceBindingName == null) {
+                throw new RuntimeException(
+                        "accumulate source must have a binding to use expression argument '"
+                                + acc.argExpressions().get(0) + "'");
+            }
+            extractor = lambdaCompiler.createValueExtractor(
+                    acc.argExpressions().get(0), srcClass, sourceBindingName);
         }
 
         @SuppressWarnings("unchecked")
@@ -477,57 +484,6 @@ public class DrlxRuleAstRuntimeBuilder {
         return p;
     }
 
-    /**
-     * v1: extractor expressions must be a simple {@code binding.property} reference
-     * (the only forms exercised by the spec and tests). Arbitrary expressions are
-     * a fast-follow — when they land, this method will delegate to a new MVEL3
-     * value-extractor compile path on {@link DrlxLambdaCompiler}.
-     */
-    private static Function<Object, Object> buildSimpleExtractor(String argExpr, Class<?> srcClass) {
-        String trimmed = argExpr.trim();
-        int dot = trimmed.indexOf('.');
-        if (dot < 0 || trimmed.indexOf('.', dot + 1) >= 0
-                || !isIdentifier(trimmed.substring(0, dot))
-                || !isIdentifier(trimmed.substring(dot + 1))) {
-            throw new RuntimeException(
-                    "v1 accumulate supports only simple <binding>.<property> arguments, got '"
-                            + argExpr + "'");
-        }
-        String property = trimmed.substring(dot + 1);
-        Method getter = findGetter(srcClass, property);
-        return obj -> {
-            try {
-                return getter.invoke(obj);
-            } catch (ReflectiveOperationException e) {
-                throw new RuntimeException("failed to read '" + property + "' on " + obj, e);
-            }
-        };
-    }
-
-    private static boolean isIdentifier(String s) {
-        if (s.isEmpty() || !Character.isJavaIdentifierStart(s.charAt(0))) {
-            return false;
-        }
-        for (int i = 1; i < s.length(); i++) {
-            if (!Character.isJavaIdentifierPart(s.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static Method findGetter(Class<?> cls, String property) {
-        String cap = Character.toUpperCase(property.charAt(0)) + property.substring(1);
-        for (String name : new String[]{"get" + cap, "is" + cap, property}) {
-            try {
-                Method m = cls.getMethod(name);
-                if (m.getParameterCount() == 0) {
-                    return m;
-                }
-            } catch (NoSuchMethodException ignored) { /* try next */ }
-        }
-        throw new RuntimeException("no getter for property '" + property + "' on " + cls.getName());
-    }
 
     private static Class<?> resultClassFor(AccumulatorIR acc) {
         AccumulateFunctionRegistry.Resolution r =

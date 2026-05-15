@@ -211,9 +211,10 @@ class AccumulateTest extends DrlxBuilderTestSupport {
     }
 
     @Test
-    void complexExtractorExpressionRejectedAsV1Limitation() {
-        // v1 only supports simple <binding>.<property> in accumulate args.
-        // Arbitrary expressions (e.g. `p.age + 1`) are deferred to a fast-follow.
+    void sumOfArithmeticExpression() {
+        // After #48: arbitrary MVEL3 expressions over the source binding are
+        // accepted. This test was the v1-limit contract — flipped here from
+        // assertion-of-rejection to assertion-of-success.
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -225,12 +226,21 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.age + 1),
-                    do {}
+                    do { results.add(total); }
                 }
                 """;
-        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("v1 accumulate supports only simple")
-                .hasMessageContaining("<binding>.<property>");
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 10));
+            entryPoint.insert(new Person("B", 30));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        // sum((10+1) + (30+1) + (60+1)) = 11 + 31 + 61 = 103
+        // SumAccumulateFunction normalises to Double.
+        assertThat(observed).containsExactly(103.0);
     }
 }
