@@ -15,11 +15,13 @@ package org.drools.drlx.builder.syntax;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class AccumulateTest extends DrlxBuilderTestSupport {
 
@@ -139,5 +141,96 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         });
         // Drools' SumAccumulateFunction normalises to Double regardless of input type.
         assertThat(observed).containsExactly(100.0);  // sum(10,30,60) = 100.0
+    }
+
+    @Test
+    void qualifiedFunctionNameRejected() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var avgAge = Func.avg(p.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("qualified accumulate function names")
+                .hasMessageContaining("Func.avg");
+    }
+
+    @Test
+    void unknownFunctionRejected() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var x = bogus(p.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("unknown accumulate function 'bogus'")
+                .hasMessageContaining("avg, sum, min, max, count");
+    }
+
+    @Test
+    void sourceBindingNotVisibleAfterAccumulate() {
+        // `p` is internal to the accumulate; referencing it in the consequence
+        // must fail at compile time. The exact message comes from the MVEL3
+        // lambda compiler — we only assert that a RuntimeException is raised.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var avgAge = avg(p.age),
+                    do { results.add(p); }
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void complexExtractorExpressionRejectedAsV1Limitation() {
+        // v1 only supports simple <binding>.<property> in accumulate args.
+        // Arbitrary expressions (e.g. `p.age + 1`) are deferred to a fast-follow.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var total = sum(p.age + 1),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("v1 accumulate supports only simple")
+                .hasMessageContaining("<binding>.<property>");
     }
 }
