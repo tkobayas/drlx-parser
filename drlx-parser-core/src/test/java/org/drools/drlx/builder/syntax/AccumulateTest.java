@@ -243,4 +243,92 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         // SumAccumulateFunction normalises to Double.
         assertThat(observed).containsExactly(103.0);
     }
+
+    @Test
+    void sumOfMethodCallExpression() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var total = sum(p.name.length()),
+                    do { results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("AA", 10));    // length 2
+            entryPoint.insert(new Person("BBB", 20));   // length 3
+            entryPoint.insert(new Person("CCCC", 30));  // length 4
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(9.0);  // 2 + 3 + 4 = 9
+    }
+
+    @Test
+    void sumOfMultipleBindingRefs() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var total = sum(p.age * p.age),
+                    do { results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 2));
+            entryPoint.insert(new Person("B", 3));
+            entryPoint.insert(new Person("C", 4));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(29.0);  // 4 + 9 + 16 = 29
+    }
+
+    @Test
+    void avgOfExpression() {
+        // Confirms non-sum functions also pick up the new MVEL3 extractor path.
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var avgPlus = avg(p.age + 1),
+                    do { results.add(avgPlus); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(41.0);  // avg(21, 41, 61) = 41.0
+    }
 }
