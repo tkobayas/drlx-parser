@@ -457,4 +457,34 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         final Declaration avgDecl = wrap.getDeclarations().get("avgAge");
         assertThat(avgDecl.getExtractor().getExtractToClass()).isEqualTo(Double.class);
     }
+
+    @Test
+    void multiFunctionCountAndSum() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    long n = count(),
+                    var total = sum(p.age),
+                    do { results.add(n); results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 10));
+            entryPoint.insert(new Person("B", 20));
+            entryPoint.insert(new Person("C", 30));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(3L, 60.0);
+    }
 }
