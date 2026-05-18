@@ -487,4 +487,36 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         });
         assertThat(observed).containsExactly(3L, 60.0);
     }
+
+    @Test
+    void multiFunctionWithExpressionExtractors() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var s1 = sum(p.age + 1),
+                    var s2 = sum(p.age * 2),
+                    do { results.add(s1); results.add(s2); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 10));
+            entryPoint.insert(new Person("B", 20));
+            entryPoint.insert(new Person("C", 30));
+            kieSession.fireAllRules();
+        });
+        // sum(age+1) = 11+21+31 = 63   |   sum(age*2) = 20+40+60 = 120
+        // SumAccumulateFunction normalises to Double.
+        assertThat(observed).containsExactly(63.0, 120.0);
+    }
 }
