@@ -110,7 +110,7 @@ public class DrlxLambdaCompiler {
         return map;
     }
 
-    public record BoundVariable(String name, Class<?> type, Pattern pattern) {}
+    public record BoundVariable(String name, Class<?> type, Pattern pattern, Declaration declaration) {}
 
     public record PendingLambda(MVELBatchCompiler.LambdaHandle handle, EvaluatorSink target) {}
 
@@ -183,7 +183,7 @@ public class DrlxLambdaCompiler {
         org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations = allDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
 
         Declaration[] requiredDeclarations = referencedBindings.stream()
-                .map(bv -> bv.pattern().getDeclaration())
+                .map(BoundVariable::declaration)
                 .toArray(Declaration[]::new);
 
         @SuppressWarnings("unchecked")

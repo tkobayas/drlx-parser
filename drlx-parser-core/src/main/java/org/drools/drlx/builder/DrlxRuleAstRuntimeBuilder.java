@@ -354,7 +354,7 @@ public class DrlxRuleAstRuntimeBuilder {
                 if (declaration != null) {
                     Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
                     boundVariables.put(declaration.getIdentifier(),
-                            new BoundVariable(declaration.getIdentifier(), patternClass, pattern));
+                            new BoundVariable(declaration.getIdentifier(), patternClass, pattern, declaration));
                 }
             } else if (item instanceof GroupElementIR group) {
                 GroupElement ge = switch (group.kind()) {
@@ -410,7 +410,7 @@ public class DrlxRuleAstRuntimeBuilder {
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
         if (srcDecl != null) {
             innerScope.put(srcDecl.getIdentifier(),
-                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcTemplate));
+                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcTemplate, srcDecl));
         }
 
         int idx = 0;
@@ -421,7 +421,10 @@ public class DrlxRuleAstRuntimeBuilder {
             parent.addChild(resultPattern);
             Class<?> resultClass = resultClassFor(acc);
             outerScope.put(acc.resultBindName(),
-                    new BoundVariable(acc.resultBindName(), resultClass, resultPattern));
+                    new BoundVariable(acc.resultBindName(),
+                                      resultClass,
+                                      resultPattern,
+                                      resultPattern.getDeclarations().get(acc.resultBindName())));
         }
     }
 
@@ -469,7 +472,7 @@ public class DrlxRuleAstRuntimeBuilder {
         Declaration[] required = acc.referencedBindings().stream()
                 .map(innerScope::get)
                 .filter(java.util.Objects::nonNull)
-                .map(bv -> bv.pattern().getDeclaration())
+                .map(BoundVariable::declaration)
                 .filter(java.util.Objects::nonNull)
                 .toArray(Declaration[]::new);
         return new SingleAccumulate(innerPattern, required, accumulator);
@@ -522,7 +525,7 @@ public class DrlxRuleAstRuntimeBuilder {
             BoundVariable bv = boundVariables.get(name);
             if (bv != null) {
                 referenced.add(bv);
-                declarations.add(bv.pattern().getDeclaration());
+                declarations.add(bv.declaration());
             }
         }
 
