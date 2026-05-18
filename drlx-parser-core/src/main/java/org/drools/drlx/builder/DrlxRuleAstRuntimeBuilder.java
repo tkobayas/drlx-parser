@@ -428,10 +428,19 @@ public class DrlxRuleAstRuntimeBuilder {
         }
     }
 
-    private SingleAccumulate buildSingleAccumulate(AccumulatorIR acc,
-                                                   Pattern innerPattern,
-                                                   Class<?> srcClass,
-                                                   Map<String, BoundVariable> innerScope) {
+    /**
+     * Per-function construction shared by SingleAccumulate (N=1) and
+     * MultiAccumulate (N>1) paths. Validates arity, builds the extractor,
+     * instantiates the AccumulateFunction.
+     *
+     * @param srcBindingName the source binding name (e.g. {@code "p"}); may
+     *                       be {@code null}, in which case any expression
+     *                       argument is rejected.
+     */
+    private org.drools.base.rule.accessor.Accumulator buildSingleAccumulator(
+            AccumulatorIR acc,
+            Class<?> srcClass,
+            String srcBindingName) {
         AccumulateFunctionRegistry.Resolution resolved =
                 AccumulateFunctionRegistry.resolve(acc.functionName());
 
@@ -448,15 +457,13 @@ public class DrlxRuleAstRuntimeBuilder {
 
         Function<Object, Object> extractor = null;
         if (argCount == 1 && !resolved.acceptsZeroArgs()) {
-            Declaration innerDecl = innerPattern.getDeclaration();
-            String sourceBindingName = innerDecl != null ? innerDecl.getIdentifier() : null;
-            if (sourceBindingName == null) {
+            if (srcBindingName == null) {
                 throw new RuntimeException(
                         "accumulate source must have a binding to use expression argument '"
                                 + acc.argExpressions().get(0) + "'");
             }
             extractor = lambdaCompiler.createValueExtractor(
-                    acc.argExpressions().get(0), srcClass, sourceBindingName);
+                    acc.argExpressions().get(0), srcClass, srcBindingName);
         }
 
         @SuppressWarnings("unchecked")
@@ -468,13 +475,29 @@ public class DrlxRuleAstRuntimeBuilder {
             throw new RuntimeException("cannot instantiate " + resolved.functionClass(), e);
         }
 
-        DrlxLambdaAccumulator accumulator = new DrlxLambdaAccumulator(fn, extractor);
-        Declaration[] required = acc.referencedBindings().stream()
+        return new DrlxLambdaAccumulator(fn, extractor);
+    }
+
+    /** Map referenced bindings through the inner scope to a Declaration[] for SingleAccumulate. */
+    private static Declaration[] requiredFor(AccumulatorIR acc,
+                                             Map<String, BoundVariable> innerScope) {
+        return acc.referencedBindings().stream()
                 .map(innerScope::get)
                 .filter(java.util.Objects::nonNull)
                 .map(BoundVariable::declaration)
                 .filter(java.util.Objects::nonNull)
                 .toArray(Declaration[]::new);
+    }
+
+    private SingleAccumulate buildSingleAccumulate(AccumulatorIR acc,
+                                                   Pattern innerPattern,
+                                                   Class<?> srcClass,
+                                                   Map<String, BoundVariable> innerScope) {
+        Declaration innerDecl = innerPattern.getDeclaration();
+        String srcBindingName = innerDecl != null ? innerDecl.getIdentifier() : null;
+        org.drools.base.rule.accessor.Accumulator accumulator =
+                buildSingleAccumulator(acc, srcClass, srcBindingName);
+        Declaration[] required = requiredFor(acc, innerScope);
         return new SingleAccumulate(innerPattern, required, accumulator);
     }
 
