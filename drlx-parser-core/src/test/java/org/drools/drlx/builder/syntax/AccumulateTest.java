@@ -15,9 +15,19 @@ package org.drools.drlx.builder.syntax;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.extractors.ArrayElementReader;
+import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
+import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Declaration;
+import org.drools.base.rule.GroupElement;
+import org.drools.base.rule.MultiAccumulate;
+import org.drools.base.rule.Pattern;
+import org.drools.base.rule.SingleAccumulate;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -354,5 +364,50 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    /** Walk the rule's LHS to find the single Pattern whose source is an Accumulate. */
+    private static Pattern accumulateResultPattern(KieBase kieBase, String pkg, String ruleName) {
+        RuleImpl impl = (RuleImpl) kieBase.getKiePackage(pkg).getRules().stream()
+                .filter(r -> r.getName().equals(ruleName))
+                .findFirst()
+                .orElseThrow();
+        GroupElement lhs = impl.getLhs();
+        return lhs.getChildren().stream()
+                .filter(Pattern.class::isInstance)
+                .map(Pattern.class::cast)
+                .filter(p -> p.getSource() instanceof org.drools.base.rule.Accumulate)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("no accumulate result Pattern under rule " + ruleName));
+    }
+
+    @Test
+    void singleFunctionEmitsSingleAccumulate() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var minAge = min(p.age),
+                    do {}
+                }
+                """;
+        final KieBase kieBase = new DrlxRuleBuilder().build(rule);
+        final Pattern wrap = accumulateResultPattern(kieBase, "org.drools.drlx.parser", "R");
+
+        assertThat(wrap.getSource()).isInstanceOf(SingleAccumulate.class);
+        // resultClassFor(min) returns the registry's resultType for var-bindings;
+        // AccumulateFunctionRegistry maps min/max -> Comparable.class.
+        assertThat(((ClassObjectType) wrap.getObjectType()).getClassType())
+                .isEqualTo(Comparable.class);
+        assertThat(wrap.getDeclarations()).hasSize(1).containsKey("minAge");
+        final Declaration d = wrap.getDeclarations().get("minAge");
+        assertThat(d.getExtractor()).isInstanceOf(SelfReferenceClassFieldReader.class);
+        assertThat(d.getExtractor().getExtractToClass()).isEqualTo(Comparable.class);
     }
 }
