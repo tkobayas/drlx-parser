@@ -468,10 +468,9 @@ public class DrlxLambdaCompiler {
     private static void collectPatternTypes(GroupElement ge, Map<String, Type<?>> types) {
         for (Object child : ge.getChildren()) {
             if (child instanceof Pattern p) {
-                Class<?> patternClass = ((ClassObjectType) p.getObjectType()).getClassType();
-                Declaration declaration = p.getDeclaration();
-                if (declaration != null) {
-                    types.put(declaration.getIdentifier(), Type.type(patternClass));
+                for (Declaration d : p.getDeclarations().values()) {
+                    types.put(d.getIdentifier(),
+                              Type.type(d.getExtractor().getExtractToClass()));
                 }
             } else if (child instanceof GroupElement nested) {
                 collectPatternTypes(nested, types);
