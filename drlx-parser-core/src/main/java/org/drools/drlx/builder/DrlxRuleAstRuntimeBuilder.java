@@ -19,6 +19,7 @@ import java.util.function.Function;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.ObjectType;
 import org.drools.base.base.SalienceInteger;
+import org.drools.base.base.extractors.ArrayElementReader;
 import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
@@ -27,9 +28,11 @@ import org.drools.base.rule.EntryPointId;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
+import org.drools.base.rule.MultiAccumulate;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
@@ -389,10 +392,15 @@ public class DrlxRuleAstRuntimeBuilder {
     }
 
     /**
-     * Lower an {@link AccumulatePatternIR} into N independent {@link SingleAccumulate}s,
-     * each wrapped in a result Pattern that carries the accumulator's result binding.
-     * The source pattern's binding ({@code p}) is internal to the accumulate scope and
-     * is NOT added to {@code outerScope}; only the result bindings ({@code avgAge}) are.
+     * Lower an {@link AccumulatePatternIR} into either one {@link SingleAccumulate}
+     * (N=1) wrapped in a typed result Pattern, or one {@link MultiAccumulate}
+     * (N>1) wrapped in an unnamed {@code Object[]} Pattern carrying N
+     * {@link ArrayElementReader}-backed declarations — mirrors Drools'
+     * {@code KiePackagesBuilder.createAccumulate} convention.
+     * <p>
+     * The source pattern's binding ({@code p}) is internal to the accumulate
+     * scope and is NOT added to {@code outerScope}; only the result bindings
+     * (e.g. {@code avgAge}) are.
      */
     private void buildAccumulatePattern(AccumulatePatternIR accPat,
                                         GroupElement parent,
@@ -401,30 +409,46 @@ public class DrlxRuleAstRuntimeBuilder {
                                         Class<?> unitClass,
                                         Map<String, BoundVariable> outerScope) {
         PatternIR srcIr = accPat.source();
-        Pattern srcTemplate = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
-        Class<?> srcClass = ((ClassObjectType) srcTemplate.getObjectType()).getClassType();
-        Declaration srcDecl = srcTemplate.getDeclaration();
+        Pattern srcPattern = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
+        Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+        Declaration srcDecl = srcPattern.getDeclaration();
 
         // Inner scope = outer ∪ source binding. Used only while compiling extractors;
         // never escapes.
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
         if (srcDecl != null) {
             innerScope.put(srcDecl.getIdentifier(),
-                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcTemplate, srcDecl));
+                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
         }
 
-        int idx = 0;
-        for (AccumulatorIR acc : accPat.accumulators()) {
-            Pattern innerClone = (idx++ == 0) ? srcTemplate : srcTemplate.clone();
-            SingleAccumulate single = buildSingleAccumulate(acc, innerClone, srcClass, innerScope);
-            Pattern resultPattern = wrapResultPattern(acc, single);
-            parent.addChild(resultPattern);
+        List<AccumulatorIR> accumulators = accPat.accumulators();
+        int n = accumulators.size();
+        String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+
+        org.drools.base.rule.accessor.Accumulator[] accs =
+                new org.drools.base.rule.accessor.Accumulator[n];
+        for (int i = 0; i < n; i++) {
+            accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName);
+        }
+
+        Pattern wrap;
+        if (n == 1) {
+            Declaration[] required = requiredFor(accumulators.get(0), innerScope);
+            SingleAccumulate single = new SingleAccumulate(srcPattern, required, accs[0]);
+            wrap = wrapResultPattern(accumulators.get(0), single);
+        } else {
+            MultiAccumulate multi = new MultiAccumulate(srcPattern, new Declaration[0], accs, n);
+            wrap = wrapMultiResultPattern(accumulators, multi);
+        }
+
+        parent.addChild(wrap);
+
+        for (int i = 0; i < n; i++) {
+            AccumulatorIR acc = accumulators.get(i);
             Class<?> resultClass = resultClassFor(acc);
+            Declaration decl = wrap.getDeclarations().get(acc.resultBindName());
             outerScope.put(acc.resultBindName(),
-                    new BoundVariable(acc.resultBindName(),
-                                      resultClass,
-                                      resultPattern,
-                                      resultPattern.getDeclarations().get(acc.resultBindName())));
+                    new BoundVariable(acc.resultBindName(), resultClass, wrap, decl));
         }
     }
 
@@ -489,16 +513,20 @@ public class DrlxRuleAstRuntimeBuilder {
                 .toArray(Declaration[]::new);
     }
 
-    private SingleAccumulate buildSingleAccumulate(AccumulatorIR acc,
-                                                   Pattern innerPattern,
-                                                   Class<?> srcClass,
-                                                   Map<String, BoundVariable> innerScope) {
-        Declaration innerDecl = innerPattern.getDeclaration();
-        String srcBindingName = innerDecl != null ? innerDecl.getIdentifier() : null;
-        org.drools.base.rule.accessor.Accumulator accumulator =
-                buildSingleAccumulator(acc, srcClass, srcBindingName);
-        Declaration[] required = requiredFor(acc, innerScope);
-        return new SingleAccumulate(innerPattern, required, accumulator);
+    private static Pattern wrapMultiResultPattern(List<AccumulatorIR> accs,
+                                                  MultiAccumulate multi) {
+        ReadAccessor selfReader = new SelfReferenceClassFieldReader(Object[].class);
+        Pattern p = new Pattern(0, new ClassObjectType(Object[].class));
+        for (int i = 0; i < accs.size(); i++) {
+            Class<?> rType = resultClassFor(accs.get(i));
+            p.addDeclaration(new Declaration(
+                    accs.get(i).resultBindName(),
+                    new ArrayElementReader(selfReader, i, rType),
+                    p,
+                    true));
+        }
+        p.setSource(multi);
+        return p;
     }
 
     private static Pattern wrapResultPattern(AccumulatorIR acc, SingleAccumulate single) {

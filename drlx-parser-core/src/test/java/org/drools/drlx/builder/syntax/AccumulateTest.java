@@ -410,4 +410,51 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         assertThat(d.getExtractor()).isInstanceOf(SelfReferenceClassFieldReader.class);
         assertThat(d.getExtractor().getExtractToClass()).isEqualTo(Comparable.class);
     }
+
+    @Test
+    void multiFunctionEmitsOneMultiAccumulate() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var minAge = min(p.age),
+                    var maxAge = max(p.age),
+                    var avgAge = avg(p.age),
+                    do {}
+                }
+                """;
+        final KieBase kieBase = new DrlxRuleBuilder().build(rule);
+        final java.util.List<Pattern> patterns = ((RuleImpl) kieBase.getKiePackage("org.drools.drlx.parser")
+                .getRules().stream().filter(r -> r.getName().equals("R")).findFirst().orElseThrow())
+                .getLhs().getChildren().stream()
+                .filter(Pattern.class::isInstance)
+                .map(Pattern.class::cast)
+                .filter(p -> p.getSource() instanceof org.drools.base.rule.Accumulate)
+                .toList();
+        assertThat(patterns).hasSize(1);
+        final Pattern wrap = patterns.get(0);
+
+        assertThat(wrap.getSource()).isInstanceOf(MultiAccumulate.class);
+        final MultiAccumulate multi = (MultiAccumulate) wrap.getSource();
+        assertThat(multi.getAccumulators()).hasSize(3);
+        assertThat(((ClassObjectType) wrap.getObjectType()).getClassType())
+                .isEqualTo(Object[].class);
+        assertThat(wrap.getDeclarations()).hasSize(3)
+                .containsKeys("minAge", "maxAge", "avgAge");
+
+        final Declaration minDecl = wrap.getDeclarations().get("minAge");
+        assertThat(minDecl.getExtractor()).isInstanceOf(ArrayElementReader.class);
+        // Registry resultType for min/max is Comparable.class; avg is Double.class.
+        assertThat(minDecl.getExtractor().getExtractToClass()).isEqualTo(Comparable.class);
+        final Declaration maxDecl = wrap.getDeclarations().get("maxAge");
+        assertThat(maxDecl.getExtractor().getExtractToClass()).isEqualTo(Comparable.class);
+        final Declaration avgDecl = wrap.getDeclarations().get("avgAge");
+        assertThat(avgDecl.getExtractor().getExtractToClass()).isEqualTo(Double.class);
+    }
 }
