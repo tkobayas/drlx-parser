@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class AccumulateVisitorTest {
@@ -110,6 +111,68 @@ class AccumulateVisitorTest {
         var rule = parseRule(drlx);
         var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
         assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("Func.avg");
+    }
+
+    @Test
+    void inlineFromBareOopathCountHasEmptyArgs() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    long n = count(/persons),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(1);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        assertThat(accPat.source().bindName()).isEqualTo("$inline0");
+        assertThat(accPat.source().entryPoint()).isEqualTo("persons");
+        var acc = accPat.accumulators().get(0);
+        assertThat(acc.functionName()).isEqualTo("count");
+        assertThat(acc.argExpressions()).isEmpty();
+        assertThat(acc.referencedBindings()).isEmpty();
+        assertThat(acc.resultTypeName()).isEqualTo("long");
+    }
+
+    @Test
+    void multipleInlineFromProduceSeparateAccumulatePatterns() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var minAge = min(/persons.age),
+                    var maxAge = max(/persons.age),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(2);
+
+        var accPat0 = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        assertThat(accPat0.source().bindName()).isEqualTo("$inline0");
+        assertThat(accPat0.accumulators().get(0).functionName()).isEqualTo("min");
+        assertThat(accPat0.accumulators().get(0).argExpressions()).containsExactly("$inline0.age");
+
+        var accPat1 = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(1);
+        assertThat(accPat1.source().bindName()).isEqualTo("$inline1");
+        assertThat(accPat1.accumulators().get(0).functionName()).isEqualTo("max");
+        assertThat(accPat1.accumulators().get(0).argExpressions()).containsExactly("$inline1.age");
+    }
+
+    @Test
+    void inlineFromCountWithFinalDotRejectedAtVisitor() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    long n = count(/persons.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> parseRule(drlx))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("function 'count' does not accept a final-dot extractor");
     }
 
     @Test
