@@ -366,6 +366,147 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class);
     }
 
+    @Test
+    void inlineFromAvg() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var avgAge = avg(/persons.age),
+                    do { results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(40.0);
+    }
+
+    @Test
+    void inlineFromCount() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    long n = count(/persons),
+                    do { results.add(n); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(2L);
+    }
+
+    @Test
+    void inlineFromMultipleSameSource() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var minAge = min(/persons.age),
+                    var maxAge = max(/persons.age),
+                    var avgAge = avg(/persons.age),
+                    do { results.add(minAge); results.add(maxAge); results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(20, 60, 40.0);
+    }
+
+    @Test
+    void inlineFromWithSourceConstraint() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var totalSenior = sum(/persons[age >= 40].age),
+                    do { results.add(totalSenior); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(100.0);
+    }
+
+    @Test
+    void inlineFromComposesWithBoundPattern() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons[age >= 18],
+                    long n = count(/persons),
+                    do { results.add(p.getName()); results.add(n); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 20));
+            entryPoint.insert(new Person("Bob", 40));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactlyInAnyOrder("Alice", 2L, "Bob", 2L);
+    }
+
     /** Walk the rule's LHS to find the single Pattern whose source is an Accumulate. */
     private static Pattern accumulateResultPattern(KieBase kieBase, String pkg, String ruleName) {
         RuleImpl impl = (RuleImpl) kieBase.getKiePackage(pkg).getRules().stream()
