@@ -205,5 +205,10 @@ accumulateItem
     ;
 
 accumulateCall
-    : qualifiedName '(' (expression (',' expression)*)? ')'
+    : qualifiedName '(' inlineFromOopath ')'
+    | qualifiedName '(' (expression (',' expression)*)? ')'
+    ;
+
+inlineFromOopath
+    : oopathExpression ('.' identifier)?
     ;
