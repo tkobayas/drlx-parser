@@ -112,6 +112,30 @@ class AccumulateVisitorTest {
         assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("Func.avg");
     }
 
+    @Test
+    void inlineFromParsesToAccumulatePatternWithSyntheticSource() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var avgAge = avg(/persons.age),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(1);
+        var item = rule.lhs().get(0);
+        assertThat(item).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) item;
+        assertThat(accPat.source().bindName()).startsWith("$inline");
+        assertThat(accPat.source().entryPoint()).isEqualTo("persons");
+        assertThat(accPat.accumulators()).hasSize(1);
+        var acc = accPat.accumulators().get(0);
+        assertThat(acc.functionName()).isEqualTo("avg");
+        assertThat(acc.argExpressions()).containsExactly("$inline0.age");
+        assertThat(acc.referencedBindings()).containsExactly("$inline0");
+    }
+
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(drlx));
         CommonTokenStream tokens = new CommonTokenStream(lexer);

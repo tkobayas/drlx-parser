@@ -96,14 +96,47 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         // the fold is inline so no transient LhsItemIR subtype is introduced.
         PatternIR pendingPattern = null;
         List<AccumulatorIR> pendingAccs = new ArrayList<>();
+        int inlineCounter = 0;
         if (ctx.ruleBody() != null) {
             for (DrlxParser.RuleItemContext itemCtx : ctx.ruleBody().ruleItem()) {
                 if (itemCtx.accumulateItem() != null) {
-                    if (pendingPattern == null) {
-                        throw new RuntimeException(
-                                "accumulate item without a preceding pattern in rule '" + name + "'");
+                    DrlxParser.AccumulateCallContext call = itemCtx.accumulateItem().accumulateCall();
+                    if (call.inlineFromOopath() != null) {
+                        DrlxParser.InlineFromOopathContext inlineCtx = call.inlineFromOopath();
+                        String functionName = call.qualifiedName().getText();
+                        DrlxParser.OopathExpressionContext oopathCtx = inlineCtx.oopathExpression();
+                        String finalDotIdent = inlineCtx.identifier() != null
+                                ? inlineCtx.identifier().getText() : null;
+
+                        if (finalDotIdent != null) {
+                            AccumulateFunctionRegistry.Resolution resolved =
+                                    AccumulateFunctionRegistry.resolve(functionName);
+                            if (resolved.acceptsZeroArgs()) {
+                                throw new RuntimeException(
+                                        "function '" + functionName
+                                        + "' does not accept a final-dot extractor in rule '"
+                                        + name + "'; use '" + functionName + "("
+                                        + getText(oopathCtx) + ")' instead");
+                            }
+                        }
+
+                        flushPending(lhs, pendingPattern, pendingAccs);
+                        pendingPattern = null;
+                        pendingAccs = new ArrayList<>();
+
+                        String synthName = "$inline" + inlineCounter++;
+                        PatternIR synthSrc = buildPatternFromOopath(oopathCtx, synthName);
+                        AccumulatorIR accIr = buildAccumulator(
+                                itemCtx.accumulateItem(), synthName, finalDotIdent);
+
+                        lhs.add(new AccumulatePatternIR(synthSrc, List.of(accIr)));
+                    } else {
+                        if (pendingPattern == null) {
+                            throw new RuntimeException(
+                                    "accumulate item without a preceding pattern in rule '" + name + "'");
+                        }
+                        pendingAccs.add(buildAccumulator(itemCtx.accumulateItem()));
                     }
-                    pendingAccs.add(buildAccumulator(itemCtx.accumulateItem()));
                     continue;
                 }
                 // Any non-accumulate item flushes the pending pattern (with or without accs).
@@ -281,6 +314,26 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return new AccumulatorIR(typeName, bindName, functionName, args, List.copyOf(refs));
     }
 
+    private AccumulatorIR buildAccumulator(DrlxParser.AccumulateItemContext ctx,
+                                            String srcBindName,
+                                            String finalDotIdent) {
+        String typeName = ctx.VAR() != null
+                ? "var"
+                : ctx.typeType().getText();
+        String bindName = ctx.identifier().getText();
+        String functionName = ctx.accumulateCall().qualifiedName().getText();
+        List<String> args;
+        List<String> refs;
+        if (finalDotIdent != null) {
+            args = List.of(srcBindName + "." + finalDotIdent);
+            refs = List.of(srcBindName);
+        } else {
+            args = List.of();
+            refs = List.of();
+        }
+        return new AccumulatorIR(typeName, bindName, functionName, args, refs);
+    }
+
     private static void flushPending(List<LhsItemIR> lhs,
                                      PatternIR pending,
                                      List<AccumulatorIR> accs) {
@@ -418,6 +471,18 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
         return new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs, passive, watchedProperties);
+    }
+
+    private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx,
+                                              String syntheticBindName) {
+        String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
+        String castTypeName = extractCastType(oopathCtx);
+        List<String> conditions = extractConditions(oopathCtx);
+        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
+        boolean passive = oopathCtx.QUESTION() != null;
+        List<String> watchedProperties = extractWatchedProperties(oopathCtx);
+        return new PatternIR("", syntheticBindName, entryPoint, conditions, castTypeName,
+                              positionalArgs, passive, watchedProperties);
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
