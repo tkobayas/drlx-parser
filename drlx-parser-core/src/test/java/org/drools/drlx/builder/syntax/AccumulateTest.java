@@ -507,6 +507,70 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         assertThat(observed).containsExactlyInAnyOrder("Alice", 2L, "Bob", 2L);
     }
 
+    @Test
+    void inlineFromSynthesisesSourcePattern() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var avgAge = avg(/persons.age),
+                    do {}
+                }
+                """;
+        final KieBase kieBase = new DrlxRuleBuilder().build(rule);
+        final Pattern wrap = accumulateResultPattern(kieBase, "org.drools.drlx.parser", "R");
+
+        assertThat(wrap.getSource()).isInstanceOf(SingleAccumulate.class);
+        SingleAccumulate single = (SingleAccumulate) wrap.getSource();
+        Pattern srcPattern = (Pattern) single.getSource();
+        assertThat(srcPattern.getDeclaration().getIdentifier()).startsWith("$inline");
+        assertThat(wrap.getDeclarations()).hasSize(1).containsKey("avgAge");
+    }
+
+    @Test
+    void inlineFromMultipleEmitsSeparateSingleAccumulates() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var minAge = min(/persons.age),
+                    var maxAge = max(/persons.age),
+                    do {}
+                }
+                """;
+        final KieBase kieBase = new DrlxRuleBuilder().build(rule);
+        RuleImpl impl = (RuleImpl) kieBase.getKiePackage("org.drools.drlx.parser")
+                .getRules().stream().filter(r -> r.getName().equals("R")).findFirst().orElseThrow();
+        java.util.List<Pattern> accPatterns = impl.getLhs().getChildren().stream()
+                .filter(Pattern.class::isInstance)
+                .map(Pattern.class::cast)
+                .filter(p -> p.getSource() instanceof SingleAccumulate)
+                .toList();
+
+        assertThat(accPatterns).hasSize(2);
+
+        SingleAccumulate s0 = (SingleAccumulate) accPatterns.get(0).getSource();
+        SingleAccumulate s1 = (SingleAccumulate) accPatterns.get(1).getSource();
+        String id0 = ((Pattern) s0.getSource()).getDeclaration().getIdentifier();
+        String id1 = ((Pattern) s1.getSource()).getDeclaration().getIdentifier();
+        assertThat(id0).isNotEqualTo(id1);
+        assertThat(id0).startsWith("$inline");
+        assertThat(id1).startsWith("$inline");
+
+        assertThat(accPatterns.get(0).getDeclarations()).containsKey("minAge");
+        assertThat(accPatterns.get(1).getDeclarations()).containsKey("maxAge");
+    }
+
     /** Walk the rule's LHS to find the single Pattern whose source is an Accumulate. */
     private static Pattern accumulateResultPattern(KieBase kieBase, String pkg, String ruleName) {
         RuleImpl impl = (RuleImpl) kieBase.getKiePackage(pkg).getRules().stream()
