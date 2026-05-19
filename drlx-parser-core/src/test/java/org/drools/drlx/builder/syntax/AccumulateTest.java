@@ -571,6 +571,65 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         assertThat(accPatterns.get(1).getDeclarations()).containsKey("maxAge");
     }
 
+    @Test
+    void inlineFromCountWithFinalDotRejected() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    long n = count(/persons.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("function 'count' does not accept a final-dot extractor");
+    }
+
+    @Test
+    void inlineFromBareOopathRejectedForNonZeroArg() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var avgAge = avg(/persons),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("requires exactly 1 argument, got 0");
+    }
+
+    @Test
+    void inlineFromUnknownPropertyFailsAtBuild() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var avgAge = avg(/persons.nope),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
     /** Walk the rule's LHS to find the single Pattern whose source is an Accumulate. */
     private static Pattern accumulateResultPattern(KieBase kieBase, String pkg, String ruleName) {
         RuleImpl impl = (RuleImpl) kieBase.getKiePackage(pkg).getRules().stream()
