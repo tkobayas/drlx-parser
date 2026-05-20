@@ -12,12 +12,14 @@ import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
-import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
@@ -137,6 +139,13 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                         }
                         pendingAccs.add(buildAccumulator(itemCtx.accumulateItem()));
                     }
+                    continue;
+                }
+                if (itemCtx.accKeywordItem() != null) {
+                    flushPending(lhs, pendingPattern, pendingAccs);
+                    pendingPattern = null;
+                    pendingAccs = new ArrayList<>();
+                    lhs.add(buildAccKeywordItem(itemCtx.accKeywordItem()));
                     continue;
                 }
                 // Any non-accumulate item flushes the pending pattern (with or without accs).
@@ -348,6 +357,269 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         } else {
             lhs.add(new AccumulatePatternIR(pending, List.copyOf(accs)));
         }
+    }
+
+    private LhsItemIR buildAccKeywordItem(DrlxParser.AccKeywordItemContext ctx) {
+        String keyword = ctx.identifier().getText();
+        if (!"acc".equals(keyword)) {
+            throw new RuntimeException(
+                    "expected 'acc' keyword but found '" + keyword + "' at "
+                    + ctx.getStart().getLine() + ":" + ctx.getStart().getCharPositionInLine());
+        }
+
+        PatternIR source = buildPatternFromBoundOopath(ctx.accSource().boundOopath());
+        String srcBindName = source.bindName();
+        DrlxParser.AccBodyContext body = ctx.accBody();
+
+        if (body.accFunctionList() != null) {
+            return buildAccKeyword2Param(source, body.accFunctionList());
+        }
+
+        List<DrlxParser.AccActionBlockContext> actionBlocks = body.accActionBlock();
+        boolean is5Param = actionBlocks.size() == 2;
+
+        List<InitVarIR> initVars = buildInitVars(body.accInitVars(), srcBindName);
+
+        String actionBlock;
+        String reverseBlock;
+
+        if (is5Param) {
+            actionBlock = extractActionBlockText(actionBlocks.get(0), true);
+            reverseBlock = extractActionBlockText(actionBlocks.get(1), true);
+        } else {
+            DrlxParser.AccActionBlockContext actionCtx = actionBlocks.get(0);
+            if (actionCtx.expression().size() == 2 && actionCtx.getChild(0).getText().equals("(")) {
+                actionBlock = getText(actionCtx.expression(0));
+                reverseBlock = getText(actionCtx.expression(1));
+            } else {
+                actionBlock = extractActionBlockText(actionCtx, false);
+                reverseBlock = null;
+            }
+        }
+
+        DrlxParser.AccResultBindingContext resultCtx = body.accResultBinding();
+        String resultTypeName = resultCtx.typeType().getText();
+        String resultBindName = resultCtx.identifier().getText();
+        String resultExpression = getText(resultCtx.expression());
+
+        validateResultExpression(resultExpression, srcBindName);
+
+        java.util.LinkedHashSet<String> refs = new java.util.LinkedHashSet<>();
+        refs.addAll(extractIdentifiers(actionBlock));
+        if (reverseBlock != null) {
+            refs.addAll(extractIdentifiers(reverseBlock));
+        }
+        refs.addAll(extractIdentifiers(resultExpression));
+
+        return new CustomAccumulateIR(source, initVars, actionBlock, reverseBlock,
+                resultTypeName, resultBindName, resultExpression, List.copyOf(refs));
+    }
+
+    private LhsItemIR buildAccKeyword2Param(PatternIR source,
+                                             DrlxParser.AccFunctionListContext funcListCtx) {
+        List<AccumulatorIR> accumulators = new ArrayList<>();
+        for (DrlxParser.AccumulateItemContext accItemCtx : funcListCtx.accumulateItem()) {
+            accumulators.add(buildAccumulator(accItemCtx));
+        }
+        return new AccumulatePatternIR(source, accumulators);
+    }
+
+    private List<InitVarIR> buildInitVars(DrlxParser.AccInitVarsContext ctx,
+                                           String srcBindName) {
+        List<InitVarIR> result = new ArrayList<>();
+        java.util.Set<String> seenNames = new java.util.LinkedHashSet<>();
+
+        for (DrlxParser.AccInitVarContext initVarCtx : ctx.accInitVar()) {
+            DrlxParser.LocalVariableDeclarationContext localVarCtx = initVarCtx.localVariableDeclaration();
+
+            if (localVarCtx.VAR() != null) {
+                throw new RuntimeException(
+                        "custom accumulate init vars require explicit types — 'var' is not permitted");
+            }
+
+            String typeName = localVarCtx.typeType().getText();
+            DrlxParser.VariableDeclaratorsContext declsCtx = localVarCtx.variableDeclarators();
+
+            for (DrlxParser.VariableDeclaratorContext declCtx : declsCtx.variableDeclarator()) {
+                String varName = declCtx.variableDeclaratorId().getText();
+
+                if (varName.equals(srcBindName)) {
+                    throw new RuntimeException(
+                            "init var '" + varName + "' conflicts with source binding name");
+                }
+                if (!seenNames.add(varName)) {
+                    throw new RuntimeException(
+                            "duplicate init var name '" + varName + "'");
+                }
+
+                String initializer;
+                if (declCtx.variableInitializer() != null) {
+                    initializer = getText(declCtx.variableInitializer());
+                    validateLiteralInitializer(initializer, typeName, varName);
+                } else {
+                    initializer = defaultValueFor(typeName);
+                }
+
+                result.add(new InitVarIR(typeName, varName, initializer));
+            }
+        }
+        return result;
+    }
+
+    private String extractActionBlockText(DrlxParser.AccActionBlockContext ctx,
+                                           boolean rejectPaired) {
+        if (ctx.expression().size() == 2 && ctx.getChild(0).getText().equals("(")) {
+            if (rejectPaired) {
+                throw new RuntimeException(
+                        "paired (action, reverse) block is not valid in 5-param acc — use separate action and reverse positions");
+            }
+            return getText(ctx.expression(0));
+        }
+        if (ctx.statement() != null && !ctx.statement().isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            for (DrlxParser.StatementContext stCtx : ctx.statement()) {
+                sb.append(getText(stCtx));
+            }
+            return sb.toString().trim();
+        }
+        return getText(ctx.expression(0));
+    }
+
+    private static void validateLiteralInitializer(String initializer, String typeName, String varName) {
+        if (initializer.equals("null")) {
+            if (isPrimitiveTypeName(typeName)) {
+                throw new RuntimeException(
+                        "init var '" + varName + "': cannot assign null to primitive type " + typeName);
+            }
+            return;
+        }
+        if (initializer.equals("true") || initializer.equals("false")) {
+            if (!"boolean".equals(typeName) && !"Boolean".equals(typeName)) {
+                throw new RuntimeException(
+                        "init var '" + varName + "': cannot assign boolean literal to " + typeName);
+            }
+            return;
+        }
+        if (initializer.startsWith("\"") && initializer.endsWith("\"")) {
+            if (!"String".equals(typeName) && !"java.lang.String".equals(typeName)) {
+                throw new RuntimeException(
+                        "init var '" + varName + "': cannot assign String literal to " + typeName);
+            }
+            return;
+        }
+        if (initializer.startsWith("'") && initializer.endsWith("'")) {
+            if (!"char".equals(typeName) && !"Character".equals(typeName)) {
+                throw new RuntimeException(
+                        "init var '" + varName + "': cannot assign char literal to " + typeName);
+            }
+            return;
+        }
+
+        if (isNumericLiteral(initializer)) {
+            validateNumericLiteralType(initializer, typeName, varName);
+            return;
+        }
+
+        throw new RuntimeException(
+                "custom accumulate init vars must be literals — complex initializers are not yet supported");
+    }
+
+    private static boolean isPrimitiveTypeName(String typeName) {
+        return switch (typeName) {
+            case "int", "long", "double", "float", "short", "byte", "boolean", "char" -> true;
+            default -> false;
+        };
+    }
+
+    private static boolean isNumericLiteral(String value) {
+        if (value.isEmpty()) return false;
+        String v = value;
+        if (v.startsWith("-") || v.startsWith("+")) v = v.substring(1);
+        if (v.isEmpty()) return false;
+        String lower = v.toLowerCase();
+        if (lower.endsWith("l") || lower.endsWith("f") || lower.endsWith("d")) {
+            lower = lower.substring(0, lower.length() - 1);
+        }
+        if (lower.isEmpty()) return false;
+        if (lower.contains(".")) {
+            try { Double.parseDouble(lower); return true; }
+            catch (NumberFormatException e) { return false; }
+        }
+        try { Long.parseLong(lower); return true; }
+        catch (NumberFormatException e) { return false; }
+    }
+
+    private static void validateNumericLiteralType(String initializer, String typeName, String varName) {
+        String lower = initializer.toLowerCase();
+        boolean isLong = lower.endsWith("l");
+        boolean isFloat = lower.endsWith("f");
+        boolean isDouble = lower.endsWith("d") || (!isLong && !isFloat && lower.contains("."));
+
+        switch (typeName) {
+            case "int", "Integer" -> {
+                if (isLong) throw new RuntimeException("init var '" + varName + "': cannot assign long literal to int");
+                if (isFloat || isDouble) throw new RuntimeException("init var '" + varName + "': cannot assign floating-point literal to int");
+                try {
+                    long val = Long.parseLong(initializer);
+                    if (val < Integer.MIN_VALUE || val > Integer.MAX_VALUE) {
+                        throw new RuntimeException("init var '" + varName + "': literal value out of range for int");
+                    }
+                } catch (NumberFormatException e) {
+                    throw new RuntimeException("init var '" + varName + "': invalid numeric literal '" + initializer + "'");
+                }
+            }
+            case "long", "Long" -> {
+                if (isFloat || isDouble) throw new RuntimeException("init var '" + varName + "': cannot assign floating-point literal to long");
+            }
+            case "double", "Double" -> { /* any numeric literal widens to double */ }
+            case "float", "Float" -> {
+                if (isLong) throw new RuntimeException("init var '" + varName + "': cannot assign long literal to float");
+            }
+            case "short", "Short" -> {
+                if (isLong) throw new RuntimeException("init var '" + varName + "': cannot assign long literal to short");
+                if (isFloat || isDouble) throw new RuntimeException("init var '" + varName + "': cannot assign floating-point literal to short");
+                try {
+                    long val = Long.parseLong(initializer);
+                    if (val < Short.MIN_VALUE || val > Short.MAX_VALUE) {
+                        throw new RuntimeException("init var '" + varName + "': literal value out of range for short");
+                    }
+                } catch (NumberFormatException e) { /* non-numeric already filtered */ }
+            }
+            case "byte", "Byte" -> {
+                if (isLong) throw new RuntimeException("init var '" + varName + "': cannot assign long literal to byte");
+                if (isFloat || isDouble) throw new RuntimeException("init var '" + varName + "': cannot assign floating-point literal to byte");
+                try {
+                    long val = Long.parseLong(initializer);
+                    if (val < Byte.MIN_VALUE || val > Byte.MAX_VALUE) {
+                        throw new RuntimeException("init var '" + varName + "': literal value out of range for byte");
+                    }
+                } catch (NumberFormatException e) { /* non-numeric already filtered */ }
+            }
+            case "boolean", "Boolean" -> throw new RuntimeException("init var '" + varName + "': cannot assign numeric literal to boolean");
+            case "char", "Character" -> throw new RuntimeException("init var '" + varName + "': cannot assign numeric literal to char");
+            default -> { /* reference types accept numeric widening at runtime */ }
+        }
+    }
+
+    private static void validateResultExpression(String resultExpr, String srcBindName) {
+        List<String> ids = extractIdentifiers(resultExpr);
+        if (ids.contains(srcBindName)) {
+            throw new RuntimeException(
+                    "result expression cannot reference source binding '" + srcBindName
+                    + "' — only init vars are available");
+        }
+    }
+
+    private static String defaultValueFor(String typeName) {
+        return switch (typeName) {
+            case "int", "Integer", "short", "Short", "byte", "Byte" -> "0";
+            case "long", "Long" -> "0";
+            case "double", "Double" -> "0.0";
+            case "float", "Float" -> "0.0";
+            case "boolean", "Boolean" -> "false";
+            case "char", "Character" -> "' '";
+            default -> "null";
+        };
     }
 
     /**
