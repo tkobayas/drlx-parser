@@ -27,6 +27,7 @@ message LhsItemParseResult {
     GroupElementParseResult group = 2;
     EvalParseResult eval = 3;
     AccumulatePatternParseResult accumulate_pattern = 4;
+    CustomAccumulateParseResult custom_accumulate = 5;
   }
 }
 
@@ -85,4 +86,21 @@ message AccumulatorParseResult {
   string function_name = 3;
   repeated string arg_expressions = 4;
   repeated string referenced_bindings = 5;
+}
+
+message CustomAccumulateParseResult {
+  PatternParseResult source = 1;
+  repeated InitVarParseResult init_vars = 2;
+  string action_block = 3;
+  string reverse_block = 4;
+  string result_type_name = 5;
+  string result_bind_name = 6;
+  string result_expression = 7;
+  repeated string referenced_bindings = 8;
+}
+
+message InitVarParseResult {
+  string type_name = 1;
+  string name = 2;
+  string initializer = 3;
 }

@@ -16,8 +16,10 @@ import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
@@ -129,6 +131,20 @@ public final class DrlxRuleAstParseResult {
                 }
                 yield new AccumulatePatternIR(srcIr, List.copyOf(accs));
             }
+            case CUSTOM_ACCUMULATE -> {
+                DrlxRuleAstProto.CustomAccumulateParseResult cap = item.getCustomAccumulate();
+                PatternIR srcIr = patternFromProto(cap.getSource());
+                List<InitVarIR> initVars = new ArrayList<>(cap.getInitVarsCount());
+                for (DrlxRuleAstProto.InitVarParseResult iv : cap.getInitVarsList()) {
+                    initVars.add(new InitVarIR(iv.getTypeName(), iv.getName(), iv.getInitializer()));
+                }
+                String reverseBlock = cap.getReverseBlock().isEmpty() ? null : cap.getReverseBlock();
+                yield new CustomAccumulateIR(srcIr, initVars,
+                        cap.getActionBlock(), reverseBlock,
+                        cap.getResultTypeName(), cap.getResultBindName(),
+                        cap.getResultExpression(),
+                        List.copyOf(cap.getReferencedBindingsList()));
+            }
             case KIND_NOT_SET -> throw new IllegalStateException("LHS item without payload in " + file);
         };
     }
@@ -192,6 +208,23 @@ public final class DrlxRuleAstParseResult {
                 ab.addAccumulators(accB);
             }
             builder.setAccumulatePattern(ab);
+        } else if (item instanceof CustomAccumulateIR customAcc) {
+            DrlxRuleAstProto.CustomAccumulateParseResult.Builder cab =
+                    DrlxRuleAstProto.CustomAccumulateParseResult.newBuilder()
+                            .setSource(patternToProto(customAcc.source()))
+                            .setActionBlock(customAcc.actionBlock())
+                            .setReverseBlock(customAcc.reverseBlock() != null ? customAcc.reverseBlock() : "")
+                            .setResultTypeName(customAcc.resultTypeName())
+                            .setResultBindName(customAcc.resultBindName())
+                            .setResultExpression(customAcc.resultExpression());
+            for (InitVarIR iv : customAcc.initVars()) {
+                cab.addInitVars(DrlxRuleAstProto.InitVarParseResult.newBuilder()
+                        .setTypeName(iv.typeName())
+                        .setName(iv.name())
+                        .setInitializer(iv.initializer()));
+            }
+            customAcc.referencedBindings().forEach(cab::addReferencedBindings);
+            builder.setCustomAccumulate(cab);
         } else {
             throw new IllegalArgumentException("Unsupported LHS item: " + item);
         }
