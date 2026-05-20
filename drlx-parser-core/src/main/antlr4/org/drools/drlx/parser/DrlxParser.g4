@@ -52,6 +52,7 @@ ruleBody
 ruleItem
     : rulePattern
     | accumulateItem ','
+    | accKeywordItem ','
     | notElement ','
     | existsElement ','
     | andElement ','
@@ -211,4 +212,44 @@ accumulateCall
 
 inlineFromOopath
     : oopathExpression ('.' identifier)?
+    ;
+
+// acc(...) keyword forms — DRLXXXX §Accumulate.
+// `acc` is contextual: parsed as an identifier, validated at visitor level.
+accKeywordItem
+    : identifier '(' accSource ',' accBody ')'
+    ;
+
+accSource
+    : boundOopath
+    ;
+
+accBody
+    : accFunctionList
+    | accInitVars ',' accActionBlock ',' accResultBinding
+    | accInitVars ',' accActionBlock ',' accActionBlock ',' accResultBinding
+    ;
+
+accFunctionList
+    : accumulateItem
+    | '(' accumulateItem (',' accumulateItem)* ')'
+    ;
+
+accInitVars
+    : accInitVar
+    | '{' accInitVar+ '}'
+    ;
+
+accInitVar
+    : localVariableDeclaration ';'
+    ;
+
+accActionBlock
+    : expression
+    | '(' expression ',' expression ')'
+    | '{' statement+ '}'
+    ;
+
+accResultBinding
+    : typeType identifier '=' expression
     ;
