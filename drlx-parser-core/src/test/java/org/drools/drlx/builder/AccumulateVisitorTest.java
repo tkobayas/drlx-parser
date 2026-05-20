@@ -12,6 +12,8 @@
 
 package org.drools.drlx.builder;
 
+import java.util.List;
+
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.assertj.core.groups.Tuple;
@@ -197,6 +199,59 @@ class AccumulateVisitorTest {
         assertThat(acc.functionName()).isEqualTo("avg");
         assertThat(acc.argExpressions()).containsExactly("$inline0.age");
         assertThat(acc.referencedBindings()).containsExactly("$inline0");
+    }
+
+    // --- protobuf round-trip tests ---
+
+    @Test
+    void customAccumulateIRProtobufRoundTrip() {
+        var original = new DrlxRuleAstModel.CustomAccumulateIR(
+                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of()),
+                List.of(
+                        new DrlxRuleAstModel.InitVarIR("int", "count", "0"),
+                        new DrlxRuleAstModel.InitVarIR("int", "total", "0")),
+                "total += p.age; count = count + 1;",
+                "total -= p.age; count = count - 1;",
+                "double",
+                "avgAge",
+                "(double) total / count",
+                List.of("p", "total", "count"));
+
+        var protoLhs = DrlxRuleAstParseResult.toProtoLhs(original);
+        var roundTripped = DrlxRuleAstParseResult.fromProtoLhs(protoLhs, java.nio.file.Path.of("test"));
+
+        assertThat(roundTripped).isInstanceOf(DrlxRuleAstModel.CustomAccumulateIR.class);
+        var rt = (DrlxRuleAstModel.CustomAccumulateIR) roundTripped;
+        assertThat(rt.source().bindName()).isEqualTo("p");
+        assertThat(rt.initVars()).hasSize(2);
+        assertThat(rt.initVars().get(0).name()).isEqualTo("count");
+        assertThat(rt.initVars().get(1).name()).isEqualTo("total");
+        assertThat(rt.actionBlock()).isEqualTo("total += p.age; count = count + 1;");
+        assertThat(rt.reverseBlock()).isEqualTo("total -= p.age; count = count - 1;");
+        assertThat(rt.resultTypeName()).isEqualTo("double");
+        assertThat(rt.resultBindName()).isEqualTo("avgAge");
+        assertThat(rt.resultExpression()).isEqualTo("(double) total / count");
+        assertThat(rt.referencedBindings()).containsExactly("p", "total", "count");
+    }
+
+    @Test
+    void customAccumulateIRProtobufRoundTripNullReverse() {
+        var original = new DrlxRuleAstModel.CustomAccumulateIR(
+                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of()),
+                List.of(new DrlxRuleAstModel.InitVarIR("int", "s", "0")),
+                "s = s + p.age",
+                null,
+                "int",
+                "sum",
+                "s",
+                List.of("p", "s"));
+
+        var protoLhs = DrlxRuleAstParseResult.toProtoLhs(original);
+        var roundTripped = DrlxRuleAstParseResult.fromProtoLhs(protoLhs, java.nio.file.Path.of("test"));
+
+        var rt = (DrlxRuleAstModel.CustomAccumulateIR) roundTripped;
+        assertThat(rt.reverseBlock()).isNull();
+        assertThat(rt.actionBlock()).isEqualTo("s = s + p.age");
     }
 
     // --- acc() keyword form tests ---
