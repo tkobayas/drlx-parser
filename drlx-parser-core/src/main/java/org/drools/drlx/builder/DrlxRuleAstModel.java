@@ -29,7 +29,7 @@ public final class DrlxRuleAstModel {
     }
 
     /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
-    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR {
+    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR, CustomAccumulateIR {
     }
 
     public record PatternIR(String typeName,
@@ -76,5 +76,28 @@ public final class DrlxRuleAstModel {
             argExpressions     = List.copyOf(argExpressions);
             referencedBindings = List.copyOf(referencedBindings);
         }
+    }
+
+    public record CustomAccumulateIR(
+        PatternIR source,
+        List<InitVarIR> initVars,
+        String actionBlock,
+        String reverseBlock,
+        String resultTypeName,
+        String resultBindName,
+        String resultExpression,
+        List<String> referencedBindings
+    ) implements LhsItemIR {
+        public CustomAccumulateIR {
+            initVars = List.copyOf(initVars);
+            referencedBindings = List.copyOf(referencedBindings);
+        }
+    }
+
+    public record InitVarIR(
+        String typeName,
+        String name,
+        String initializer
+    ) {
     }
 }
