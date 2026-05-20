@@ -477,4 +477,137 @@ public class DrlxLambdaCompiler {
             }
         }
     }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DrlxCustomAccumulator createCustomAccumulator(
+            DrlxRuleAstModel.CustomAccumulateIR ir,
+            Class<?> srcClass,
+            String srcBindingName) {
+
+        DrlxCustomAccumulator acc = new DrlxCustomAccumulator(ir.initVars(), srcBindingName);
+
+        List<org.mvel3.transpiler.context.Declaration<?>> holderDecls = new ArrayList<>();
+        for (DrlxRuleAstModel.InitVarIR iv : ir.initVars()) {
+            holderDecls.add(org.mvel3.transpiler.context.Declaration.of(iv.name(), resolveInitVarType(iv.typeName())));
+        }
+
+        List<org.mvel3.transpiler.context.Declaration<?>> actionDecls = new ArrayList<>(holderDecls);
+        actionDecls.add(org.mvel3.transpiler.context.Declaration.of(srcBindingName, srcClass));
+        org.mvel3.transpiler.context.Declaration<?>[] actionDeclArray =
+                actionDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
+
+        // Action block
+        {
+            int counter = lambdaCounter++;
+            String normalizedAction = normalizeBlockText(ir.actionBlock());
+            Evaluator<Map<String, Object>, Void, ?> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, normalizedAction, "custom acc action");
+            if (preCompiled != null) {
+                acc.setActionEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, String> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(actionDeclArray)
+                                .<String>out(String.class)
+                                .block(normalizedAction + RETURN_NULL)
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ActionSink(acc)));
+                onLambdaCreated(counter, normalizedAction);
+            }
+        }
+
+        // Reverse block (optional)
+        if (ir.reverseBlock() != null) {
+            int counter = lambdaCounter++;
+            String normalizedReverse = normalizeBlockText(ir.reverseBlock());
+            Evaluator<Map<String, Object>, Void, ?> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, normalizedReverse, "custom acc reverse");
+            if (preCompiled != null) {
+                acc.setReverseEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, String> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(actionDeclArray)
+                                .<String>out(String.class)
+                                .block(normalizedReverse + RETURN_NULL)
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ReverseSink(acc)));
+                onLambdaCreated(counter, normalizedReverse);
+            }
+        }
+
+        // Result expression
+        {
+            int counter = lambdaCounter++;
+            org.mvel3.transpiler.context.Declaration<?>[] holderDeclArray =
+                    holderDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
+            Class<?> resultClass = resolveInitVarType(ir.resultTypeName());
+
+            Evaluator<Map<String, Object>, Void, Object> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, ir.resultExpression(), "custom acc result");
+            if (preCompiled != null) {
+                acc.setResultEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, Object> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(holderDeclArray)
+                                .<Object>out(resultClass)
+                                .expression(ir.resultExpression())
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ResultSink(acc)));
+                onLambdaCreated(counter, ir.resultExpression());
+            }
+        }
+
+        return acc;
+    }
+
+    private static String normalizeBlockText(String text) {
+        if (text == null) return "";
+        String trimmed = text.trim();
+        if (trimmed.endsWith(";")) {
+            return trimmed;
+        }
+        return trimmed + ";";
+    }
+
+    // Returns primitive classes for MVEL3 compile-time declarations.
+    // MVEL3 handles boxing when the map stores boxed values at runtime.
+    private static Class<?> resolveInitVarType(String typeName) {
+        return switch (typeName) {
+            case "int"     -> int.class;
+            case "long"    -> long.class;
+            case "double"  -> double.class;
+            case "float"   -> float.class;
+            case "short"   -> short.class;
+            case "byte"    -> byte.class;
+            case "boolean" -> boolean.class;
+            case "char"    -> char.class;
+            case "Integer" -> Integer.class;
+            case "Long"    -> Long.class;
+            case "Double"  -> Double.class;
+            case "Float"   -> Float.class;
+            case "Short"   -> Short.class;
+            case "Byte"    -> Byte.class;
+            case "Boolean" -> Boolean.class;
+            case "Character" -> Character.class;
+            case "String"  -> String.class;
+            default -> {
+                try { yield Class.forName(typeName); }
+                catch (ClassNotFoundException e) {
+                    throw new RuntimeException(
+                            "cannot resolve type '" + typeName + "' in custom accumulate — use a fully-qualified name or add an import");
+                }
+            }
+        };
+    }
 }
