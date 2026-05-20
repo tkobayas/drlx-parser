@@ -817,4 +817,166 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         });
         assertThat(observed).containsExactly(120);
     }
+
+    @Test
+    void accKeyword2ParamSingleFunction() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        var avgAge = avg(p.age)),
+                    do { results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(40.0);
+    }
+
+    @Test
+    void accKeyword2ParamGroupedFunctions() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        (var maxAge = max(p.age),
+                         var minAge = min(p.age))),
+                    do { results.add(maxAge); results.add(minAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(60, 20);
+    }
+
+    @Test
+    void accKeyword3ParamSumWithReverse() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        int s = 0;,
+                        (s = s + p.age, s = s - p.age),
+                        int sum = s),
+                    do { results.add(sum); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            FactHandle h1 = entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+
+            observed.clear();
+            entryPoint.delete(h1);
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(100);
+    }
+
+    @Test
+    void accKeyword5ParamAvg() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        { int count = 0; int total = 0; },
+                        { total = total + p.age; count = count + 1; },
+                        { total = total - p.age; count = count - 1; },
+                        double avgAge = (double) total / count),
+                    do { results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(40.0);
+    }
+
+    @Test
+    void accKeyword5ParamWithRetraction() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        { int count = 0; int total = 0; },
+                        { total = total + p.age; count = count + 1; },
+                        { total = total - p.age; count = count - 1; },
+                        double avgAge = (double) total / count),
+                    do { results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            FactHandle h1 = entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+
+            observed.clear();
+            entryPoint.delete(h1);
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(50.0);
+    }
 }
