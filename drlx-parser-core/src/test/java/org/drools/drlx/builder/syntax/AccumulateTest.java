@@ -29,6 +29,7 @@ import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.runtime.rule.EntryPoint;
+import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -782,5 +783,38 @@ class AccumulateTest extends DrlxBuilderTestSupport {
         // sum(age+1) = 11+21+31 = 63   |   sum(age*2) = 20+40+60 = 120
         // SumAccumulateFunction normalises to Double.
         assertThat(observed).containsExactly(63.0, 120.0);
+    }
+
+    // --- acc() keyword form tests ---
+
+    @Test
+    void accKeyword3ParamSumWithoutReverse() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    acc(var p : /persons,
+                        int s = 0;,
+                        s = s + p.age,
+                        int sum = s),
+                    do { results.add(sum); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 20));
+            entryPoint.insert(new Person("B", 40));
+            entryPoint.insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(120);
     }
 }

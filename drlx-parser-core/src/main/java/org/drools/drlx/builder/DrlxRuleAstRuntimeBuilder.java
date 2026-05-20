@@ -40,6 +40,8 @@ import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
@@ -151,6 +153,8 @@ public class DrlxRuleAstRuntimeBuilder {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
             } else if (item instanceof AccumulatePatternIR accPat) {
                 classes.add(resolvePatternType(accPat.source(), typeResolver, entryPointTypes, unitClass));
+            } else if (item instanceof CustomAccumulateIR customAcc) {
+                classes.add(resolvePatternType(customAcc.source(), typeResolver, entryPointTypes, unitClass));
             }
         }
     }
@@ -385,6 +389,9 @@ public class DrlxRuleAstRuntimeBuilder {
             } else if (item instanceof AccumulatePatternIR accPat) {
                 buildAccumulatePattern(accPat, parent, typeResolver, entryPointTypes,
                                        unitClass, boundVariables);
+            } else if (item instanceof CustomAccumulateIR customAcc) {
+                buildCustomAccumulatePattern(customAcc, parent, typeResolver, entryPointTypes,
+                                              unitClass, boundVariables);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
@@ -450,6 +457,72 @@ public class DrlxRuleAstRuntimeBuilder {
             outerScope.put(acc.resultBindName(),
                     new BoundVariable(acc.resultBindName(), resultClass, wrap, decl));
         }
+    }
+
+    private void buildCustomAccumulatePattern(CustomAccumulateIR customAcc,
+                                               GroupElement parent,
+                                               TypeResolver typeResolver,
+                                               Map<String, Class<?>> entryPointTypes,
+                                               Class<?> unitClass,
+                                               Map<String, BoundVariable> outerScope) {
+        PatternIR srcIr = customAcc.source();
+        Pattern srcPattern = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
+        Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+        Declaration srcDecl = srcPattern.getDeclaration();
+        String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+
+        // Reject outer-binding references in action/reverse/result blocks (#54)
+        java.util.Set<String> allowedNames = new java.util.LinkedHashSet<>();
+        if (srcBindingName != null) allowedNames.add(srcBindingName);
+        for (InitVarIR iv : customAcc.initVars()) {
+            allowedNames.add(iv.name());
+        }
+        for (String ref : customAcc.referencedBindings()) {
+            if (!allowedNames.contains(ref) && outerScope.containsKey(ref)) {
+                throw new RuntimeException(
+                        "outer-binding reference '" + ref + "' in custom accumulate is not yet supported (see #54)");
+            }
+        }
+
+        DrlxCustomAccumulator accumulator =
+                lambdaCompiler.createCustomAccumulator(customAcc, srcClass, srcBindingName);
+
+        Declaration[] required = new Declaration[0];
+        SingleAccumulate single = new SingleAccumulate(srcPattern, required, accumulator);
+
+        Class<?> resultClass = resolveCustomResultType(customAcc.resultTypeName(), typeResolver);
+        Pattern wrap = new Pattern(lambdaCompiler.nextPatternId(), new ClassObjectType(resultClass),
+                                   customAcc.resultBindName());
+        wrap.addDeclaration(new Declaration(customAcc.resultBindName(),
+                new SelfReferenceClassFieldReader(resultClass), wrap, true));
+        wrap.setSource(single);
+
+        parent.addChild(wrap);
+
+        Declaration decl = wrap.getDeclarations().get(customAcc.resultBindName());
+        outerScope.put(customAcc.resultBindName(),
+                new BoundVariable(customAcc.resultBindName(), resultClass, wrap, decl));
+    }
+
+    // Returns boxed classes for Drools Pattern ObjectType wrappers.
+    private static Class<?> resolveCustomResultType(String typeName, TypeResolver typeResolver) {
+        return switch (typeName) {
+            case "int"     -> Integer.class;
+            case "long"    -> Long.class;
+            case "double"  -> Double.class;
+            case "float"   -> Float.class;
+            case "short"   -> Short.class;
+            case "byte"    -> Byte.class;
+            case "boolean" -> Boolean.class;
+            case "char"    -> Character.class;
+            default -> {
+                try { yield typeResolver.resolveType(typeName); }
+                catch (ClassNotFoundException e) {
+                    throw new RuntimeException(
+                            "cannot resolve type '" + typeName + "' in custom accumulate result — use a fully-qualified name or add an import", e);
+                }
+            }
+        };
     }
 
     /**

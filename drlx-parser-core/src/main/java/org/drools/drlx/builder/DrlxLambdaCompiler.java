@@ -580,18 +580,18 @@ public class DrlxLambdaCompiler {
         return trimmed + ";";
     }
 
-    // Returns primitive classes for MVEL3 compile-time declarations.
-    // MVEL3 handles boxing when the map stores boxed values at runtime.
-    private static Class<?> resolveInitVarType(String typeName) {
+    // Returns boxed classes — MVEL3 rejects primitive types in .out() and
+    // Map<String, Object> context stores boxed values at runtime.
+    static Class<?> resolveInitVarType(String typeName) {
         return switch (typeName) {
-            case "int"     -> int.class;
-            case "long"    -> long.class;
-            case "double"  -> double.class;
-            case "float"   -> float.class;
-            case "short"   -> short.class;
-            case "byte"    -> byte.class;
-            case "boolean" -> boolean.class;
-            case "char"    -> char.class;
+            case "int"     -> Integer.class;
+            case "long"    -> Long.class;
+            case "double"  -> Double.class;
+            case "float"   -> Float.class;
+            case "short"   -> Short.class;
+            case "byte"    -> Byte.class;
+            case "boolean" -> Boolean.class;
+            case "char"    -> Character.class;
             case "Integer" -> Integer.class;
             case "Long"    -> Long.class;
             case "Double"  -> Double.class;
