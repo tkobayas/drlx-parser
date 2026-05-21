@@ -110,7 +110,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                         String finalDotIdent = inlineCtx.identifier() != null
                                 ? inlineCtx.identifier().getText() : null;
 
-                        if (finalDotIdent != null) {
+                        if (finalDotIdent != null && !functionName.contains(".")) {
                             AccumulateFunctionRegistry.Resolution resolved =
                                     AccumulateFunctionRegistry.resolve(functionName);
                             if (resolved.acceptsZeroArgs()) {
