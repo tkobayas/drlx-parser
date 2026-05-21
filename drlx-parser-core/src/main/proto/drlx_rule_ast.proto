@@ -76,7 +76,7 @@ enum GroupElementKind {
 }
 
 message AccumulatePatternParseResult {
-  PatternParseResult source = 1;
+  LhsItemParseResult source = 1;
   repeated AccumulatorParseResult accumulators = 2;
 }
 
@@ -89,7 +89,7 @@ message AccumulatorParseResult {
 }
 
 message CustomAccumulateParseResult {
-  PatternParseResult source = 1;
+  LhsItemParseResult source = 1;
   repeated InitVarParseResult init_vars = 2;
   string action_block = 3;
   string reverse_block = 4;

@@ -571,6 +571,138 @@ public class DrlxLambdaCompiler {
         return acc;
     }
 
+    public DrlxValueExtractor createValueExtractor(String argExpr,
+                                                   Map<String, BoundVariable> sourceScope) {
+        int counter = lambdaCounter++;
+
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, Object> preCompiled =
+                (Evaluator<Map<String, Object>, Void, Object>) tryLoadPreCompiled(counter, argExpr, "value extractor");
+        if (preCompiled != null) {
+            return new DrlxValueExtractor(argExpr, null, preCompiled);
+        }
+
+        DrlxValueExtractor deferred = createBatchValueExtractorMulti(argExpr, sourceScope);
+        onLambdaCreated(counter, argExpr);
+        return deferred;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private DrlxValueExtractor createBatchValueExtractorMulti(String argExpr,
+                                                              Map<String, BoundVariable> sourceScope) {
+        org.mvel3.transpiler.context.Declaration<?>[] decls = sourceScope.entrySet().stream()
+                .map(e -> org.mvel3.transpiler.context.Declaration.of(e.getKey(), e.getValue().type()))
+                .toArray(org.mvel3.transpiler.context.Declaration[]::new);
+
+        CompilerParameters<Map<String, Object>, Void, Object> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(decls)
+                        .<Object>out(Object.class)
+                        .expression(argExpr)
+                        .imports(new HashSet<>(imports))
+                        .classManager(batchCompiler.getClassManager())
+                        .generatedClassName("GeneratorEvaluator__")
+                        .build();
+        MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+        DrlxValueExtractor extractor = new DrlxValueExtractor(argExpr, null, null);
+        pendingLambdas.add(new PendingLambda(handle, extractor));
+        return extractor;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public DrlxCustomAccumulator createCustomAccumulator(
+            DrlxRuleAstModel.CustomAccumulateIR ir,
+            Map<String, BoundVariable> sourceScope) {
+
+        List<String> srcBindingNames = new ArrayList<>(sourceScope.keySet());
+        DrlxCustomAccumulator acc = new DrlxCustomAccumulator(ir.initVars(), srcBindingNames);
+
+        List<org.mvel3.transpiler.context.Declaration<?>> holderDecls = new ArrayList<>();
+        for (DrlxRuleAstModel.InitVarIR iv : ir.initVars()) {
+            holderDecls.add(org.mvel3.transpiler.context.Declaration.of(iv.name(), resolveInitVarType(iv.typeName())));
+        }
+
+        List<org.mvel3.transpiler.context.Declaration<?>> actionDecls = new ArrayList<>(holderDecls);
+        for (Map.Entry<String, BoundVariable> e : sourceScope.entrySet()) {
+            actionDecls.add(org.mvel3.transpiler.context.Declaration.of(e.getKey(), e.getValue().type()));
+        }
+        org.mvel3.transpiler.context.Declaration<?>[] actionDeclArray =
+                actionDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
+
+        // Action block
+        {
+            int counter = lambdaCounter++;
+            String normalizedAction = normalizeBlockText(ir.actionBlock());
+            Evaluator<Map<String, Object>, Void, ?> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, normalizedAction, "custom acc action");
+            if (preCompiled != null) {
+                acc.setActionEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, String> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(actionDeclArray)
+                                .<String>out(String.class)
+                                .block(normalizedAction + RETURN_NULL)
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ActionSink(acc)));
+                onLambdaCreated(counter, normalizedAction);
+            }
+        }
+
+        // Reverse block (optional)
+        if (ir.reverseBlock() != null) {
+            int counter = lambdaCounter++;
+            String normalizedReverse = normalizeBlockText(ir.reverseBlock());
+            Evaluator<Map<String, Object>, Void, ?> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, normalizedReverse, "custom acc reverse");
+            if (preCompiled != null) {
+                acc.setReverseEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, String> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(actionDeclArray)
+                                .<String>out(String.class)
+                                .block(normalizedReverse + RETURN_NULL)
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ReverseSink(acc)));
+                onLambdaCreated(counter, normalizedReverse);
+            }
+        }
+
+        // Result expression
+        {
+            int counter = lambdaCounter++;
+            org.mvel3.transpiler.context.Declaration<?>[] holderDeclArray =
+                    holderDecls.toArray(new org.mvel3.transpiler.context.Declaration[0]);
+            Class<?> resultClass = resolveInitVarType(ir.resultTypeName());
+
+            Evaluator<Map<String, Object>, Void, Object> preCompiled =
+                    (Evaluator) tryLoadPreCompiled(counter, ir.resultExpression(), "custom acc result");
+            if (preCompiled != null) {
+                acc.setResultEval(preCompiled);
+            } else {
+                CompilerParameters<Map<String, Object>, Void, Object> evalInfo =
+                        (CompilerParameters) MVEL.<Object>map(holderDeclArray)
+                                .<Object>out(resultClass)
+                                .expression(ir.resultExpression())
+                                .imports(new HashSet<>(imports))
+                                .classManager(batchCompiler.getClassManager())
+                                .generatedClassName("GeneratorEvaluator__")
+                                .build();
+                MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+                pendingLambdas.add(new PendingLambda(handle, new DrlxCustomAccumulator.ResultSink(acc)));
+                onLambdaCreated(counter, ir.resultExpression());
+            }
+        }
+
+        return acc;
+    }
+
     private static String normalizeBlockText(String text) {
         if (text == null) return "";
         String trimmed = text.trim();

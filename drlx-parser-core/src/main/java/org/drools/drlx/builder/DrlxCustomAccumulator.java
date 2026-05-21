@@ -16,6 +16,8 @@ public final class DrlxCustomAccumulator implements Accumulator {
 
     private final List<InitVarIR> initVars;
     private final String srcBindingName;
+    private final List<String> srcBindingNames;
+    private final boolean multiSource;
     private final Map<String, Object> initDefaults;
 
     private Evaluator<Map<String, Object>, Void, ?> actionEval;
@@ -25,6 +27,16 @@ public final class DrlxCustomAccumulator implements Accumulator {
     public DrlxCustomAccumulator(List<InitVarIR> initVars, String srcBindingName) {
         this.initVars = initVars;
         this.srcBindingName = srcBindingName;
+        this.srcBindingNames = null;
+        this.multiSource = false;
+        this.initDefaults = buildDefaults(initVars);
+    }
+
+    public DrlxCustomAccumulator(List<InitVarIR> initVars, List<String> srcBindingNames) {
+        this.initVars = initVars;
+        this.srcBindingName = null;
+        this.srcBindingNames = List.copyOf(srcBindingNames);
+        this.multiSource = true;
         this.initDefaults = buildDefaults(initVars);
     }
 
@@ -36,7 +48,8 @@ public final class DrlxCustomAccumulator implements Accumulator {
 
     @Override
     public Object createContext() {
-        return new HashMap<String, Object>(initDefaults.size() + 1);
+        int extra = multiSource ? srcBindingNames.size() : 1;
+        return new HashMap<String, Object>(initDefaults.size() + extra);
     }
 
     @Override
@@ -54,14 +67,28 @@ public final class DrlxCustomAccumulator implements Accumulator {
                              Declaration[] innerDecls, ValueResolver vr) {
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) context;
-        Object srcFact = handle.getObject();
-        map.put(srcBindingName, srcFact);
-        try {
-            actionEval.eval(map);
-        } finally {
-            map.remove(srcBindingName);
+        if (multiSource) {
+            for (Declaration d : innerDecls) {
+                map.put(d.getIdentifier(), d.getValue(vr, tuple));
+            }
+            try {
+                actionEval.eval(map);
+            } finally {
+                for (Declaration d : innerDecls) {
+                    map.remove(d.getIdentifier());
+                }
+            }
+            return null;
+        } else {
+            Object srcFact = handle.getObject();
+            map.put(srcBindingName, srcFact);
+            try {
+                actionEval.eval(map);
+            } finally {
+                map.remove(srcBindingName);
+            }
+            return srcFact;
         }
-        return srcFact;
     }
 
     @Override
@@ -75,11 +102,24 @@ public final class DrlxCustomAccumulator implements Accumulator {
         if (reverseEval == null) return false;
         @SuppressWarnings("unchecked")
         Map<String, Object> map = (Map<String, Object>) context;
-        map.put(srcBindingName, value);
-        try {
-            reverseEval.eval(map);
-        } finally {
-            map.remove(srcBindingName);
+        if (multiSource) {
+            for (Declaration d : innerDecls) {
+                map.put(d.getIdentifier(), d.getValue(vr, tuple));
+            }
+            try {
+                reverseEval.eval(map);
+            } finally {
+                for (Declaration d : innerDecls) {
+                    map.remove(d.getIdentifier());
+                }
+            }
+        } else {
+            map.put(srcBindingName, value);
+            try {
+                reverseEval.eval(map);
+            } finally {
+                map.remove(srcBindingName);
+            }
         }
         return true;
     }

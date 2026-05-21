@@ -13,6 +13,8 @@
 package org.drools.drlx.builder;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.drools.base.base.ValueResolver;
@@ -22,20 +24,28 @@ import org.drools.base.rule.accessor.Accumulator;
 import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.api.runtime.rule.FactHandle;
 
-/**
- * Minimal {@link Accumulator} for DRLX accumulate v1. Delegates accumulation lifecycle
- * to an {@link AccumulateFunction} and projects each fact through an optional extractor.
- * Lives in {@code drlx-parser-core} to avoid depending on {@code drools-model-compiler}.
- */
 public final class DrlxLambdaAccumulator implements Accumulator {
 
     private final AccumulateFunction<Serializable> accFunction;
-    private final Function<Object, Object> extractor; // null for count() / count(x)
+    private final Function<Object, Object> extractor;
+    private final DrlxValueExtractor multiExtractor;
+    private final boolean multiSource;
 
     public DrlxLambdaAccumulator(AccumulateFunction<Serializable> accFunction,
                                  Function<Object, Object> extractor) {
         this.accFunction = accFunction;
         this.extractor = extractor;
+        this.multiExtractor = null;
+        this.multiSource = false;
+    }
+
+    public DrlxLambdaAccumulator(AccumulateFunction<Serializable> accFunction,
+                                 DrlxValueExtractor multiExtractor,
+                                 boolean multiSource) {
+        this.accFunction = accFunction;
+        this.extractor = null;
+        this.multiExtractor = multiExtractor;
+        this.multiSource = multiSource;
     }
 
     @Override public Object createWorkingMemoryContext() { return null; }
@@ -57,7 +67,16 @@ public final class DrlxLambdaAccumulator implements Accumulator {
     public Object accumulate(Object wmContext, Object context, BaseTuple tuple,
                              FactHandle handle, Declaration[] decls,
                              Declaration[] innerDecls, ValueResolver vr) {
-        Object value = (extractor == null) ? handle.getObject() : extractor.apply(handle.getObject());
+        Object value;
+        if (multiSource) {
+            Map<String, Object> bindings = new HashMap<>(innerDecls.length);
+            for (Declaration d : innerDecls) {
+                bindings.put(d.getIdentifier(), d.getValue(vr, tuple));
+            }
+            value = (multiExtractor == null) ? bindings : multiExtractor.applyMulti(bindings);
+        } else {
+            value = (extractor == null) ? handle.getObject() : extractor.apply(handle.getObject());
+        }
         try {
             accFunction.accumulate((Serializable) context, value);
         } catch (Exception e) {

@@ -367,8 +367,27 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     + ctx.getStart().getLine() + ":" + ctx.getStart().getCharPositionInLine());
         }
 
-        PatternIR source = buildPatternFromBoundOopath(ctx.accSource().boundOopath());
-        String srcBindName = source.bindName();
+        LhsItemIR source;
+        if (ctx.accSource().boundOopath() != null) {
+            source = buildPatternFromBoundOopath(ctx.accSource().boundOopath());
+        } else {
+            source = buildGroupElementFromChildren(
+                    ctx.accSource().andElement().groupChild(),
+                    GroupElementIR.Kind.AND);
+        }
+
+        java.util.Set<String> sourceBindNames;
+        if (source instanceof PatternIR pat) {
+            sourceBindNames = java.util.Set.of(pat.bindName());
+        } else if (source instanceof GroupElementIR group) {
+            sourceBindNames = group.children().stream()
+                    .filter(PatternIR.class::isInstance)
+                    .map(c -> ((PatternIR) c).bindName())
+                    .collect(java.util.stream.Collectors.toSet());
+        } else {
+            sourceBindNames = java.util.Set.of();
+        }
+
         DrlxParser.AccBodyContext body = ctx.accBody();
 
         if (body.accFunctionList() != null) {
@@ -378,7 +397,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<DrlxParser.AccActionBlockContext> actionBlocks = body.accActionBlock();
         boolean is5Param = actionBlocks.size() == 2;
 
-        List<InitVarIR> initVars = buildInitVars(body.accInitVars(), srcBindName);
+        List<InitVarIR> initVars = buildInitVars(body.accInitVars(), sourceBindNames);
 
         String actionBlock;
         String reverseBlock;
@@ -402,7 +421,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         String resultBindName = resultCtx.identifier().getText();
         String resultExpression = getText(resultCtx.expression());
 
-        validateResultExpression(resultExpression, srcBindName);
+        if (source instanceof PatternIR pat) {
+            validateResultExpression(resultExpression, pat.bindName());
+        }
 
         java.util.LinkedHashSet<String> refs = new java.util.LinkedHashSet<>();
         refs.addAll(extractIdentifiers(actionBlock));
@@ -415,7 +436,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                 resultTypeName, resultBindName, resultExpression, List.copyOf(refs));
     }
 
-    private LhsItemIR buildAccKeyword2Param(PatternIR source,
+    private LhsItemIR buildAccKeyword2Param(LhsItemIR source,
                                              DrlxParser.AccFunctionListContext funcListCtx) {
         List<AccumulatorIR> accumulators = new ArrayList<>();
         for (DrlxParser.AccumulateItemContext accItemCtx : funcListCtx.accumulateItem()) {
@@ -425,7 +446,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private List<InitVarIR> buildInitVars(DrlxParser.AccInitVarsContext ctx,
-                                           String srcBindName) {
+                                           java.util.Set<String> sourceBindNames) {
         List<InitVarIR> result = new ArrayList<>();
         java.util.Set<String> seenNames = new java.util.LinkedHashSet<>();
 
@@ -443,7 +464,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             for (DrlxParser.VariableDeclaratorContext declCtx : declsCtx.variableDeclarator()) {
                 String varName = declCtx.variableDeclaratorId().getText();
 
-                if (varName.equals(srcBindName)) {
+                if (sourceBindNames.contains(varName)) {
                     throw new RuntimeException(
                             "init var '" + varName + "' conflicts with source binding name");
                 }

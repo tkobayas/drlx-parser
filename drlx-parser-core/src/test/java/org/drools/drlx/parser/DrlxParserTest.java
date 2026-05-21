@@ -307,4 +307,27 @@ class DrlxParserTest {
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
     }
+
+    @Test
+    void parsesAccSourceWithAndElement() {
+        final String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        var total = sum(o.amount)),
+                    do { results.add(total); }
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(rule);
+        assertThat(tree).isNotNull();
+        var accSource = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .accKeywordItem().accSource();
+        assertThat(accSource.boundOopath()).isNull();
+        assertThat(accSource.andElement()).isNotNull();
+        assertThat(accSource.andElement().groupChild()).hasSize(2);
+    }
 }

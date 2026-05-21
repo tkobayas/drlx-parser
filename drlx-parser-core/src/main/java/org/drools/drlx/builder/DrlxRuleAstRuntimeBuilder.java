@@ -152,9 +152,17 @@ public class DrlxRuleAstRuntimeBuilder {
             } else if (item instanceof GroupElementIR g) {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
             } else if (item instanceof AccumulatePatternIR accPat) {
-                classes.add(resolvePatternType(accPat.source(), typeResolver, entryPointTypes, unitClass));
+                if (accPat.source() instanceof PatternIR p) {
+                    classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                } else if (accPat.source() instanceof GroupElementIR g) {
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                }
             } else if (item instanceof CustomAccumulateIR customAcc) {
-                classes.add(resolvePatternType(customAcc.source(), typeResolver, entryPointTypes, unitClass));
+                if (customAcc.source() instanceof PatternIR p) {
+                    classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                } else if (customAcc.source() instanceof GroupElementIR g) {
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                }
             }
         }
     }
@@ -415,36 +423,73 @@ public class DrlxRuleAstRuntimeBuilder {
                                         Map<String, Class<?>> entryPointTypes,
                                         Class<?> unitClass,
                                         Map<String, BoundVariable> outerScope) {
-        PatternIR srcIr = accPat.source();
-        Pattern srcPattern = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
-        Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
-        Declaration srcDecl = srcPattern.getDeclaration();
+        LhsItemIR srcIr = accPat.source();
 
-        // Inner scope = outer ∪ source binding. Used only while compiling extractors;
-        // never escapes.
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
-        if (srcDecl != null) {
-            innerScope.put(srcDecl.getIdentifier(),
-                    new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
+        org.drools.base.rule.RuleConditionElement srcElement;
+        boolean multiSource;
+
+        if (srcIr instanceof GroupElementIR groupIr
+                && groupIr.children().size() == 1
+                && groupIr.children().get(0) instanceof PatternIR) {
+            srcIr = groupIr.children().get(0);
+        }
+
+        if (srcIr instanceof PatternIR patIr) {
+            Pattern srcPattern = buildPattern(patIr, typeResolver, entryPointTypes, unitClass, outerScope);
+            srcElement = srcPattern;
+            multiSource = false;
+            Declaration srcDecl = srcPattern.getDeclaration();
+            if (srcDecl != null) {
+                Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+                innerScope.put(srcDecl.getIdentifier(),
+                        new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
+            }
+        } else if (srcIr instanceof GroupElementIR groupIr) {
+            GroupElement andGroup = GroupElementFactory.newAndInstance();
+            buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
+                     unitClass, innerScope);
+            srcElement = andGroup;
+            multiSource = true;
+        } else {
+            throw new IllegalArgumentException("Unsupported accumulate source: " + srcIr.getClass());
         }
 
         List<AccumulatorIR> accumulators = accPat.accumulators();
         int n = accumulators.size();
-        String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+
+        Map<String, BoundVariable> sourceScope = null;
+        if (multiSource) {
+            sourceScope = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    sourceScope.put(e.getKey(), e.getValue());
+                }
+            }
+        }
 
         org.drools.base.rule.accessor.Accumulator[] accs =
                 new org.drools.base.rule.accessor.Accumulator[n];
         for (int i = 0; i < n; i++) {
-            accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName);
+            if (multiSource) {
+                accs[i] = buildSingleAccumulatorMulti(accumulators.get(i), sourceScope);
+            } else {
+                Declaration srcDecl = ((Pattern) srcElement).getDeclaration();
+                Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+                String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+                accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName);
+            }
         }
 
         Pattern wrap;
         if (n == 1) {
-            Declaration[] required = requiredFor(accumulators.get(0), innerScope);
-            SingleAccumulate single = new SingleAccumulate(srcPattern, required, accs[0]);
+            Declaration[] required = multiSource
+                    ? new Declaration[0]
+                    : requiredFor(accumulators.get(0), innerScope);
+            SingleAccumulate single = new SingleAccumulate(srcElement, required, accs[0]);
             wrap = wrapResultPattern(accumulators.get(0), single);
         } else {
-            MultiAccumulate multi = new MultiAccumulate(srcPattern, new Declaration[0], accs, n);
+            MultiAccumulate multi = new MultiAccumulate(srcElement, new Declaration[0], accs, n);
             wrap = wrapMultiResultPattern(accumulators, multi);
         }
 
@@ -465,15 +510,50 @@ public class DrlxRuleAstRuntimeBuilder {
                                                Map<String, Class<?>> entryPointTypes,
                                                Class<?> unitClass,
                                                Map<String, BoundVariable> outerScope) {
-        PatternIR srcIr = customAcc.source();
-        Pattern srcPattern = buildPattern(srcIr, typeResolver, entryPointTypes, unitClass, outerScope);
-        Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
-        Declaration srcDecl = srcPattern.getDeclaration();
-        String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+        LhsItemIR srcIr = customAcc.source();
+
+        if (srcIr instanceof GroupElementIR groupIr
+                && groupIr.children().size() == 1
+                && groupIr.children().get(0) instanceof PatternIR) {
+            srcIr = groupIr.children().get(0);
+        }
+
+        Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
+        org.drools.base.rule.RuleConditionElement srcElement;
+        boolean multiSource;
+
+        if (srcIr instanceof PatternIR patIr) {
+            Pattern srcPattern = buildPattern(patIr, typeResolver, entryPointTypes, unitClass, outerScope);
+            srcElement = srcPattern;
+            multiSource = false;
+            Declaration srcDecl = srcPattern.getDeclaration();
+            if (srcDecl != null) {
+                Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+                innerScope.put(srcDecl.getIdentifier(),
+                        new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
+            }
+        } else if (srcIr instanceof GroupElementIR groupIr) {
+            GroupElement andGroup = GroupElementFactory.newAndInstance();
+            buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
+                     unitClass, innerScope);
+            srcElement = andGroup;
+            multiSource = true;
+        } else {
+            throw new IllegalArgumentException("Unsupported accumulate source: " + srcIr.getClass());
+        }
 
         // Reject outer-binding references in action/reverse/result blocks (#54)
         java.util.Set<String> allowedNames = new java.util.LinkedHashSet<>();
-        if (srcBindingName != null) allowedNames.add(srcBindingName);
+        if (multiSource) {
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    allowedNames.add(e.getKey());
+                }
+            }
+        } else {
+            Declaration srcDecl = ((Pattern) srcElement).getDeclaration();
+            if (srcDecl != null) allowedNames.add(srcDecl.getIdentifier());
+        }
         for (InitVarIR iv : customAcc.initVars()) {
             allowedNames.add(iv.name());
         }
@@ -484,11 +564,24 @@ public class DrlxRuleAstRuntimeBuilder {
             }
         }
 
-        DrlxCustomAccumulator accumulator =
-                lambdaCompiler.createCustomAccumulator(customAcc, srcClass, srcBindingName);
+        DrlxCustomAccumulator accumulator;
+        if (multiSource) {
+            Map<String, BoundVariable> sourceScope = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    sourceScope.put(e.getKey(), e.getValue());
+                }
+            }
+            accumulator = lambdaCompiler.createCustomAccumulator(customAcc, sourceScope);
+        } else {
+            Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+            String srcBindingName = ((Pattern) srcElement).getDeclaration() != null
+                    ? ((Pattern) srcElement).getDeclaration().getIdentifier() : null;
+            accumulator = lambdaCompiler.createCustomAccumulator(customAcc, srcClass, srcBindingName);
+        }
 
         Declaration[] required = new Declaration[0];
-        SingleAccumulate single = new SingleAccumulate(srcPattern, required, accumulator);
+        SingleAccumulate single = new SingleAccumulate(srcElement, required, accumulator);
 
         Class<?> resultClass = resolveCustomResultType(customAcc.resultTypeName(), typeResolver);
         Pattern wrap = new Pattern(lambdaCompiler.nextPatternId(), new ClassObjectType(resultClass),
@@ -573,6 +666,41 @@ public class DrlxRuleAstRuntimeBuilder {
         }
 
         return new DrlxLambdaAccumulator(fn, extractor);
+    }
+
+    private org.drools.base.rule.accessor.Accumulator buildSingleAccumulatorMulti(
+            AccumulatorIR acc,
+            Map<String, BoundVariable> sourceScope) {
+        AccumulateFunctionRegistry.Resolution resolved =
+                AccumulateFunctionRegistry.resolve(acc.functionName());
+
+        int argCount = acc.argExpressions().size();
+        if (resolved.acceptsZeroArgs()) {
+            if (argCount > 1) {
+                throw new RuntimeException("function '" + acc.functionName()
+                        + "' accepts 0 or 1 argument, got " + argCount);
+            }
+        } else if (argCount != 1) {
+            throw new RuntimeException("function '" + acc.functionName()
+                    + "' requires exactly 1 argument, got " + argCount);
+        }
+
+        DrlxValueExtractor multiExtractor = null;
+        if (argCount == 1 && !resolved.acceptsZeroArgs()) {
+            multiExtractor = lambdaCompiler.createValueExtractor(
+                    acc.argExpressions().get(0), sourceScope);
+        }
+
+        @SuppressWarnings("unchecked")
+        AccumulateFunction<Serializable> fn;
+        try {
+            fn = (AccumulateFunction<Serializable>) resolved.functionClass()
+                    .getDeclaredConstructor().newInstance();
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("cannot instantiate " + resolved.functionClass(), e);
+        }
+
+        return new DrlxLambdaAccumulator(fn, multiExtractor, true);
     }
 
     /** Map referenced bindings through the inner scope to a Declaration[] for SingleAccumulate. */

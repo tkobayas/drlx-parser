@@ -47,7 +47,7 @@ class DrlxRuleAstModelTest {
                 "var", "avgAge", "avg",
                 List.of("p.age"), List.of("p"));
         var pat = new DrlxRuleAstModel.AccumulatePatternIR(src, List.of(acc));
-        assertThat(pat.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) pat.source()).bindName()).isEqualTo("p");
         assertThat(pat.accumulators()).hasSize(1);
         assertThat(pat.accumulators().get(0).functionName()).isEqualTo("avg");
     }

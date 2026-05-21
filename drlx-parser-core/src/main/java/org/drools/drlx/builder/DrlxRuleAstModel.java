@@ -60,7 +60,7 @@ public final class DrlxRuleAstModel {
         }
     }
 
-    public record AccumulatePatternIR(PatternIR source,
+    public record AccumulatePatternIR(LhsItemIR source,
                                       List<AccumulatorIR> accumulators) implements LhsItemIR {
         public AccumulatePatternIR {
             accumulators = List.copyOf(accumulators);
@@ -79,7 +79,7 @@ public final class DrlxRuleAstModel {
     }
 
     public record CustomAccumulateIR(
-        PatternIR source,
+        LhsItemIR source,
         List<InitVarIR> initVars,
         String actionBlock,
         String reverseBlock,

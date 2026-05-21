@@ -58,4 +58,13 @@ public final class DrlxValueExtractor implements Function<Object, Object>, Evalu
                     "value extractor '" + expression + "' failed at runtime", e);
         }
     }
+
+    public Object applyMulti(Map<String, Object> bindings) {
+        try {
+            return evaluator.eval(bindings);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "value extractor '" + expression + "' failed at runtime (multi-source)", e);
+        }
+    }
 }

@@ -119,7 +119,7 @@ public final class DrlxRuleAstParseResult {
             }
             case ACCUMULATE_PATTERN -> {
                 DrlxRuleAstProto.AccumulatePatternParseResult accPat = item.getAccumulatePattern();
-                PatternIR srcIr = patternFromProto(accPat.getSource());
+                LhsItemIR srcIr = fromProtoLhs(accPat.getSource(), file);
                 List<AccumulatorIR> accs = new ArrayList<>(accPat.getAccumulatorsCount());
                 for (DrlxRuleAstProto.AccumulatorParseResult a : accPat.getAccumulatorsList()) {
                     accs.add(new AccumulatorIR(
@@ -133,7 +133,7 @@ public final class DrlxRuleAstParseResult {
             }
             case CUSTOM_ACCUMULATE -> {
                 DrlxRuleAstProto.CustomAccumulateParseResult cap = item.getCustomAccumulate();
-                PatternIR srcIr = patternFromProto(cap.getSource());
+                LhsItemIR srcIr = fromProtoLhs(cap.getSource(), file);
                 List<InitVarIR> initVars = new ArrayList<>(cap.getInitVarsCount());
                 for (DrlxRuleAstProto.InitVarParseResult iv : cap.getInitVarsList()) {
                     initVars.add(new InitVarIR(iv.getTypeName(), iv.getName(), iv.getInitializer()));
@@ -196,7 +196,7 @@ public final class DrlxRuleAstParseResult {
         } else if (item instanceof AccumulatePatternIR accPat) {
             DrlxRuleAstProto.AccumulatePatternParseResult.Builder ab =
                     DrlxRuleAstProto.AccumulatePatternParseResult.newBuilder()
-                            .setSource(patternToProto(accPat.source()));
+                            .setSource(toProtoLhs(accPat.source()));
             for (AccumulatorIR acc : accPat.accumulators()) {
                 DrlxRuleAstProto.AccumulatorParseResult.Builder accB =
                         DrlxRuleAstProto.AccumulatorParseResult.newBuilder()
@@ -211,7 +211,7 @@ public final class DrlxRuleAstParseResult {
         } else if (item instanceof CustomAccumulateIR customAcc) {
             DrlxRuleAstProto.CustomAccumulateParseResult.Builder cab =
                     DrlxRuleAstProto.CustomAccumulateParseResult.newBuilder()
-                            .setSource(patternToProto(customAcc.source()))
+                            .setSource(toProtoLhs(customAcc.source()))
                             .setActionBlock(customAcc.actionBlock())
                             .setReverseBlock(customAcc.reverseBlock() != null ? customAcc.reverseBlock() : "")
                             .setResultTypeName(customAcc.resultTypeName())

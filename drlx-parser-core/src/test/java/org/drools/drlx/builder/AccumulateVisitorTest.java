@@ -44,7 +44,7 @@ class AccumulateVisitorTest {
         var item = rule.lhs().get(0);
         assertThat(item).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
         var accPat = (DrlxRuleAstModel.AccumulatePatternIR) item;
-        assertThat(accPat.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).bindName()).isEqualTo("p");
         assertThat(accPat.accumulators()).hasSize(1);
         var acc = accPat.accumulators().get(0);
         assertThat(acc.resultBindName()).isEqualTo("avgAge");
@@ -128,8 +128,8 @@ class AccumulateVisitorTest {
         var rule = parseRule(drlx);
         assertThat(rule.lhs()).hasSize(1);
         var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
-        assertThat(accPat.source().bindName()).isEqualTo("$inline0");
-        assertThat(accPat.source().entryPoint()).isEqualTo("persons");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).bindName()).isEqualTo("$inline0");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).entryPoint()).isEqualTo("persons");
         var acc = accPat.accumulators().get(0);
         assertThat(acc.functionName()).isEqualTo("count");
         assertThat(acc.argExpressions()).isEmpty();
@@ -152,12 +152,12 @@ class AccumulateVisitorTest {
         assertThat(rule.lhs()).hasSize(2);
 
         var accPat0 = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
-        assertThat(accPat0.source().bindName()).isEqualTo("$inline0");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat0.source()).bindName()).isEqualTo("$inline0");
         assertThat(accPat0.accumulators().get(0).functionName()).isEqualTo("min");
         assertThat(accPat0.accumulators().get(0).argExpressions()).containsExactly("$inline0.age");
 
         var accPat1 = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(1);
-        assertThat(accPat1.source().bindName()).isEqualTo("$inline1");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat1.source()).bindName()).isEqualTo("$inline1");
         assertThat(accPat1.accumulators().get(0).functionName()).isEqualTo("max");
         assertThat(accPat1.accumulators().get(0).argExpressions()).containsExactly("$inline1.age");
     }
@@ -192,8 +192,8 @@ class AccumulateVisitorTest {
         var item = rule.lhs().get(0);
         assertThat(item).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
         var accPat = (DrlxRuleAstModel.AccumulatePatternIR) item;
-        assertThat(accPat.source().bindName()).startsWith("$inline");
-        assertThat(accPat.source().entryPoint()).isEqualTo("persons");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).bindName()).startsWith("$inline");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).entryPoint()).isEqualTo("persons");
         assertThat(accPat.accumulators()).hasSize(1);
         var acc = accPat.accumulators().get(0);
         assertThat(acc.functionName()).isEqualTo("avg");
@@ -222,7 +222,7 @@ class AccumulateVisitorTest {
 
         assertThat(roundTripped).isInstanceOf(DrlxRuleAstModel.CustomAccumulateIR.class);
         var rt = (DrlxRuleAstModel.CustomAccumulateIR) roundTripped;
-        assertThat(rt.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) rt.source()).bindName()).isEqualTo("p");
         assertThat(rt.initVars()).hasSize(2);
         assertThat(rt.initVars().get(0).name()).isEqualTo("count");
         assertThat(rt.initVars().get(1).name()).isEqualTo("total");
@@ -273,7 +273,7 @@ class AccumulateVisitorTest {
         assertThat(rule.lhs()).hasSize(1);
         assertThat(rule.lhs().get(0)).isInstanceOf(DrlxRuleAstModel.CustomAccumulateIR.class);
         var custom = (DrlxRuleAstModel.CustomAccumulateIR) rule.lhs().get(0);
-        assertThat(custom.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) custom.source()).bindName()).isEqualTo("p");
         assertThat(custom.initVars()).hasSize(1);
         assertThat(custom.initVars().get(0).typeName()).isEqualTo("int");
         assertThat(custom.initVars().get(0).name()).isEqualTo("s");
@@ -300,7 +300,7 @@ class AccumulateVisitorTest {
         assertThat(rule.lhs()).hasSize(1);
         assertThat(rule.lhs().get(0)).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
         var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
-        assertThat(accPat.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) accPat.source()).bindName()).isEqualTo("p");
         assertThat(accPat.accumulators()).hasSize(1);
         assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
     }
@@ -360,7 +360,7 @@ class AccumulateVisitorTest {
                 """;
         var rule = parseRule(drlx);
         var custom = (DrlxRuleAstModel.CustomAccumulateIR) rule.lhs().get(0);
-        assertThat(custom.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) custom.source()).bindName()).isEqualTo("p");
         assertThat(custom.initVars()).hasSize(2);
         assertThat(custom.initVars().get(0)).isEqualTo(new DrlxRuleAstModel.InitVarIR("int", "count", "0"));
         assertThat(custom.initVars().get(1)).isEqualTo(new DrlxRuleAstModel.InitVarIR("int", "total", "0"));
@@ -570,6 +570,83 @@ class AccumulateVisitorTest {
         var custom = (DrlxRuleAstModel.CustomAccumulateIR) rule.lhs().get(0);
         assertThat(custom.initVars()).hasSize(1);
         assertThat(custom.initVars().get(0).initializer()).isEqualTo("0");
+    }
+
+    @Test
+    void accKeyword2ParamWithAndSourceProducesGroupElementSource() {
+        DrlxRuleAstModel.RuleIR rule = parseRule("""
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        var total = sum(o.amount)),
+                    do { results.add(total); }
+                }
+                """);
+        assertThat(rule.lhs()).hasSize(1);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        assertThat(accPat.source()).isInstanceOf(DrlxRuleAstModel.GroupElementIR.class);
+        var group = (DrlxRuleAstModel.GroupElementIR) accPat.source();
+        assertThat(group.kind()).isEqualTo(DrlxRuleAstModel.GroupElementIR.Kind.AND);
+        assertThat(group.children()).hasSize(2);
+        assertThat(group.children().get(0)).isInstanceOf(DrlxRuleAstModel.PatternIR.class);
+        assertThat(group.children().get(1)).isInstanceOf(DrlxRuleAstModel.PatternIR.class);
+        assertThat(((DrlxRuleAstModel.PatternIR) group.children().get(0)).bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) group.children().get(1)).bindName()).isEqualTo("o");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("sum");
+    }
+
+    @Test
+    void accKeyword3ParamWithAndSourceProducesGroupElementSource() {
+        DrlxRuleAstModel.RuleIR rule = parseRule("""
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        int s = 0;,
+                        s = s + o.amount,
+                        int total = s),
+                    do { results.add(total); }
+                }
+                """);
+        assertThat(rule.lhs()).hasSize(1);
+        var customAcc = (DrlxRuleAstModel.CustomAccumulateIR) rule.lhs().get(0);
+        assertThat(customAcc.source()).isInstanceOf(DrlxRuleAstModel.GroupElementIR.class);
+        var group = (DrlxRuleAstModel.GroupElementIR) customAcc.source();
+        assertThat(group.kind()).isEqualTo(DrlxRuleAstModel.GroupElementIR.Kind.AND);
+        assertThat(group.children()).hasSize(2);
+    }
+
+    @Test
+    void accumulatePatternWithAndSourceProtobufRoundTrip() {
+        var src = new DrlxRuleAstModel.GroupElementIR(
+                DrlxRuleAstModel.GroupElementIR.Kind.AND,
+                List.of(
+                        new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of()),
+                        new DrlxRuleAstModel.PatternIR("var", "o", "orders", List.of("customerId == p.age"), null, List.of(), false, List.of())));
+        var acc = new DrlxRuleAstModel.AccumulatorIR("var", "total", "sum", List.of("o.amount"), List.of("o"));
+        var original = new DrlxRuleAstModel.AccumulatePatternIR(src, List.of(acc));
+
+        var protoLhs = DrlxRuleAstParseResult.toProtoLhs(original);
+        var roundTripped = DrlxRuleAstParseResult.fromProtoLhs(protoLhs, java.nio.file.Path.of("test"));
+
+        assertThat(roundTripped).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
+        var back = (DrlxRuleAstModel.AccumulatePatternIR) roundTripped;
+        assertThat(back.source()).isInstanceOf(DrlxRuleAstModel.GroupElementIR.class);
+        var group = (DrlxRuleAstModel.GroupElementIR) back.source();
+        assertThat(group.kind()).isEqualTo(DrlxRuleAstModel.GroupElementIR.Kind.AND);
+        assertThat(group.children()).hasSize(2);
+        assertThat(((DrlxRuleAstModel.PatternIR) group.children().get(0)).bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) group.children().get(1)).bindName()).isEqualTo("o");
+        assertThat(back.accumulators()).hasSize(1);
+        assertThat(back.accumulators().get(0).functionName()).isEqualTo("sum");
     }
 
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {

@@ -25,6 +25,7 @@ import org.drools.base.rule.MultiAccumulate;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.drlx.builder.DrlxRuleBuilder;
+import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
@@ -978,5 +979,190 @@ class AccumulateTest extends DrlxBuilderTestSupport {
             kieSession.fireAllRules();
         });
         assertThat(observed).containsExactly(50.0);
+    }
+
+    // --- multi-pattern source (and()) tests ---
+
+    @Test
+    void accMultiPatternCount() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule CountJoined {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        var count = count()),
+                    do { results.add(count); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
+            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
+            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
+            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(2L);
+    }
+
+    @Test
+    void accMultiPatternSumSingleBinding() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule SumAmount {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        var total = sum(o.amount)),
+                    do { results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
+            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
+            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
+            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(300.0);
+    }
+
+    @Test
+    void accMultiPatternSumCrossBinding() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule WeightedSum {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        var weighted = sum(p.age * o.amount)),
+                    do { results.add(weighted); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
+            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
+            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
+            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(500.0);
+    }
+
+    @Test
+    void accMultiPatternCustom3Param() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule CustomSum {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        int s = 0;,
+                        s = s + o.amount,
+                        int total = s),
+                    do { results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
+            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
+            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
+            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(300);
+    }
+
+    @Test
+    void accMultiPatternCustom5ParamWithReverse() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Order;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule CustomSumReverse {
+                    acc(and(var p : /persons, var o : /orders[customerId == p.age]),
+                        int s = 0;,
+                        { s = s + o.amount; },
+                        { s = s - o.amount; },
+                        int total = s),
+                    do { results.add(total); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
+            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
+            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
+            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(300);
+    }
+
+    @Test
+    void accSingleChildAndBehavesLikeSingleSource() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule SingleChildAnd {
+                    acc(and(var p : /persons),
+                        var avgAge = avg(p.age)),
+                    do { results.add(avgAge); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            kieSession.getEntryPoint("persons").insert(new Person("A", 20));
+            kieSession.getEntryPoint("persons").insert(new Person("B", 40));
+            kieSession.getEntryPoint("persons").insert(new Person("C", 60));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(40.0);
     }
 }

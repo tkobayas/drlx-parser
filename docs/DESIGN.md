@@ -160,7 +160,7 @@ KieBase
 |-------|------|
 | `DrlxRuleBuilder` | Orchestrator. Coordinates parsing, cache, pre-build, and batch compilation. |
 | `DrlxToRuleAstVisitor` | Walks the ANTLR parse tree and produces `DrlxRuleAstModel` IR records. The only ANTLR-aware step in the pipeline. |
-| `DrlxRuleAstModel` | In-memory IR: `CompilationUnitIR(packageName, unitName, imports, rules)`, `RuleIR(name, annotations, lhs, rhs)`, `RuleAnnotationIR`, `PatternIR`, `ConsequenceIR`, `GroupElementIR`. Sealed interface `LhsItemIR` permits `PatternIR \| GroupElementIR` for tree-shape LHS. `unitName` is the simple name from `unit <Name>;`; the runtime builder resolves it against imports. Shared by runtime build and proto serialization. |
+| `DrlxRuleAstModel` | In-memory IR: `CompilationUnitIR(packageName, unitName, imports, rules)`, `RuleIR(name, annotations, lhs, rhs)`, `RuleAnnotationIR`, `PatternIR`, `ConsequenceIR`, `GroupElementIR`, `AccumulatePatternIR`, `CustomAccumulateIR`. Sealed interface `LhsItemIR` permits `PatternIR \| GroupElementIR` for tree-shape LHS. `AccumulatePatternIR` and `CustomAccumulateIR` use `LhsItemIR source` to support both single-pattern and multi-pattern (AND group) accumulate sources. `unitName` is the simple name from `unit <Name>;`; the runtime builder resolves it against imports. Shared by runtime build and proto serialization. |
 | `DrlxRuleAstRuntimeBuilder` | Builds `KiePackages` from `DrlxRuleAstModel` IR. Uses `DrlxLambdaCompiler` via composition. |
 | `DrlxLambdaCompiler` | Owns lambda compilation: constraints, beta constraints, consequences, batch mode, pre-built metadata reuse. |
 | `DrlxPreBuildLambdaCompiler` | Extends `DrlxLambdaCompiler`. Records lambda metadata during pre-build. |
@@ -171,6 +171,9 @@ KieBase
 | `DrlxRuleAstParseResult` | Protobuf serialization of `DrlxRuleAstModel` IR (save/load). No ANTLR dependency. |
 | `DrlxBuildCacheStrategy` | Enum: `NONE`, `RULE_AST`. Configured via `drlx.compiler.cacheStrategy`. |
 | `DrlxMetadataMismatchMode` | Enum: `FAIL_FAST` (default), `FALLBACK`. Configured via `drlx.compiler.metadataMismatch`. Controls behavior when pre-built lambda metadata is stale or missing. |
+| `DrlxLambdaAccumulator` | `Accumulator` for keyword-form accumulate (`sum`, `avg`, etc.). Delegates to `AccumulateFunction` with optional extractor. Supports multi-source via `DrlxValueExtractor`. |
+| `DrlxCustomAccumulator` | `Accumulator` for custom 3/5-param accumulate (init/action/reverse/result). Uses MVEL3-compiled evaluators for each block. Supports multi-source via `innerDecls` binding. |
+| `DrlxValueExtractor` | Wraps an MVEL3 evaluator to extract a value from a single fact or a map of bindings (multi-source). Used by `DrlxLambdaAccumulator`. |
 | `EvaluatorSink` | Package-private interface implemented by the three lambda classes so `DrlxLambdaCompiler.compileBatch()` can bind compiled evaluators uniformly. |
 | `DrlxRuleUnit` | Wraps unit declaration. |
 
@@ -191,11 +194,13 @@ KieBase
 ## LHS Tree Shape
 
 `RuleIR.lhs` is a `List<LhsItemIR>` where `LhsItemIR` is sealed and permits
-`PatternIR | GroupElementIR`. `GroupElementIR.Kind` currently supports only
-`NOT`; `EXISTS`, `AND`, `OR` enum slots are reserved for follow-up issues
-(#9, #11). The proto schema likewise reserves their field numbers. The
-runtime builder maps `Kind.NOT` to `GroupElementFactory.newNotInstance()`
-and recurses into the group's children for constraint generation.
+`PatternIR | GroupElementIR`. `GroupElementIR.Kind` currently supports `NOT`
+and `AND`. `AND` is used as the source for multi-pattern `accumulate`
+(e.g. `acc(and(var p : /persons, var o : /orders), ...)`); `EXISTS` and `OR`
+enum slots are reserved for follow-up issues (#9, #11). The proto schema
+likewise reserves their field numbers. The runtime builder maps `Kind.NOT`
+to `GroupElementFactory.newNotInstance()` and recurses into the group's
+children for constraint generation.
 
 ## Constraint Types
 
@@ -329,6 +334,8 @@ All tests live in `drlx-parser-core`:
 | `syntax.PositionalTest` | Positional syntax (single/multi-arg, beta path, `@Position` resolution errors) |
 | `syntax.InlineCastTest` | Inline cast `#Type` filtering |
 | `syntax.RuleAnnotationsTest` | `@Salience`/`@Description` (metadata, firing order, import/duplicate/literal errors) |
+| `AccumulateVisitorTest` | Accumulate visitor: keyword-2-param, custom 3/5-param, multi-pattern source parsing, protobuf round-trip |
+| `syntax.AccumulateTest` | Runtime integration: single/multi-pattern accumulate with keyword and custom forms |
 | `DrlxParserTest` | Low-level ANTLR parser verification |
 | `DrlxToJavaParserVisitorTest` | JavaParser AST conversion |
 | `TolerantDrlxToJavaParserVisitorTest` | Error-tolerant parsing edge cases |

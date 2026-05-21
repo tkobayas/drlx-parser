@@ -136,7 +136,7 @@ class DrlxRuleAstParseResultTest {
         assertThat(roundTripped).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
         DrlxRuleAstModel.AccumulatePatternIR back =
                 (DrlxRuleAstModel.AccumulatePatternIR) roundTripped;
-        assertThat(back.source().bindName()).isEqualTo("p");
+        assertThat(((DrlxRuleAstModel.PatternIR) back.source()).bindName()).isEqualTo("p");
         assertThat(back.accumulators()).hasSize(2);
         assertThat(back.accumulators().get(0).functionName()).isEqualTo("avg");
         assertThat(back.accumulators().get(0).resultBindName()).isEqualTo("avgAge");

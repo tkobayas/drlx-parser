@@ -222,6 +222,7 @@ accKeywordItem
 
 accSource
     : boundOopath
+    | andElement
     ;
 
 accBody
