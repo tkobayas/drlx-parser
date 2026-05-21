@@ -246,6 +246,73 @@ class AccumulateTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void customFunctionClassNotFound() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var ss = NoSuchClass.sumSquares(p.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("cannot resolve accumulate function class")
+                .hasMessageContaining("NoSuchClass");
+    }
+
+    @Test
+    void customFunctionFieldNotFound() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.acc.TestAccFuncs;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var ss = TestAccFuncs.noSuchField(p.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("has no static AccumulateFunction field")
+                .hasMessageContaining("noSuchField");
+    }
+
+    @Test
+    void customFunctionFieldWrongType() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.acc.BadContainer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var ss = BadContainer.notAFunction(p.age),
+                    do {}
+                }
+                """;
+        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("is not an AccumulateFunction");
+    }
+
+    @Test
     void unknownFunctionRejected() {
         final String rule = """
                 package org.drools.drlx.parser;
