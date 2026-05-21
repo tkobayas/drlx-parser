@@ -472,12 +472,12 @@ public class DrlxRuleAstRuntimeBuilder {
                 new org.drools.base.rule.accessor.Accumulator[n];
         for (int i = 0; i < n; i++) {
             if (multiSource) {
-                accs[i] = buildSingleAccumulatorMulti(accumulators.get(i), sourceScope);
+                accs[i] = buildSingleAccumulatorMulti(accumulators.get(i), sourceScope, typeResolver);
             } else {
                 Declaration srcDecl = ((Pattern) srcElement).getDeclaration();
                 Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
                 String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
-                accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName);
+                accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName, typeResolver);
             }
         }
 
@@ -487,17 +487,17 @@ public class DrlxRuleAstRuntimeBuilder {
                     ? new Declaration[0]
                     : requiredFor(accumulators.get(0), innerScope);
             SingleAccumulate single = new SingleAccumulate(srcElement, required, accs[0]);
-            wrap = wrapResultPattern(accumulators.get(0), single);
+            wrap = wrapResultPattern(accumulators.get(0), single, typeResolver);
         } else {
             MultiAccumulate multi = new MultiAccumulate(srcElement, new Declaration[0], accs, n);
-            wrap = wrapMultiResultPattern(accumulators, multi);
+            wrap = wrapMultiResultPattern(accumulators, multi, typeResolver);
         }
 
         parent.addChild(wrap);
 
         for (int i = 0; i < n; i++) {
             AccumulatorIR acc = accumulators.get(i);
-            Class<?> resultClass = resultClassFor(acc);
+            Class<?> resultClass = resultClassFor(acc, typeResolver);
             Declaration decl = wrap.getDeclarations().get(acc.resultBindName());
             outerScope.put(acc.resultBindName(),
                     new BoundVariable(acc.resultBindName(), resultClass, wrap, decl));
@@ -630,9 +630,9 @@ public class DrlxRuleAstRuntimeBuilder {
     private org.drools.base.rule.accessor.Accumulator buildSingleAccumulator(
             AccumulatorIR acc,
             Class<?> srcClass,
-            String srcBindingName) {
-        AccumulateFunctionRegistry.Resolution resolved =
-                AccumulateFunctionRegistry.resolve(acc.functionName());
+            String srcBindingName,
+            TypeResolver typeResolver) {
+        ResolvedFunction resolved = resolveFunction(acc.functionName(), typeResolver);
 
         int argCount = acc.argExpressions().size();
         if (resolved.acceptsZeroArgs()) {
@@ -656,23 +656,14 @@ public class DrlxRuleAstRuntimeBuilder {
                     acc.argExpressions().get(0), srcClass, srcBindingName);
         }
 
-        @SuppressWarnings("unchecked")
-        AccumulateFunction<Serializable> fn;
-        try {
-            fn = (AccumulateFunction<Serializable>) resolved.functionClass()
-                    .getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("cannot instantiate " + resolved.functionClass(), e);
-        }
-
-        return new DrlxLambdaAccumulator(fn, extractor);
+        return new DrlxLambdaAccumulator(resolved.instance(), extractor);
     }
 
     private org.drools.base.rule.accessor.Accumulator buildSingleAccumulatorMulti(
             AccumulatorIR acc,
-            Map<String, BoundVariable> sourceScope) {
-        AccumulateFunctionRegistry.Resolution resolved =
-                AccumulateFunctionRegistry.resolve(acc.functionName());
+            Map<String, BoundVariable> sourceScope,
+            TypeResolver typeResolver) {
+        ResolvedFunction resolved = resolveFunction(acc.functionName(), typeResolver);
 
         int argCount = acc.argExpressions().size();
         if (resolved.acceptsZeroArgs()) {
@@ -691,16 +682,7 @@ public class DrlxRuleAstRuntimeBuilder {
                     acc.argExpressions().get(0), sourceScope);
         }
 
-        @SuppressWarnings("unchecked")
-        AccumulateFunction<Serializable> fn;
-        try {
-            fn = (AccumulateFunction<Serializable>) resolved.functionClass()
-                    .getDeclaredConstructor().newInstance();
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("cannot instantiate " + resolved.functionClass(), e);
-        }
-
-        return new DrlxLambdaAccumulator(fn, multiExtractor, true);
+        return new DrlxLambdaAccumulator(resolved.instance(), multiExtractor, true);
     }
 
     /** Map referenced bindings through the inner scope to a Declaration[] for SingleAccumulate. */
@@ -714,12 +696,13 @@ public class DrlxRuleAstRuntimeBuilder {
                 .toArray(Declaration[]::new);
     }
 
-    private static Pattern wrapMultiResultPattern(List<AccumulatorIR> accs,
-                                                  MultiAccumulate multi) {
+    private Pattern wrapMultiResultPattern(List<AccumulatorIR> accs,
+                                          MultiAccumulate multi,
+                                          TypeResolver typeResolver) {
         ReadAccessor selfReader = new SelfReferenceClassFieldReader(Object[].class);
         Pattern p = new Pattern(0, new ClassObjectType(Object[].class));
         for (int i = 0; i < accs.size(); i++) {
-            Class<?> rType = resultClassFor(accs.get(i));
+            Class<?> rType = resultClassFor(accs.get(i), typeResolver);
             p.addDeclaration(new Declaration(
                     accs.get(i).resultBindName(),
                     new ArrayElementReader(selfReader, i, rType),
@@ -730,8 +713,9 @@ public class DrlxRuleAstRuntimeBuilder {
         return p;
     }
 
-    private static Pattern wrapResultPattern(AccumulatorIR acc, SingleAccumulate single) {
-        Class<?> resultType = resultClassFor(acc);
+    private Pattern wrapResultPattern(AccumulatorIR acc, SingleAccumulate single,
+                                      TypeResolver typeResolver) {
+        Class<?> resultType = resultClassFor(acc, typeResolver);
         Pattern p = new Pattern(0, new ClassObjectType(resultType), acc.resultBindName());
         p.addDeclaration(new Declaration(acc.resultBindName(),
                 new SelfReferenceClassFieldReader(resultType), p, true));
@@ -740,11 +724,10 @@ public class DrlxRuleAstRuntimeBuilder {
     }
 
 
-    private static Class<?> resultClassFor(AccumulatorIR acc) {
-        AccumulateFunctionRegistry.Resolution r =
-                AccumulateFunctionRegistry.resolve(acc.functionName());
+    private Class<?> resultClassFor(AccumulatorIR acc, TypeResolver typeResolver) {
+        ResolvedFunction resolved = resolveFunction(acc.functionName(), typeResolver);
         if ("var".equals(acc.resultTypeName())) {
-            return r.resultType();
+            return resolved.resultType();
         }
         return switch (acc.resultTypeName()) {
             case "int"     -> Integer.class;
@@ -759,10 +742,74 @@ public class DrlxRuleAstRuntimeBuilder {
                 try {
                     yield Class.forName(acc.resultTypeName());
                 } catch (ClassNotFoundException primitiveOrUnqualified) {
-                    yield r.resultType();
+                    yield resolved.resultType();
                 }
             }
         };
+    }
+
+    private record ResolvedFunction(AccumulateFunction<Serializable> instance,
+                                    Class<?> resultType,
+                                    boolean acceptsZeroArgs) {
+    }
+
+    @SuppressWarnings("unchecked")
+    private ResolvedFunction resolveFunction(String functionName, TypeResolver typeResolver) {
+        AccumulateFunctionRegistry.Resolution builtIn = AccumulateFunctionRegistry.resolve(functionName);
+        if (builtIn != null) {
+            try {
+                AccumulateFunction<Serializable> fn =
+                        (AccumulateFunction<Serializable>) builtIn.functionClass()
+                                .getDeclaredConstructor().newInstance();
+                return new ResolvedFunction(fn, builtIn.resultType(), builtIn.acceptsZeroArgs());
+            } catch (ReflectiveOperationException e) {
+                throw new RuntimeException("cannot instantiate " + builtIn.functionClass(), e);
+            }
+        }
+
+        int dot = functionName.lastIndexOf('.');
+        String className = functionName.substring(0, dot);
+        String fieldName = functionName.substring(dot + 1);
+
+        Class<?> containerClass;
+        try {
+            containerClass = typeResolver.resolveType(className);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(
+                    "cannot resolve accumulate function class '" + className
+                    + "' — ensure it is imported");
+        }
+
+        java.lang.reflect.Field field;
+        try {
+            field = containerClass.getField(fieldName);
+        } catch (NoSuchFieldException e) {
+            throw new RuntimeException(
+                    "class '" + className + "' has no static AccumulateFunction field named '"
+                    + fieldName + "'");
+        }
+
+        if (!java.lang.reflect.Modifier.isStatic(field.getModifiers())) {
+            throw new RuntimeException(
+                    "class '" + className + "' has no static AccumulateFunction field named '"
+                    + fieldName + "'");
+        }
+
+        Object value;
+        try {
+            value = field.get(null);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(
+                    "cannot access field '" + className + "." + fieldName + "'", e);
+        }
+
+        if (!(value instanceof AccumulateFunction)) {
+            throw new RuntimeException(
+                    "field '" + className + "." + fieldName + "' is not an AccumulateFunction");
+        }
+
+        AccumulateFunction<Serializable> fn = (AccumulateFunction<Serializable>) value;
+        return new ResolvedFunction(fn, fn.getResultType(), false);
     }
 
     private void buildEvalCondition(EvalIR evalIr,
