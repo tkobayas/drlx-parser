@@ -59,11 +59,8 @@ class AccumulateFunctionRegistryTest {
     }
 
     @Test
-    void rejectsQualifiedName() {
-        assertThatThrownBy(() -> AccumulateFunctionRegistry.resolve("Func.avg"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("qualified accumulate function names")
-                .hasMessageContaining("not yet supported")
-                .hasMessageContaining("avg, sum, min, max, count");
+    void qualifiedNameReturnsNull() {
+        var resolved = AccumulateFunctionRegistry.resolve("Func.avg");
+        assertThat(resolved).isNull();
     }
 }

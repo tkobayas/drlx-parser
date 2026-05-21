@@ -48,10 +48,7 @@ public final class AccumulateFunctionRegistry {
 
     public static Resolution resolve(String functionName) {
         if (functionName.contains(".")) {
-            throw new IllegalArgumentException(
-                    "qualified accumulate function names ('" + functionName + "') "
-                    + "are not yet supported — use unqualified built-ins ("
-                    + BUILTIN_LIST + ")");
+            return null;
         }
         Resolution r = BUILTINS.get(functionName);
         if (r == null) {
