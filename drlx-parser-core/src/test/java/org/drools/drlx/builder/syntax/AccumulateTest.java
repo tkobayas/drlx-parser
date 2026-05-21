@@ -156,25 +156,93 @@ class AccumulateTest extends DrlxBuilderTestSupport {
     }
 
     @Test
-    void qualifiedFunctionNameRejected() {
+    void customFunctionSumSquares() {
         final String rule = """
                 package org.drools.drlx.parser;
 
                 import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.acc.TestAccFuncs;
 
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
                 rule R {
                     var p : /persons,
-                    var avgAge = Func.avg(p.age),
-                    do {}
+                    var ss = TestAccFuncs.sumSquares(p.age),
+                    do { results.add(ss); }
                 }
                 """;
-        assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("qualified accumulate function names")
-                .hasMessageContaining("Func.avg");
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 3));
+            entryPoint.insert(new Person("B", 4));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(25.0);  // 3² + 4² = 9 + 16 = 25.0
+    }
+
+    @Test
+    void customFunctionMultiAccumulate() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.acc.TestAccFuncs;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var ss = TestAccFuncs.sumSquares(p.age),
+                    var dc = TestAccFuncs.doubleCount(p.age),
+                    do { results.add(ss); results.add(dc); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 3));
+            entryPoint.insert(new Person("B", 4));
+            entryPoint.insert(new Person("C", 5));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(50.0, 6L);  // 9+16+25=50.0, count=3 × 2=6
+    }
+
+    @Test
+    void mixedBuiltinAndCustomFunction() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.acc.TestAccFuncs;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule R {
+                    var p : /persons,
+                    var avgAge = avg(p.age),
+                    var ss = TestAccFuncs.sumSquares(p.age),
+                    do { results.add(avgAge); results.add(ss); }
+                }
+                """;
+
+        final List<Object> observed = new ArrayList<>();
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.setGlobal("results", observed);
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("A", 3));
+            entryPoint.insert(new Person("B", 4));
+            kieSession.fireAllRules();
+        });
+        assertThat(observed).containsExactly(3.5, 25.0);  // avg(3,4)=3.5, 9+16=25.0
     }
 
     @Test
