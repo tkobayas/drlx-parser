@@ -31,5 +31,7 @@ public class MyUnit implements RuleUnitData {
     public DataStore<Vehicle> objects = DataSource.createStore();
     public DataStore<Order> orders = DataSource.createStore();
     public DataStore<ReactiveEmployee> reactiveEmployees = DataSource.createStore();
+    public DataStore<Person> personsByAge = DataSource.createStore();
+    public DataStore<Person> personsByAgeRange = DataSource.createStore();
     public List<Object> results = new ArrayList<>();
 }

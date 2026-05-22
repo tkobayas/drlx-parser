@@ -18,8 +18,11 @@ public final class DrlxRuleAstModel {
                                     List<RuleIR> rules) {
     }
 
+    public record RuleParameterIR(String typeName, String paramName) { }
+
     public record RuleIR(String name,
                          List<RuleAnnotationIR> annotations,
+                         List<RuleParameterIR> parameters,
                          List<LhsItemIR> lhs,
                          ConsequenceIR rhs) {
     }

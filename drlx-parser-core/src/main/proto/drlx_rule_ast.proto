@@ -19,6 +19,12 @@ message RuleParseResult {
   repeated RuleAnnotationParseResult annotations = 3;
   repeated LhsItemParseResult lhs = 4;             // NEW — tree-shape LHS
   ConsequenceParseResult rhs = 5;                  // NEW — consequence out of items
+  repeated RuleParameterParseResult parameters = 6;
+}
+
+message RuleParameterParseResult {
+  string type_name = 1;
+  string param_name = 2;
 }
 
 message LhsItemParseResult {

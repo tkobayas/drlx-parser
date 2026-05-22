@@ -37,8 +37,17 @@ unitDeclaration
     ;
 
 // Rule declaration — annotations may prefix the RULE keyword (e.g. @Salience(10))
+// Optional parameter list makes the rule a query (DRLXXXX §Queries).
 ruleDeclaration
-    : annotation* RULE identifier '{' ruleBody '}'
+    : annotation* RULE identifier ruleParameterList? '{' ruleBody '}'
+    ;
+
+ruleParameterList
+    : '(' ruleParameter (',' ruleParameter)* ')'
+    ;
+
+ruleParameter
+    : typeType identifier
     ;
 
 // Rule body contains rule items (patterns and consequences)
@@ -49,8 +58,11 @@ ruleBody
 
 // Rule item can be a pattern, a `not` / `exists` / `and` / `or` group
 // element, or a consequence. CE terminator `,` is owned here.
+// `oopathExpression ','` supports bare (unbound) query invocations at the
+// top level (DRLXXXX §Queries): `/queryName(arg, var out),`
 ruleItem
     : rulePattern
+    | oopathExpression ','
     | accumulateItem ','
     | accKeywordItem ','
     | notElement ','
@@ -174,9 +186,16 @@ oopathExpression
 // be empty to allow `[][watch]` form.
 oopathRoot
     : identifier (HASH identifier)?
-      ('(' expression (',' expression)* ')')?
+      ('(' positionalArg (',' positionalArg)* ')')?
       ('[' (drlxExpression (',' drlxExpression)*)? ']')?
       ('[' watchItem (',' watchItem)* ']')?
+    ;
+
+// Positional argument — either a regular expression or `var identifier`
+// for out-bind variables in query invocations (DRLXXXX §Queries).
+positionalArg
+    : VAR identifier
+    | expression
     ;
 
 // OOPath chunk - navigation segments after the root; no positional

@@ -21,6 +21,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
 
@@ -90,6 +91,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private RuleIR buildRule(DrlxParser.RuleDeclarationContext ctx,
                              Map<String, String> annotationImports) {
         String name = ctx.identifier().getText();
+        List<RuleParameterIR> parameters = List.of();
+        if (ctx.ruleParameterList() != null) {
+            parameters = ctx.ruleParameterList().ruleParameter().stream()
+                    .map(p -> new RuleParameterIR(p.typeType().getText(), p.identifier().getText()))
+                    .toList();
+        }
         List<RuleAnnotationIR> annotations = buildRuleAnnotations(ctx, annotationImports);
         List<LhsItemIR> lhs = new ArrayList<>();
         ConsequenceIR rhs = null;
@@ -161,6 +168,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     rhs = new ConsequenceIR(extractConsequence(itemCtx.ruleConsequence()));
                 } else if (itemCtx.rulePattern() != null) {
                     pendingPattern = buildPattern(itemCtx.rulePattern());
+                } else if (itemCtx.oopathExpression() != null) {
+                    lhs.add(buildPatternFromOopath(itemCtx.oopathExpression()));
                 } else if (itemCtx.notElement() != null) {
                     lhs.add(buildNotElement(itemCtx.notElement()));
                 } else if (itemCtx.existsElement() != null) {
@@ -179,7 +188,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             flushPending(lhs, pendingPattern, pendingAccs);
         }
-        return new RuleIR(name, annotations, List.copyOf(lhs), rhs);
+        return new RuleIR(name, annotations, parameters, List.copyOf(lhs), rhs);
     }
 
     private List<RuleAnnotationIR> buildRuleAnnotations(DrlxParser.RuleDeclarationContext ctx,
@@ -810,13 +819,18 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return null;
     }
 
-    private static List<String> extractPositionalArgs(DrlxParser.OopathExpressionContext ctx) {
+    private List<String> extractPositionalArgs(DrlxParser.OopathExpressionContext ctx) {
         DrlxParser.OopathRootContext root = ctx.oopathRoot();
-        if (root == null || root.expression() == null || root.expression().isEmpty()) {
+        if (root == null || root.positionalArg() == null || root.positionalArg().isEmpty()) {
             return List.of();
         }
-        return root.expression().stream()
-                .map(ParserRuleContext::getText)
+        return root.positionalArg().stream()
+                .map(arg -> {
+                    if (arg.VAR() != null) {
+                        return "var " + arg.identifier().getText();
+                    }
+                    return getText(arg.expression());
+                })
                 .toList();
     }
 

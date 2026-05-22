@@ -22,6 +22,7 @@ import org.drools.base.base.SalienceInteger;
 import org.drools.base.base.extractors.ArrayElementReader;
 import org.drools.base.base.extractors.SelfReferenceClassFieldReader;
 import org.drools.base.definitions.impl.KnowledgePackageImpl;
+import org.drools.base.definitions.rule.impl.QueryImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.EntryPointId;
@@ -33,7 +34,10 @@ import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.rule.accessor.ReadAccessor;
+import org.drools.base.rule.QueryArgument;
+import org.drools.base.rule.QueryElement;
 import org.drools.base.rule.constraint.Constraint;
+import org.drools.base.rule.constraint.QueryNameConstraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
 import org.kie.api.runtime.rule.AccumulateFunction;
@@ -49,6 +53,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
 import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
 import org.drools.util.TypeResolver;
@@ -100,8 +105,23 @@ public class DrlxRuleAstRuntimeBuilder {
         Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
         registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
 
-        parseResult.rules().forEach(rule ->
-                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass, globalTypes, dataStoreGlobalNames, updateRewriter)));
+        Map<String, QueryImpl> queryRegistry = new LinkedHashMap<>();
+
+        for (RuleIR rule : parseResult.rules()) {
+            if (!rule.parameters().isEmpty()) {
+                QueryImpl query = buildQuery(rule, pkg.getTypeResolver(), entryPointTypes, unitClass);
+                String entryPointName = Character.toLowerCase(rule.name().charAt(0)) + rule.name().substring(1);
+                queryRegistry.put(entryPointName, query);
+                pkg.addRule(query);
+            }
+        }
+
+        for (RuleIR rule : parseResult.rules()) {
+            if (rule.parameters().isEmpty()) {
+                pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass,
+                                     globalTypes, dataStoreGlobalNames, updateRewriter, queryRegistry));
+            }
+        }
 
         List<KiePackage> out = new ArrayList<>();
         out.add(pkg);
@@ -327,7 +347,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                Class<?> unitClass,
                                Map<String, java.lang.reflect.Type> globalTypes,
                                Set<String> dataStoreGlobalNames,
-                               DataStoreUpdateRewriter updateRewriter) {
+                               DataStoreUpdateRewriter updateRewriter,
+                               Map<String, QueryImpl> queryRegistry) {
         lambdaCompiler.beginRule(parseResult.name());
 
         RuleImpl rule = new RuleImpl(parseResult.name());
@@ -337,7 +358,7 @@ public class DrlxRuleAstRuntimeBuilder {
         GroupElement root = GroupElementFactory.newAndInstance();
         Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
 
-        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables);
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry);
 
         if (parseResult.rhs() != null) {
             Map<String, Type<?>> types = lambdaCompiler.getTypeMap(root);
@@ -355,14 +376,95 @@ public class DrlxRuleAstRuntimeBuilder {
         return rule;
     }
 
+    private QueryImpl buildQuery(RuleIR parseResult,
+                                 TypeResolver typeResolver,
+                                 Map<String, Class<?>> entryPointTypes,
+                                 Class<?> unitClass) {
+        lambdaCompiler.beginRule(parseResult.name());
+
+        QueryImpl query = new QueryImpl(parseResult.name());
+
+        Pattern prefixPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0,
+                ClassObjectType.DroolsQuery_ObjectType, null);
+
+        QueryNameConstraint nameConstraint = new QueryNameConstraint(null, query.getName());
+        prefixPattern.addConstraint(nameConstraint);
+
+        List<RuleParameterIR> params = parseResult.parameters();
+        Declaration[] paramDecls = new Declaration[params.size()];
+        for (int i = 0; i < params.size(); i++) {
+            RuleParameterIR param = params.get(i);
+            Class<?> paramType = resolveOrThrow(param.typeName(), typeResolver);
+            Declaration decl = prefixPattern.addDeclaration(param.paramName());
+            ArrayElementReader reader = new ArrayElementReader(
+                    DroolsQueryElementsReader.INSTANCE, i, paramType);
+            decl.setReadAccessor(reader);
+            paramDecls[i] = decl;
+        }
+        query.setParameters(paramDecls);
+
+        GroupElement root = GroupElementFactory.newAndInstance();
+        root.addChild(prefixPattern);
+
+        Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
+        for (int i = 0; i < params.size(); i++) {
+            RuleParameterIR param = params.get(i);
+            Class<?> paramType = resolveOrThrow(param.typeName(), typeResolver);
+            boundVariables.put(param.paramName(),
+                    new BoundVariable(param.paramName(), paramType, prefixPattern, paramDecls[i]));
+        }
+
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, Map.of());
+
+        query.setLhs(root);
+        return query;
+    }
+
     private void buildLhs(List<LhsItemIR> items,
                           GroupElement parent,
                           TypeResolver typeResolver,
                           Map<String, Class<?>> entryPointTypes,
                           Class<?> unitClass,
                           Map<String, BoundVariable> boundVariables) {
+        buildLhs(items, parent, typeResolver, entryPointTypes, unitClass, boundVariables, Map.of());
+    }
+
+    private void buildLhs(List<LhsItemIR> items,
+                          GroupElement parent,
+                          TypeResolver typeResolver,
+                          Map<String, Class<?>> entryPointTypes,
+                          Class<?> unitClass,
+                          Map<String, BoundVariable> boundVariables,
+                          Map<String, QueryImpl> queryRegistry) {
         for (LhsItemIR item : items) {
             if (item instanceof PatternIR patternIr) {
+                QueryImpl targetQuery = queryRegistry.get(patternIr.entryPoint());
+                if (targetQuery != null && !patternIr.positionalArgs().isEmpty()) {
+                    QueryElement queryElement = buildQueryElement(
+                            patternIr, targetQuery, boundVariables);
+                    parent.addChild(queryElement);
+                    Declaration[] queryParams = targetQuery.getParameters();
+                    List<String> args = patternIr.positionalArgs();
+                    for (int i = 0; i < args.size(); i++) {
+                        String arg = args.get(i);
+                        String varName = null;
+                        if (arg.startsWith("var ")) {
+                            varName = arg.substring(4).trim();
+                        } else if (!boundVariables.containsKey(arg) && isSimpleIdentifier(arg)) {
+                            varName = arg;
+                        }
+                        if (varName != null) {
+                            Class<?> paramType = queryParams[i].getDeclarationClass();
+                            Pattern resultPattern = queryElement.getResultPattern();
+                            Declaration decl = resultPattern.getDeclarations().get(varName);
+                            if (decl != null) {
+                                boundVariables.put(varName,
+                                        new BoundVariable(varName, paramType, resultPattern, decl));
+                            }
+                        }
+                    }
+                    continue;
+                }
                 Pattern pattern = buildPattern(patternIr, typeResolver, entryPointTypes, unitClass, boundVariables);
                 parent.addChild(pattern);
                 Declaration declaration = pattern.getDeclaration();
@@ -378,6 +480,11 @@ public class DrlxRuleAstRuntimeBuilder {
                     case AND    -> GroupElementFactory.newAndInstance();
                     case OR     -> GroupElementFactory.newOrInstance();
                 };
+                // OR/NOT/EXISTS inner bindings are branch-local and must not
+                // leak to the outer scope. AND bindings propagate normally.
+                boolean scopeIsolated = group.kind() != GroupElementIR.Kind.AND;
+                Map<String, BoundVariable> innerScope = scopeIsolated
+                        ? new LinkedHashMap<>(boundVariables) : boundVariables;
                 // Drools enforces exactly one child on both NOT and EXISTS
                 // (GroupElement.addChild). For multi-element forms wrap the
                 // children in an AND so the group element has exactly one
@@ -386,10 +493,10 @@ public class DrlxRuleAstRuntimeBuilder {
                         || group.kind() == GroupElementIR.Kind.EXISTS)
                         && group.children().size() > 1) {
                     GroupElement andInstance = GroupElementFactory.newAndInstance();
-                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, boundVariables);
+                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, innerScope);
                     ge.addChild(andInstance);
                 } else {
-                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, boundVariables);
+                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope);
                 }
                 parent.addChild(ge);
             } else if (item instanceof EvalIR evalIr) {
@@ -810,6 +917,90 @@ public class DrlxRuleAstRuntimeBuilder {
 
         AccumulateFunction<Serializable> fn = (AccumulateFunction<Serializable>) value;
         return new ResolvedFunction(fn, fn.getResultType(), false);
+    }
+
+    private QueryElement buildQueryElement(PatternIR patternIr,
+                                          QueryImpl targetQuery,
+                                          Map<String, BoundVariable> boundVariables) {
+        Declaration[] queryParams = targetQuery.getParameters();
+        List<String> args = patternIr.positionalArgs();
+
+        if (args.size() != queryParams.length) {
+            throw new RuntimeException(
+                    "query '" + targetQuery.getName() + "' expects " + queryParams.length
+                    + " arguments but got " + args.size());
+        }
+
+        QueryArgument[] arguments = new QueryArgument[args.size()];
+        List<Integer> varIndexes = new ArrayList<>();
+        List<Declaration> requiredDeclarations = new ArrayList<>();
+
+        for (int i = 0; i < args.size(); i++) {
+            String arg = args.get(i);
+            if (arg.startsWith("var ")) {
+                arguments[i] = QueryArgument.VAR;
+                varIndexes.add(i);
+            } else {
+                BoundVariable bv = boundVariables.get(arg);
+                if (bv != null) {
+                    arguments[i] = new QueryArgument.Declr(bv.declaration());
+                    requiredDeclarations.add(bv.declaration());
+                } else if (isSimpleIdentifier(arg)) {
+                    arguments[i] = QueryArgument.VAR;
+                    varIndexes.add(i);
+                } else {
+                    arguments[i] = new QueryArgument.Literal(parseLiteral(arg));
+                }
+            }
+        }
+
+        ReadAccessor selfReader = new SelfReferenceClassFieldReader(Object[].class);
+        Pattern resultPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0,
+                new ClassObjectType(Object[].class), null);
+
+        for (int idx : varIndexes) {
+            String varName = args.get(idx);
+            if (varName.startsWith("var ")) {
+                varName = varName.substring(4).trim();
+            }
+            Class<?> paramType = queryParams[idx].getDeclarationClass();
+            Declaration decl = resultPattern.addDeclaration(varName);
+            decl.setReadAccessor(new ArrayElementReader(selfReader, idx, paramType));
+        }
+
+        int[] varIndexArray = varIndexes.stream().mapToInt(Integer::intValue).toArray();
+
+        return new QueryElement(
+                resultPattern,
+                targetQuery.getName(),
+                arguments,
+                varIndexArray,
+                requiredDeclarations.toArray(new Declaration[0]),
+                true,
+                false);
+    }
+
+    private static boolean isSimpleIdentifier(String s) {
+        if (s == null || s.isEmpty()) return false;
+        if (!Character.isJavaIdentifierStart(s.charAt(0))) return false;
+        for (int i = 1; i < s.length(); i++) {
+            if (!Character.isJavaIdentifierPart(s.charAt(i))) return false;
+        }
+        return true;
+    }
+
+    private static Object parseLiteral(String literal) {
+        if (literal.startsWith("\"") && literal.endsWith("\"")) {
+            return literal.substring(1, literal.length() - 1);
+        }
+        try { return Integer.parseInt(literal); }
+        catch (NumberFormatException e1) {
+            try { return Long.parseLong(literal); }
+            catch (NumberFormatException e2) {
+                try { return Double.parseDouble(literal); }
+                catch (NumberFormatException e3) { return literal; }
+            }
+        }
     }
 
     private void buildEvalCondition(EvalIR evalIr,

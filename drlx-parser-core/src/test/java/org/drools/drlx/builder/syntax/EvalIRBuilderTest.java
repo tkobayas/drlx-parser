@@ -49,6 +49,7 @@ class EvalIRBuilderTest {
         RuleIR rule = new RuleIR(
                 "R",
                 List.of(),
+                List.of(),
                 List.of((LhsItemIR) pattern, (LhsItemIR) eval),
                 rhs);
 

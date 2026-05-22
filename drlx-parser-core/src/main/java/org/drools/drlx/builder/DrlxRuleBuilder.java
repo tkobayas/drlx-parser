@@ -130,6 +130,10 @@ public class DrlxRuleBuilder {
         return new DrlxLambdaCompiler(batchCompiler);
     }
 
+    public static CompilationUnitIR parseToAst(String drlxSource) {
+        return parseToRuleAst(drlxSource);
+    }
+
     private static CompilationUnitIR parseToRuleAst(String drlxSource) {
         CharStream charStream = CharStreams.fromString(drlxSource);
         DrlxLexer lexer = new DrlxLexer(charStream);

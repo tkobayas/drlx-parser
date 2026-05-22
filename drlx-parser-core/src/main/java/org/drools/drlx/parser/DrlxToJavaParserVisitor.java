@@ -492,7 +492,7 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
     @Override
     public Node visitOopathRoot(DrlxParser.OopathRootContext ctx) {
-        if (ctx.expression() != null && !ctx.expression().isEmpty()) {
+        if (ctx.positionalArg() != null && !ctx.positionalArg().isEmpty()) {
             throw new UnsupportedOperationException(
                     "Positional syntax is not supported in DrlxToJavaParserVisitor — "
                     + "use DrlxToRuleAstVisitor for DRLX→RuleImpl. "

@@ -197,10 +197,11 @@ public class DrlxLambdaBetaConstraint extends MutableTypeConstraint<ContextEntry
             }
         }
 
-        // Extract bound variables from tuple
+        // Extract bound variables from tuple via declaration's ReadAccessor
+        // (handles both regular SelfReference bindings and ArrayElementReader for query params)
         for (Declaration decl : requiredDeclarations) {
             FactHandle fh = tuple.get(decl);
-            map.put(decl.getIdentifier(), fh != null ? fh.getObject() : null);
+            map.put(decl.getIdentifier(), fh != null ? decl.getValue(null, fh.getObject()) : null);
         }
 
         return map;

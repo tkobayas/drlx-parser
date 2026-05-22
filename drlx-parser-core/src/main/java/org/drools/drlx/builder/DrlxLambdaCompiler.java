@@ -472,6 +472,11 @@ public class DrlxLambdaCompiler {
                     types.put(d.getIdentifier(),
                               Type.type(d.getExtractor().getExtractToClass()));
                 }
+            } else if (child instanceof org.drools.base.rule.QueryElement qe) {
+                for (Declaration d : qe.getResultPattern().getDeclarations().values()) {
+                    types.put(d.getIdentifier(),
+                              Type.type(d.getExtractor().getExtractToClass()));
+                }
             } else if (child instanceof GroupElement nested) {
                 collectPatternTypes(nested, types);
             }

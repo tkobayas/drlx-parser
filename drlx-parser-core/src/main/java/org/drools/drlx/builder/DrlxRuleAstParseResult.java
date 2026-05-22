@@ -24,6 +24,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
 import org.drools.drlx.builder.proto.DrlxRuleAstProto;
 
 /**
@@ -87,9 +88,15 @@ public final class DrlxRuleAstParseResult {
                 ruleAnnotations.add(new RuleAnnotationIR(fromProtoKind(annPR.getKind()), annPR.getRawValue()));
             }
 
+            List<RuleParameterIR> parameters = new ArrayList<>();
+            for (DrlxRuleAstProto.RuleParameterParseResult paramPR : ruleParseResult.getParametersList()) {
+                parameters.add(new RuleParameterIR(paramPR.getTypeName(), paramPR.getParamName()));
+            }
+
             rules.add(new RuleIR(
                     ruleParseResult.getName(),
                     List.copyOf(ruleAnnotations),
+                    List.copyOf(parameters),
                     List.copyOf(lhs),
                     rhs));
         }
@@ -174,6 +181,12 @@ public final class DrlxRuleAstParseResult {
             builder.addAnnotations(DrlxRuleAstProto.RuleAnnotationParseResult.newBuilder()
                     .setKind(toProtoKind(ann.kind()))
                     .setRawValue(ann.rawValue())
+                    .build());
+        }
+        for (RuleParameterIR param : rule.parameters()) {
+            builder.addParameters(DrlxRuleAstProto.RuleParameterParseResult.newBuilder()
+                    .setTypeName(param.typeName())
+                    .setParamName(param.paramName())
                     .build());
         }
         return builder.build();
