@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.drools.drlx.domain.Person;
+import org.drools.drlx.domain.Trust;
 import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
 import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
@@ -178,5 +179,42 @@ class QueryTest extends DrlxBuilderTestSupport {
         assertThatThrownBy(() -> newBuilder().build(source))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("expects 2 arguments but got 1");
+    }
+
+    @Test
+    void recursiveQueryTransitiveClosure() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule Trusts(String a, String b) {
+                    or(
+                        /trusts(a, b),
+                        and(/trusts(a, var z), /trusts(z, b))
+                    ),
+                }
+
+                rule R1 {
+                    /trusts("A", var t),
+                    do { results.add(t); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.trusts.add(new Trust("A", "B"));
+        unit.trusts.add(new Trust("B", "C"));
+        unit.trusts.add(new Trust("C", "D"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            // Transitive closure from A: direct A->B, via B->C, via C->D
+            assertThat(unit.results).containsExactlyInAnyOrder("B", "C", "D");
+        }
     }
 }

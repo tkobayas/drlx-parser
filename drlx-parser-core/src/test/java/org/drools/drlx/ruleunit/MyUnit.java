@@ -11,6 +11,7 @@ import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.domain.PlainLocation;
 import org.drools.drlx.domain.ReactiveEmployee;
+import org.drools.drlx.domain.Trust;
 import org.drools.drlx.domain.Vehicle;
 import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
@@ -31,6 +32,7 @@ public class MyUnit implements RuleUnitData {
     public DataStore<Vehicle> objects = DataSource.createStore();
     public DataStore<Order> orders = DataSource.createStore();
     public DataStore<ReactiveEmployee> reactiveEmployees = DataSource.createStore();
+    public DataStore<Trust> trusts = DataSource.createStore();
     public DataStore<Person> personsByAge = DataSource.createStore();
     public DataStore<Person> personsByAgeRange = DataSource.createStore();
     public List<Object> results = new ArrayList<>();

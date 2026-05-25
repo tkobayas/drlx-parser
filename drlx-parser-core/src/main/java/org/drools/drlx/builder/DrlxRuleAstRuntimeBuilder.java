@@ -30,6 +30,7 @@ import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
 import org.drools.base.rule.MultiAccumulate;
+import org.drools.base.rule.MutableTypeConstraint;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
@@ -109,9 +110,10 @@ public class DrlxRuleAstRuntimeBuilder {
 
         for (RuleIR rule : parseResult.rules()) {
             if (!rule.parameters().isEmpty()) {
-                QueryImpl query = buildQuery(rule, pkg.getTypeResolver(), entryPointTypes, unitClass);
                 String entryPointName = Character.toLowerCase(rule.name().charAt(0)) + rule.name().substring(1);
+                QueryImpl query = new QueryImpl(rule.name());
                 queryRegistry.put(entryPointName, query);
+                buildQuery(query, rule, pkg.getTypeResolver(), entryPointTypes, unitClass, queryRegistry);
                 pkg.addRule(query);
             }
         }
@@ -168,6 +170,12 @@ public class DrlxRuleAstRuntimeBuilder {
                                               Class<?> unitClass) {
         for (LhsItemIR item : items) {
             if (item instanceof PatternIR p) {
+                // Skip patterns that look like query invocations (have positional args
+                // and their entry point is not a known data source). Type declarations
+                // for query results are not needed since QueryElement produces Object[].
+                if (!p.positionalArgs().isEmpty() && !entryPointTypes.containsKey(p.entryPoint())) {
+                    continue;
+                }
                 classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
             } else if (item instanceof GroupElementIR g) {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
@@ -358,7 +366,7 @@ public class DrlxRuleAstRuntimeBuilder {
         GroupElement root = GroupElementFactory.newAndInstance();
         Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
 
-        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry);
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, null);
 
         if (parseResult.rhs() != null) {
             Map<String, Type<?>> types = lambdaCompiler.getTypeMap(root);
@@ -376,13 +384,13 @@ public class DrlxRuleAstRuntimeBuilder {
         return rule;
     }
 
-    private QueryImpl buildQuery(RuleIR parseResult,
-                                 TypeResolver typeResolver,
-                                 Map<String, Class<?>> entryPointTypes,
-                                 Class<?> unitClass) {
+    private void buildQuery(QueryImpl query,
+                            RuleIR parseResult,
+                            TypeResolver typeResolver,
+                            Map<String, Class<?>> entryPointTypes,
+                            Class<?> unitClass,
+                            Map<String, QueryImpl> queryRegistry) {
         lambdaCompiler.beginRule(parseResult.name());
-
-        QueryImpl query = new QueryImpl(parseResult.name());
 
         Pattern prefixPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0,
                 ClassObjectType.DroolsQuery_ObjectType, null);
@@ -414,19 +422,9 @@ public class DrlxRuleAstRuntimeBuilder {
                     new BoundVariable(param.paramName(), paramType, prefixPattern, paramDecls[i]));
         }
 
-        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, Map.of());
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, query);
 
         query.setLhs(root);
-        return query;
-    }
-
-    private void buildLhs(List<LhsItemIR> items,
-                          GroupElement parent,
-                          TypeResolver typeResolver,
-                          Map<String, Class<?>> entryPointTypes,
-                          Class<?> unitClass,
-                          Map<String, BoundVariable> boundVariables) {
-        buildLhs(items, parent, typeResolver, entryPointTypes, unitClass, boundVariables, Map.of());
     }
 
     private void buildLhs(List<LhsItemIR> items,
@@ -435,11 +433,38 @@ public class DrlxRuleAstRuntimeBuilder {
                           Map<String, Class<?>> entryPointTypes,
                           Class<?> unitClass,
                           Map<String, BoundVariable> boundVariables,
-                          Map<String, QueryImpl> queryRegistry) {
+                          Map<String, QueryImpl> queryRegistry,
+                          QueryImpl currentQuery) {
         for (LhsItemIR item : items) {
             if (item instanceof PatternIR patternIr) {
                 QueryImpl targetQuery = queryRegistry.get(patternIr.entryPoint());
                 if (targetQuery != null && !patternIr.positionalArgs().isEmpty()) {
+                    // Self-referencing query disambiguation heuristic:
+                    // When a query's LHS references its own entry point with positional args,
+                    // decide Pattern vs QueryElement based on whether any INPUT argument is
+                    // a variable NOT in the query's parameter list.
+                    //
+                    // - All input variable args are query params -> Pattern (base case fact match)
+                    // - Any input variable arg is locally bound (not a param) -> QueryElement (recursive call)
+                    //
+                    // This heuristic produces the same RETE structure as old DRL where
+                    // Trust(;a, b) is a Pattern and trusts(;z, b) is a QueryElement.
+                    // It may be revisited in the future for more complex recursive patterns.
+                    if (targetQuery == currentQuery
+                            && !hasNonParameterInput(patternIr.positionalArgs(), currentQuery, boundVariables)) {
+                        // Pattern path: positional match on DataStore type (base case)
+                        Pattern pattern = buildSelfReferencePattern(
+                                patternIr, typeResolver, entryPointTypes, unitClass, boundVariables, currentQuery);
+                        parent.addChild(pattern);
+                        Declaration declaration = pattern.getDeclaration();
+                        if (declaration != null) {
+                            Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+                            boundVariables.put(declaration.getIdentifier(),
+                                    new BoundVariable(declaration.getIdentifier(), patternClass, pattern, declaration));
+                        }
+                        continue;
+                    }
+                    // QueryElement path: recursive query call or invocation of a different query
                     QueryElement queryElement = buildQueryElement(
                             patternIr, targetQuery, boundVariables);
                     parent.addChild(queryElement);
@@ -493,20 +518,20 @@ public class DrlxRuleAstRuntimeBuilder {
                         || group.kind() == GroupElementIR.Kind.EXISTS)
                         && group.children().size() > 1) {
                     GroupElement andInstance = GroupElementFactory.newAndInstance();
-                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, innerScope);
+                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery);
                     ge.addChild(andInstance);
                 } else {
-                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope);
+                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery);
                 }
                 parent.addChild(ge);
             } else if (item instanceof EvalIR evalIr) {
                 buildEvalCondition(evalIr, parent, boundVariables);
             } else if (item instanceof AccumulatePatternIR accPat) {
                 buildAccumulatePattern(accPat, parent, typeResolver, entryPointTypes,
-                                       unitClass, boundVariables);
+                                       unitClass, boundVariables, queryRegistry, currentQuery);
             } else if (item instanceof CustomAccumulateIR customAcc) {
                 buildCustomAccumulatePattern(customAcc, parent, typeResolver, entryPointTypes,
-                                              unitClass, boundVariables);
+                                              unitClass, boundVariables, queryRegistry, currentQuery);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
@@ -529,7 +554,9 @@ public class DrlxRuleAstRuntimeBuilder {
                                         TypeResolver typeResolver,
                                         Map<String, Class<?>> entryPointTypes,
                                         Class<?> unitClass,
-                                        Map<String, BoundVariable> outerScope) {
+                                        Map<String, BoundVariable> outerScope,
+                                        Map<String, QueryImpl> queryRegistry,
+                                        QueryImpl currentQuery) {
         LhsItemIR srcIr = accPat.source();
 
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
@@ -555,7 +582,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope);
+                     unitClass, innerScope, queryRegistry, currentQuery);
             srcElement = andGroup;
             multiSource = true;
         } else {
@@ -616,7 +643,9 @@ public class DrlxRuleAstRuntimeBuilder {
                                                TypeResolver typeResolver,
                                                Map<String, Class<?>> entryPointTypes,
                                                Class<?> unitClass,
-                                               Map<String, BoundVariable> outerScope) {
+                                               Map<String, BoundVariable> outerScope,
+                                               Map<String, QueryImpl> queryRegistry,
+                                               QueryImpl currentQuery) {
         LhsItemIR srcIr = customAcc.source();
 
         if (srcIr instanceof GroupElementIR groupIr
@@ -642,7 +671,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope);
+                     unitClass, innerScope, queryRegistry, currentQuery);
             srcElement = andGroup;
             multiSource = true;
         } else {
@@ -980,6 +1009,22 @@ public class DrlxRuleAstRuntimeBuilder {
                 false);
     }
 
+    /**
+     * Finds the JavaBeans getter for a named field on the given class.
+     */
+    private static java.lang.reflect.Method findGetterForField(Class<?> clazz, String fieldName) {
+        String capitalized = Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
+        try {
+            return clazz.getMethod("get" + capitalized);
+        } catch (NoSuchMethodException e) {
+            try {
+                return clazz.getMethod("is" + capitalized);
+            } catch (NoSuchMethodException e2) {
+                throw new RuntimeException("No getter found for field '" + fieldName + "' on " + clazz.getName());
+            }
+        }
+    }
+
     private static boolean isSimpleIdentifier(String s) {
         if (s == null || s.isEmpty()) return false;
         if (!Character.isJavaIdentifierStart(s.charAt(0))) return false;
@@ -989,9 +1034,36 @@ public class DrlxRuleAstRuntimeBuilder {
         return true;
     }
 
+    /**
+     * Checks whether any input argument in a positional query invocation is a
+     * variable that is NOT in the query's parameter list. Used by the
+     * self-reference disambiguation heuristic: inside a query body, when a
+     * pattern matches the current query's own entry point, all-param inputs
+     * means a positional fact match (Pattern / base case), while any non-param
+     * input means a recursive call (QueryElement).
+     */
+    private static boolean hasNonParameterInput(List<String> positionalArgs,
+                                                 QueryImpl currentQuery,
+                                                 Map<String, BoundVariable> boundVariables) {
+        Set<String> paramNames = new HashSet<>();
+        for (Declaration d : currentQuery.getParameters()) {
+            paramNames.add(d.getIdentifier());
+        }
+        for (String arg : positionalArgs) {
+            if (arg.startsWith("var ")) continue; // explicit output
+            if (!isSimpleIdentifier(arg)) continue; // expression or literal — not a simple variable
+            if (!boundVariables.containsKey(arg)) continue; // unbound identifier -> implicit output
+            // Bound variable that is NOT a query parameter -> local binding
+            if (!paramNames.contains(arg)) return true;
+        }
+        return false;
+    }
+
     private static Object parseLiteral(String literal) {
         if (literal.startsWith("\"") && literal.endsWith("\"")) {
-            return literal.substring(1, literal.length() - 1);
+            // Intern string literals so reference equality (==) works in
+            // constraints compiled to Java code by MVEL3 transpiler.
+            return literal.substring(1, literal.length() - 1).intern();
         }
         try { return Integer.parseInt(literal); }
         catch (NumberFormatException e1) {
@@ -1027,6 +1099,118 @@ public class DrlxRuleAstRuntimeBuilder {
                         evalExpression,
                         declarations.toArray(new Declaration[0]));
         parent.addChild(evalCondition);
+    }
+
+    /**
+     * Builds a Pattern for the self-referencing base case in a recursive query.
+     * Unlike {@link #buildPattern}, this handles positional args specially:
+     * <ul>
+     *   <li>{@code var z} args create output bindings (Declarations) instead of constraints</li>
+     *   <li>When a positional arg name collides with the pattern field name (e.g. both are "a"),
+     *       the bound variable reference is aliased to avoid duplicate MVEL declarations</li>
+     * </ul>
+     */
+    private Pattern buildSelfReferencePattern(PatternIR parseResult,
+                                               TypeResolver typeResolver,
+                                               Map<String, Class<?>> entryPointTypes,
+                                               Class<?> unitClass,
+                                               Map<String, BoundVariable> boundVariables,
+                                               QueryImpl currentQuery) {
+        Class<?> type = resolvePatternType(parseResult, typeResolver, entryPointTypes, unitClass);
+        ObjectType objectType = new ClassObjectType(type, false);
+
+        Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, parseResult.bindName(), false);
+        pattern.setPassive(parseResult.passive());
+        pattern.setSource(new EntryPointId(parseResult.entryPoint()));
+
+        Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+        org.mvel3.transpiler.context.Declaration<?>[] declarations = DrlxLambdaCompiler.extractDeclarations(patternClass);
+
+        // Collect pattern field names for collision detection
+        Set<String> fieldNames = new HashSet<>();
+        for (org.mvel3.transpiler.context.Declaration<?> d : declarations) {
+            fieldNames.add(d.name());
+        }
+
+        // Map query parameter names to their index for unification
+        Declaration[] queryParams = currentQuery.getParameters();
+        Map<String, Integer> paramIndexMap = new HashMap<>();
+        for (int p = 0; p < queryParams.length; p++) {
+            paramIndexMap.put(queryParams[p].getIdentifier(), p);
+        }
+
+        for (int i = 0; i < parseResult.positionalArgs().size(); i++) {
+            String argExpr = parseResult.positionalArgs().get(i);
+            String fieldName = DrlxLambdaCompiler.resolvePositionalField(patternClass, i);
+
+            if (argExpr.startsWith("var ")) {
+                // Output binding: bind the positional field to the variable name
+                String varName = argExpr.substring(4).trim();
+                Declaration decl = pattern.addDeclaration(varName);
+                java.lang.reflect.Method getter = findGetterForField(patternClass, fieldName);
+                Class<?> fieldType = getter.getReturnType();
+                decl.setReadAccessor(new DrlxBeanFieldReader(getter, fieldType));
+                boundVariables.put(varName, new BoundVariable(varName, fieldType, pattern, decl));
+                continue;
+            }
+
+            // Build the inner beta constraint, handling name collisions
+            @SuppressWarnings("rawtypes")
+            MutableTypeConstraint innerConstraint;
+            BoundVariable bv = boundVariables.get(argExpr);
+            if (bv != null && fieldNames.contains(argExpr)) {
+                // Name collision: use an aliased name for the bound variable reference
+                // so MVEL can distinguish between the pattern field and the external variable.
+                // Create a synthetic Declaration on the same source pattern with the alias
+                // name, so buildEvalMap populates the map key as "__qp_<name>" instead of
+                // overwriting the fact field entry.
+                String alias = "__qp_" + argExpr;
+                Declaration aliasDecl = bv.pattern().addDeclaration(alias);
+                aliasDecl.setReadAccessor(bv.declaration().getExtractor());
+                // Use .equals() instead of == to avoid reference-equality issues
+                // for Object types (MVEL3 transpiles == to Java ==).
+                String synthesized = alias + " != null ? " + alias + ".equals(" + fieldName + ") : " + fieldName + " == null";
+                BoundVariable aliased = new BoundVariable(alias, bv.type(), bv.pattern(), aliasDecl);
+                List<BoundVariable> refs = List.of(aliased);
+                innerConstraint = (MutableTypeConstraint) lambdaCompiler.createBetaLambdaConstraint(
+                        synthesized, patternClass, declarations, refs);
+            } else {
+                // Normal constraint synthesis (no collision)
+                String synthesized = fieldName + " == (" + argExpr + ")";
+                List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(synthesized, boundVariables);
+                innerConstraint = referencedBindings.isEmpty()
+                        ? lambdaCompiler.createLambdaConstraint(synthesized, patternClass, declarations)
+                        : (MutableTypeConstraint) lambdaCompiler.createBetaLambdaConstraint(synthesized, patternClass, declarations, referencedBindings);
+            }
+
+            // Wrap with unification: if the query parameter is unbound at runtime,
+            // skip the constraint (allow any value). This mirrors old DRL's
+            // unification semantics where output parameters don't constrain.
+            Integer paramIdx = paramIndexMap.get(argExpr);
+            if (paramIdx != null) {
+                pattern.addConstraint(new DrlxUnificationConstraint(innerConstraint, paramIdx));
+                // Add an output binding declaration on the body Pattern so the query
+                // terminal node can read the matched fact's field value for unbound
+                // parameters. This mirrors LogicTransformer's redeclaredDeclr mechanism.
+                java.lang.reflect.Method getter = findGetterForField(patternClass, fieldName);
+                Class<?> fieldType = getter.getReturnType();
+                Declaration outputDecl = pattern.addDeclaration(argExpr);
+                outputDecl.setReadAccessor(new DrlxBeanFieldReader(getter, fieldType));
+            } else {
+                pattern.addConstraint(innerConstraint);
+            }
+        }
+
+        // Add regular conditions (non-positional)
+        for (String expression : parseResult.conditions()) {
+            List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(expression, boundVariables);
+            Constraint constraint = referencedBindings.isEmpty()
+                    ? lambdaCompiler.createLambdaConstraint(expression, patternClass, declarations)
+                    : lambdaCompiler.createBetaLambdaConstraint(expression, patternClass, declarations, referencedBindings);
+            pattern.addConstraint(constraint);
+        }
+
+        return pattern;
     }
 
     private Pattern buildPattern(PatternIR parseResult,
