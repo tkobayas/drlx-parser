@@ -1227,6 +1227,17 @@ public class DrlxRuleAstRuntimeBuilder {
         for (int i = 0; i < parseResult.positionalArgs().size(); i++) {
             String argExpr = parseResult.positionalArgs().get(i);
             String fieldName = DrlxLambdaCompiler.resolvePositionalField(patternClass, i);
+
+            if (argExpr.startsWith("var ")) {
+                String varName = argExpr.substring(4).trim();
+                Declaration decl = pattern.addDeclaration(varName);
+                java.lang.reflect.Method getter = findGetterForField(patternClass, fieldName);
+                Class<?> fieldType = getter.getReturnType();
+                decl.setReadAccessor(new DrlxBeanFieldReader(getter, fieldType));
+                boundVariables.put(varName, new BoundVariable(varName, fieldType, pattern, decl));
+                continue;
+            }
+
             String synthesized = fieldName + " == (" + argExpr + ")";
             List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(synthesized, boundVariables);
             Constraint constraint = referencedBindings.isEmpty()

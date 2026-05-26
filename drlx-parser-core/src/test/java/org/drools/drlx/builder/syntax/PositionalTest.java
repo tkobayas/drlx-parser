@@ -1,9 +1,14 @@
 package org.drools.drlx.builder.syntax;
 
+import java.util.List;
+
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
+import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
+import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
+import org.kie.api.KieBase;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -233,5 +238,94 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@Position(0)")
                 .hasMessageContaining("PlainLocation");
+    }
+
+    @Test
+    void testPositionalOutBinding() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule BindDistrict {
+                    /locations("paris", var postCode),
+                    do { results.add(postCode); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(rule);
+        MyUnit unit = new MyUnit();
+        unit.locations.add(new Location("paris", "Belleville"));
+        unit.locations.add(new Location("paris", "Montmartre"));
+        unit.locations.add(new Location("london", "Soho"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactlyInAnyOrder("Belleville", "Montmartre");
+        }
+    }
+
+    @Test
+    void testPositionalOutBindingOnly() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule BindBoth {
+                    /locations(var c, var d),
+                    do { results.add(c + ":" + d); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(rule);
+        MyUnit unit = new MyUnit();
+        unit.locations.add(new Location("paris", "Belleville"));
+        unit.locations.add(new Location("london", "Soho"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactlyInAnyOrder("paris:Belleville", "london:Soho");
+        }
+    }
+
+    @Test
+    void testPositionalOutBindingUsedInSubsequentPattern() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule BindAndUse {
+                    /locations("paris", var district),
+                    Person p : /persons[name == district],
+                    do { results.add(p.getName()); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(rule);
+        MyUnit unit = new MyUnit();
+        unit.locations.add(new Location("paris", "Belleville"));
+        unit.locations.add(new Location("paris", "Montmartre"));
+        unit.persons.add(new Person("Belleville", 25));
+        unit.persons.add(new Person("Other", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactly("Belleville");
+        }
     }
 }

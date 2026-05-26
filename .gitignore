@@ -9,7 +9,7 @@ target/
 /nbproject
 /*.ipr
 /*.iws
-/*.iml
+*.iml
 
 # Eclipse files
 /.classpath
@@ -30,3 +30,4 @@ gen/
 /bak
 
 CLAUDE.local.md
+.claude/
