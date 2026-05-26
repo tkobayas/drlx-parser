@@ -1218,7 +1218,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                  Class<?> unitClass,
                                  Map<String, BoundVariable> boundVariables) {
         Class<?> type = resolvePatternType(parseResult, typeResolver, entryPointTypes, unitClass);
-        ObjectType objectType = new ClassObjectType(type, false);
+        boolean isEvent = parseResult.windowType() != null;
+        ObjectType objectType = new ClassObjectType(type, isEvent);
 
         Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, parseResult.bindName(), false);
         pattern.setPassive(parseResult.passive());
