@@ -1061,9 +1061,7 @@ public class DrlxRuleAstRuntimeBuilder {
 
     private static Object parseLiteral(String literal) {
         if (literal.startsWith("\"") && literal.endsWith("\"")) {
-            // Intern string literals so reference equality (==) works in
-            // constraints compiled to Java code by MVEL3 transpiler.
-            return literal.substring(1, literal.length() - 1).intern();
+            return literal.substring(1, literal.length() - 1);
         }
         try { return Integer.parseInt(literal); }
         catch (NumberFormatException e1) {
@@ -1167,9 +1165,7 @@ public class DrlxRuleAstRuntimeBuilder {
                 String alias = "__qp_" + argExpr;
                 Declaration aliasDecl = bv.pattern().addDeclaration(alias);
                 aliasDecl.setReadAccessor(bv.declaration().getExtractor());
-                // Use .equals() instead of == to avoid reference-equality issues
-                // for Object types (MVEL3 transpiles == to Java ==).
-                String synthesized = alias + " != null ? " + alias + ".equals(" + fieldName + ") : " + fieldName + " == null";
+                String synthesized = fieldName + " == (" + alias + ")";
                 BoundVariable aliased = new BoundVariable(alias, bv.type(), bv.pattern(), aliasDecl);
                 List<BoundVariable> refs = List.of(aliased);
                 innerConstraint = (MutableTypeConstraint) lambdaCompiler.createBetaLambdaConstraint(
