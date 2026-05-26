@@ -110,6 +110,80 @@ class WindowVisitorTest {
                 .hasMessageContaining("Unknown window type");
     }
 
+    @Test
+    void lengthWindowProducesPatternWithSlidingLengthBehavior() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons | length[5],
+                    do {}
+                }
+                """;
+        org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
+        org.kie.api.definition.rule.Rule rule = kieBase.getRule("org.drools.drlx.parser", "R1");
+        assertThat(rule).isNotNull();
+        org.drools.base.definitions.rule.impl.RuleImpl ruleImpl = (org.drools.base.definitions.rule.impl.RuleImpl) rule;
+        org.drools.base.rule.Pattern pattern =
+                (org.drools.base.rule.Pattern) ruleImpl.getLhs().getChildren().get(0);
+        assertThat(pattern.getBehaviors()).hasSize(1);
+        assertThat(pattern.getBehaviors().get(0))
+                .isInstanceOf(org.drools.core.rule.SlidingLengthWindow.class);
+        org.drools.core.rule.SlidingLengthWindow window =
+                (org.drools.core.rule.SlidingLengthWindow) pattern.getBehaviors().get(0);
+        assertThat(window.getSize()).isEqualTo(5);
+    }
+
+    @Test
+    void timeWindowProducesPatternWithSlidingTimeBehavior() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons | time[5s],
+                    do {}
+                }
+                """;
+        org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
+        org.drools.base.definitions.rule.impl.RuleImpl ruleImpl =
+                (org.drools.base.definitions.rule.impl.RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
+        org.drools.base.rule.Pattern pattern =
+                (org.drools.base.rule.Pattern) ruleImpl.getLhs().getChildren().get(0);
+        assertThat(pattern.getBehaviors()).hasSize(1);
+        assertThat(pattern.getBehaviors().get(0))
+                .isInstanceOf(org.drools.core.rule.SlidingTimeWindow.class);
+        org.drools.core.rule.SlidingTimeWindow window =
+                (org.drools.core.rule.SlidingTimeWindow) pattern.getBehaviors().get(0);
+        assertThat(window.getSize()).isEqualTo(5000L);
+    }
+
+    @Test
+    void compoundTimeWindowParsesCorrectly() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+                rule R1 {
+                    var p : /persons | time[4d6h5m6s],
+                    do {}
+                }
+                """;
+        org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
+        org.drools.base.definitions.rule.impl.RuleImpl ruleImpl =
+                (org.drools.base.definitions.rule.impl.RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
+        org.drools.base.rule.Pattern pattern =
+                (org.drools.base.rule.Pattern) ruleImpl.getLhs().getChildren().get(0);
+        org.drools.core.rule.SlidingTimeWindow window =
+                (org.drools.core.rule.SlidingTimeWindow) pattern.getBehaviors().get(0);
+        long expected = 4L * 86400000 + 6L * 3600000 + 5L * 60000 + 6L * 1000;
+        assertThat(window.getSize()).isEqualTo(expected);
+    }
+
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(drlx));
         CommonTokenStream tokens = new CommonTokenStream(lexer);

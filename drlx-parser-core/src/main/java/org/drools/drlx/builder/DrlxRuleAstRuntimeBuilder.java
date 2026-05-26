@@ -34,6 +34,9 @@ import org.drools.base.rule.MutableTypeConstraint;
 import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
+import org.drools.base.time.TimeUtils;
+import org.drools.core.rule.SlidingLengthWindow;
+import org.drools.core.rule.SlidingTimeWindow;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.QueryArgument;
 import org.drools.base.rule.QueryElement;
@@ -1258,6 +1261,15 @@ public class DrlxRuleAstRuntimeBuilder {
             List<String> validated = validateWatchedProperties(
                     parseResult.watchedProperties(), patternClass, parseResult.typeName());
             pattern.addWatchedProperties(validated);
+        }
+
+        if (parseResult.windowType() != null) {
+            switch (parseResult.windowType()) {
+                case "time" -> pattern.addBehavior(
+                        new SlidingTimeWindow(TimeUtils.parseTimeString(parseResult.windowParameter())));
+                case "length" -> pattern.addBehavior(
+                        new SlidingLengthWindow(Integer.parseInt(parseResult.windowParameter())));
+            }
         }
 
         return pattern;
