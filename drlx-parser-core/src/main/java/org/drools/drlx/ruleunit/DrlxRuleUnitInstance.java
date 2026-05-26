@@ -3,6 +3,7 @@ package org.drools.drlx.ruleunit;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 
+import org.drools.core.SessionConfiguration;
 import org.drools.core.common.ReteEvaluator;
 import org.drools.core.impl.InternalRuleBase;
 import org.drools.ruleunits.api.DataSource;
@@ -45,12 +46,20 @@ public final class DrlxRuleUnitInstance<T extends RuleUnitData> implements RuleU
     private final ReteEvaluator reteEvaluator;
 
     public static <T extends RuleUnitData> DrlxRuleUnitInstance<T> create(KieBase kieBase, T unitData) {
-        return new DrlxRuleUnitInstance<>(kieBase, unitData);
+        return new DrlxRuleUnitInstance<>(kieBase, unitData, null);
     }
 
-    private DrlxRuleUnitInstance(KieBase kieBase, T unitData) {
+    public static <T extends RuleUnitData> DrlxRuleUnitInstance<T> create(KieBase kieBase, T unitData,
+                                                                          SessionConfiguration sessionConfig) {
+        return new DrlxRuleUnitInstance<>(kieBase, unitData, sessionConfig);
+    }
+
+    private DrlxRuleUnitInstance(KieBase kieBase, T unitData, SessionConfiguration sessionConfig) {
         this.unitData = unitData;
-        this.reteEvaluator = new RuleUnitExecutorImpl((InternalRuleBase) kieBase);
+        InternalRuleBase ruleBase = (InternalRuleBase) kieBase;
+        this.reteEvaluator = sessionConfig != null
+                ? new RuleUnitExecutorImpl(ruleBase, sessionConfig)
+                : new RuleUnitExecutorImpl(ruleBase);
         bind();
     }
 
