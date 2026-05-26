@@ -158,6 +158,8 @@ public final class DrlxRuleAstParseResult {
 
     private static PatternIR patternFromProto(DrlxRuleAstProto.PatternParseResult pattern) {
         String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
+        String windowType = pattern.getWindowType().isEmpty() ? null : pattern.getWindowType();
+        String windowParameter = pattern.getWindowParameter().isEmpty() ? null : pattern.getWindowParameter();
         return new PatternIR(
                 pattern.getTypeName(),
                 pattern.getBindName(),
@@ -167,7 +169,8 @@ public final class DrlxRuleAstParseResult {
                 List.copyOf(pattern.getPositionalArgsList()),
                 pattern.getPassive(),
                 List.copyOf(pattern.getWatchedPropertiesList()),
-                null, null);
+                windowType,
+                windowParameter);
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {
@@ -257,6 +260,10 @@ public final class DrlxRuleAstParseResult {
         p.conditions().forEach(pb::addConditions);
         p.positionalArgs().forEach(pb::addPositionalArgs);
         p.watchedProperties().forEach(pb::addWatchedProperties);
+        if (p.windowType() != null) {
+            pb.setWindowType(p.windowType());
+            pb.setWindowParameter(p.windowParameter());
+        }
         return pb.build();
     }
 

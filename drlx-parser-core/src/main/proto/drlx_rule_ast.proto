@@ -56,6 +56,8 @@ message PatternParseResult {
   repeated string positional_args = 6;
   bool passive = 7;
   repeated string watched_properties = 8;
+  string window_type = 9;
+  string window_parameter = 10;
 }
 
 message ConsequenceParseResult {

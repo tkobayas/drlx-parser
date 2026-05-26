@@ -150,4 +150,44 @@ class DrlxRuleAstParseResultTest {
         assertThat(back.accumulators().get(1).argExpressions()).isEmpty();
         assertThat(back.accumulators().get(1).referencedBindings()).isEmpty();
     }
+
+    @Test
+    void windowFieldsRoundTripThroughProto() {
+        PatternIR ir = new PatternIR(
+                "Withdrawal", "w", "withdrawals",
+                List.of(),
+                null,
+                List.of(),
+                false,
+                List.of(),
+                "time", "5s");
+
+        DrlxRuleAstProto.LhsItemParseResult lhsItem = DrlxRuleAstParseResult.toProtoLhs(ir);
+        DrlxRuleAstProto.PatternParseResult proto = lhsItem.getPattern();
+        assertThat(proto.getWindowType()).isEqualTo("time");
+        assertThat(proto.getWindowParameter()).isEqualTo("5s");
+
+        PatternIR back = (PatternIR) DrlxRuleAstParseResult.fromProtoLhs(lhsItem, Path.of("test"));
+        assertThat(back.windowType()).isEqualTo("time");
+        assertThat(back.windowParameter()).isEqualTo("5s");
+    }
+
+    @Test
+    void missingWindowFieldsDeserialiseToNull() {
+        DrlxRuleAstProto.PatternParseResult proto =
+                DrlxRuleAstProto.PatternParseResult.newBuilder()
+                        .setTypeName("Person")
+                        .setBindName("p")
+                        .setEntryPoint("persons")
+                        .build();
+
+        DrlxRuleAstProto.LhsItemParseResult lhsItem =
+                DrlxRuleAstProto.LhsItemParseResult.newBuilder()
+                        .setPattern(proto)
+                        .build();
+
+        PatternIR back = (PatternIR) DrlxRuleAstParseResult.fromProtoLhs(lhsItem, Path.of("test"));
+        assertThat(back.windowType()).isNull();
+        assertThat(back.windowParameter()).isNull();
+    }
 }
