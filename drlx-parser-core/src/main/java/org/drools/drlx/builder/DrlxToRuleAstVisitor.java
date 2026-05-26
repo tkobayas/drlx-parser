@@ -762,7 +762,18 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = ctx.oopathExpression().QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(ctx.oopathExpression());
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName, positionalArgs, passive, watchedProperties, null, null);
+        String windowType = null;
+        String windowParameter = null;
+        if (ctx.windowFilter() != null) {
+            windowType = ctx.windowFilter().identifier().getText();
+            if (!"length".equals(windowType) && !"time".equals(windowType)) {
+                throw new IllegalArgumentException("Unknown window type: " + windowType
+                        + ". Expected 'length' or 'time'.");
+            }
+            windowParameter = ctx.windowFilter().windowParam().getText();
+        }
+        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName,
+                              positionalArgs, passive, watchedProperties, windowType, windowParameter);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {

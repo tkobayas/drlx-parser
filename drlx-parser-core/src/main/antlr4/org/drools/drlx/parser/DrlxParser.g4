@@ -163,8 +163,15 @@ boundOopath
 // Window filter — CEP sliding window applied to a pattern.
 // Uses BITOR (`|`) already defined in JavaLexer. Window type is an
 // identifier validated by the visitor (avoids reserving `length`/`time`).
+// Window parameter is a duration literal (e.g. 5, 5s, 4d6h5m6s) captured
+// as an identifier sequence rather than an expression, because compound
+// durations like `4d6h5m6s` are not valid Java/MVEL expressions.
 windowFilter
-    : BITOR identifier '[' expression ']'
+    : BITOR identifier '[' windowParam ']'
+    ;
+
+windowParam
+    : ~']'+
     ;
 
 // Top-level pattern: `boundOopath ,`. CE terminator owned by ruleItem.
