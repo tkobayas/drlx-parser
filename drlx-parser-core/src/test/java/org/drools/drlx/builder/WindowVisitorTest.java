@@ -114,11 +114,11 @@ class WindowVisitorTest {
     void lengthWindowProducesPatternWithSlidingLengthBehavior() {
         String drlx = """
                 package org.drools.drlx.parser;
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
                 rule R1 {
-                    var p : /persons | length[5],
+                    var w : /withdrawals | length[5],
                     do {}
                 }
                 """;
@@ -140,11 +140,11 @@ class WindowVisitorTest {
     void timeWindowProducesPatternWithSlidingTimeBehavior() {
         String drlx = """
                 package org.drools.drlx.parser;
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
                 rule R1 {
-                    var p : /persons | time[5s],
+                    var w : /withdrawals | time[5s],
                     do {}
                 }
                 """;
@@ -165,11 +165,11 @@ class WindowVisitorTest {
     void compoundTimeWindowParsesCorrectly() {
         String drlx = """
                 package org.drools.drlx.parser;
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
                 rule R1 {
-                    var p : /persons | time[4d6h5m6s],
+                    var w : /withdrawals | time[4d6h5m6s],
                     do {}
                 }
                 """;
