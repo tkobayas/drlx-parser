@@ -155,8 +155,16 @@ branchItem
 // Bound pattern body without trailing `,`. Reused by `rulePattern`
 // (top-level, with terminator `,`) and by `groupChild` (inside a CE
 // paren form, where `,` is the sibling separator).
+// Optional `windowFilter` suffix for CEP windows (DRLXXXX §Windows).
 boundOopath
-    : identifier identifier (':' | '=') oopathExpression
+    : identifier identifier (':' | '=') oopathExpression windowFilter?
+    ;
+
+// Window filter — CEP sliding window applied to a pattern.
+// Uses BITOR (`|`) already defined in JavaLexer. Window type is an
+// identifier validated by the visitor (avoids reserving `length`/`time`).
+windowFilter
+    : BITOR identifier '[' expression ']'
     ;
 
 // Top-level pattern: `boundOopath ,`. CE terminator owned by ruleItem.
