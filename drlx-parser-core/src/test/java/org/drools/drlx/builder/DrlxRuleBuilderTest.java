@@ -290,6 +290,75 @@ class DrlxRuleBuilderTest {
         }
     }
 
+    @Test
+    void testSetterDesugaring() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule SetName {
+                    Person p : /persons[ age > 18 ],
+                    do { p.name = "Modified"; }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+        Person person = new Person("John", 25);
+        entryPoint.insert(person);
+        int fired = kieSession.fireAllRules();
+
+        assertThat(fired).isEqualTo(1);
+        assertThat(person.getName()).isEqualTo("Modified");
+
+        kieSession.dispose();
+    }
+
+    @Test
+    void testSetterDesugaringChainedProperty() {
+        String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Address;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule SetCity {
+                    Person p : /persons[ age > 18 ],
+                    do { p.address.city = "Tokyo"; }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        KieSession kieSession = kieBase.newKieSession();
+        TrackingAgendaEventListener listener = new TrackingAgendaEventListener();
+        kieSession.addEventListener(listener);
+
+        EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+        Person person = new Person("John", 25, new Address("Osaka"));
+        entryPoint.insert(person);
+        int fired = kieSession.fireAllRules();
+
+        assertThat(fired).isEqualTo(1);
+        assertThat(person.getAddress().getCity()).isEqualTo("Tokyo");
+
+        kieSession.dispose();
+    }
+
     private List<Path> listClassFiles() {
         try (Stream<Path> walk = Files.walk(LambdaRuntime.defaultPersistencePath())) {
             return walk
