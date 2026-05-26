@@ -44,6 +44,7 @@ import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.rule.constraint.QueryNameConstraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
+import org.kie.api.definition.type.Role;
 import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
@@ -1218,7 +1219,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                  Class<?> unitClass,
                                  Map<String, BoundVariable> boundVariables) {
         Class<?> type = resolvePatternType(parseResult, typeResolver, entryPointTypes, unitClass);
-        boolean isEvent = parseResult.windowType() != null;
+        Role roleAnnotation = type.getAnnotation(Role.class);
+        boolean isEvent = roleAnnotation != null && roleAnnotation.value() == Role.Type.EVENT;
         ObjectType objectType = new ClassObjectType(type, isEvent);
 
         Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, parseResult.bindName(), false);
