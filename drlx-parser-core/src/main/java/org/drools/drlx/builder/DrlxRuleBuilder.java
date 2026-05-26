@@ -18,6 +18,7 @@ import org.drools.drlx.parser.DrlxLexer;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.kiesession.rulebase.KnowledgeBaseFactory;
 import org.kie.api.KieBase;
+import org.kie.api.KieBaseConfiguration;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.ClassManager;
 import org.mvel3.MVELBatchCompiler;
@@ -40,7 +41,11 @@ public class DrlxRuleBuilder {
      * Creates a KieBase from a list of KiePackages.
      */
     public KieBase createKieBase(List<KiePackage> kiePackages) {
-        RuleBase kBase = RuleBaseFactory.newRuleBase("myKBase", RuleBaseFactory.newKnowledgeBaseConfiguration());
+        return createKieBase(kiePackages, RuleBaseFactory.newKnowledgeBaseConfiguration());
+    }
+
+    public KieBase createKieBase(List<KiePackage> kiePackages, KieBaseConfiguration config) {
+        RuleBase kBase = RuleBaseFactory.newRuleBase("myKBase", config);
         kBase.addPackages(kiePackages);
         return KnowledgeBaseFactory.newKnowledgeBase(kBase);
     }
@@ -51,6 +56,11 @@ public class DrlxRuleBuilder {
     public KieBase build(String drlxSource) {
         List<KiePackage> kiePackages = parse(drlxSource);
         return createKieBase(kiePackages);
+    }
+
+    public KieBase build(String drlxSource, KieBaseConfiguration config) {
+        List<KiePackage> kiePackages = parse(drlxSource);
+        return createKieBase(kiePackages, config);
     }
 
     /**
