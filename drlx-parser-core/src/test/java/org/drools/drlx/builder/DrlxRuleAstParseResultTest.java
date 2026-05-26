@@ -52,7 +52,8 @@ class DrlxRuleAstParseResultTest {
                 null,
                 List.of(),
                 true,
-                List.of());
+                List.of(),
+                null, null);
 
         // Serialise.
         DrlxRuleAstProto.LhsItemParseResult lhsItem = DrlxRuleAstParseResult.toProtoLhs(ir);
@@ -90,7 +91,8 @@ class DrlxRuleAstParseResultTest {
                 null,
                 List.of(),
                 false,
-                List.of("basePay", "!bonusPay", "*"));
+                List.of("basePay", "!bonusPay", "*"),
+                null, null);
 
         DrlxRuleAstProto.LhsItemParseResult lhsItem = DrlxRuleAstParseResult.toProtoLhs(ir);
         DrlxRuleAstProto.PatternParseResult proto = lhsItem.getPattern();
@@ -122,7 +124,7 @@ class DrlxRuleAstParseResultTest {
     void accumulatePatternIrRoundTripsThroughProto() {
         DrlxRuleAstModel.PatternIR src = new DrlxRuleAstModel.PatternIR(
                 "var", "p", "persons",
-                List.of(), null, List.of(), false, List.of());
+                List.of(), null, List.of(), false, List.of(), null, null);
         DrlxRuleAstModel.AccumulatorIR acc1 = new DrlxRuleAstModel.AccumulatorIR(
                 "var", "avgAge", "avg", List.of("p.age"), List.of("p"));
         DrlxRuleAstModel.AccumulatorIR acc2 = new DrlxRuleAstModel.AccumulatorIR(

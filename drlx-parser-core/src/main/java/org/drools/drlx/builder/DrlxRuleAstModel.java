@@ -42,7 +42,9 @@ public final class DrlxRuleAstModel {
                             String castTypeName,
                             List<String> positionalArgs,
                             boolean passive,
-                            List<String> watchedProperties) implements LhsItemIR {
+                            List<String> watchedProperties,
+                            String windowType,
+                            String windowParameter) implements LhsItemIR {
     }
 
     public record GroupElementIR(Kind kind, List<LhsItemIR> children) implements LhsItemIR {

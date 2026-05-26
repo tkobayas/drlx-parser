@@ -166,7 +166,8 @@ public final class DrlxRuleAstParseResult {
                 castTypeName,
                 List.copyOf(pattern.getPositionalArgsList()),
                 pattern.getPassive(),
-                List.copyOf(pattern.getWatchedPropertiesList()));
+                List.copyOf(pattern.getWatchedPropertiesList()),
+                null, null);
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {

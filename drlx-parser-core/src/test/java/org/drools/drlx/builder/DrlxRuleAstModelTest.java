@@ -42,7 +42,7 @@ class DrlxRuleAstModelTest {
     void accumulatePatternIrCopiesAccumulators() {
         var src = new DrlxRuleAstModel.PatternIR(
                 "var", "p", "persons",
-                List.of(), null, List.of(), false, List.of());
+                List.of(), null, List.of(), false, List.of(), null, null);
         var acc = new DrlxRuleAstModel.AccumulatorIR(
                 "var", "avgAge", "avg",
                 List.of("p.age"), List.of("p"));
@@ -56,7 +56,7 @@ class DrlxRuleAstModelTest {
     void accumulatePatternIrIsLhsItem() {
         var src = new DrlxRuleAstModel.PatternIR(
                 "var", "p", "persons",
-                List.of(), null, List.of(), false, List.of());
+                List.of(), null, List.of(), false, List.of(), null, null);
         var pat = new DrlxRuleAstModel.AccumulatePatternIR(src, List.of());
         LhsItemIR item = pat;
         assertThat(item).isInstanceOf(DrlxRuleAstModel.AccumulatePatternIR.class);
