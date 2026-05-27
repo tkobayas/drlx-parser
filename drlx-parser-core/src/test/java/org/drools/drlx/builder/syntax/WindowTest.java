@@ -106,4 +106,59 @@ class WindowTest {
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
+
+    @Test
+    void constraintBeforeWindowFiltersEntries() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
+                rule R1 {
+                    var w : /withdrawals[customer == "GOLD"] | length[3],
+                    do {}
+                }
+                """;
+        KieBase kieBase = buildWithStreamMode(drlx);
+
+        WithdrawalUnit unit = new WithdrawalUnit();
+        unit.withdrawals.add(new Withdrawal("A1", 100.0, "GOLD"));
+        unit.withdrawals.add(new Withdrawal("A2", 200.0, "STANDARD"));
+        unit.withdrawals.add(new Withdrawal("A3", 300.0, "GOLD"));
+        unit.withdrawals.add(new Withdrawal("A4", 400.0, "STANDARD"));
+        unit.withdrawals.add(new Withdrawal("A5", 500.0, "GOLD"));
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
+                     DrlxRuleUnitInstance.create(kieBase, unit)) {
+            assertThat(instance.fire()).isEqualTo(3);
+        }
+    }
+
+    @Test
+    void constraintAfterWindowFiltersContents() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
+                rule R1 {
+                    var w : /withdrawals | length[3],
+                    test w.customer == "GOLD",
+                    do {}
+                }
+                """;
+        KieBase kieBase = buildWithStreamMode(drlx);
+
+        WithdrawalUnit unit = new WithdrawalUnit();
+        unit.withdrawals.add(new Withdrawal("A1", 100.0, "GOLD"));
+        unit.withdrawals.add(new Withdrawal("A2", 200.0, "STANDARD"));
+        unit.withdrawals.add(new Withdrawal("A3", 300.0, "GOLD"));
+        unit.withdrawals.add(new Withdrawal("A4", 400.0, "STANDARD"));
+        unit.withdrawals.add(new Withdrawal("A5", 500.0, "GOLD"));
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
+                     DrlxRuleUnitInstance.create(kieBase, unit)) {
+            assertThat(instance.fire()).isEqualTo(2);
+        }
+    }
 }
