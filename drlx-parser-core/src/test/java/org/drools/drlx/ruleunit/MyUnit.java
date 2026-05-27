@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.ChildPositioned;
+import org.drools.drlx.domain.Container;
 import org.drools.drlx.domain.DuplicatePositionLocation;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Order;
@@ -33,6 +34,7 @@ public class MyUnit implements RuleUnitData {
     public DataStore<Order> orders = DataSource.createStore();
     public DataStore<ReactiveEmployee> reactiveEmployees = DataSource.createStore();
     public DataStore<Trust> trusts = DataSource.createStore();
+    public DataStore<Container> containers = DataSource.createStore();
     public DataStore<Person> personsByAge = DataSource.createStore();
     public DataStore<Person> personsByAgeRange = DataSource.createStore();
     public List<Object> results = new ArrayList<>();
