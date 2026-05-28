@@ -22,6 +22,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.TemporalConditionIR;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
 
@@ -39,6 +40,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.of(
             SALIENCE_FQN, Kind.SALIENCE,
             DESCRIPTION_FQN, Kind.DESCRIPTION);
+
+    private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
+            "after", "before", "coincides", "during",
+            "finishes", "finishedby", "includes",
+            "meets", "metby", "overlaps", "overlappedby",
+            "starts", "startedby");
 
     private final TokenStream tokens;
 
@@ -759,6 +766,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
         String castTypeName = extractCastType(oopathCtx);
         List<String> conditions = extractConditions(oopathCtx);
+        List<TemporalConditionIR> temporalConditions = extractTemporalConditions(oopathCtx);
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = ctx.oopathExpression().QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(ctx.oopathExpression());
@@ -772,8 +780,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             windowParameter = ctx.windowFilter().windowParam().getText();
         }
-        return new PatternIR(typeName, bindName, entryPoint, conditions, List.of(), castTypeName,
-                              positionalArgs, passive, watchedProperties, windowType, windowParameter);
+        return new PatternIR(typeName, bindName, entryPoint, conditions, temporalConditions,
+                              castTypeName, positionalArgs, passive, watchedProperties,
+                              windowType, windowParameter);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
@@ -856,20 +865,53 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {
+        return collectDrlxExpressions(ctx).stream()
+                .filter(de -> de.customConstraint() == null)
+                .map(this::getText)
+                .toList();
+    }
+
+    private List<TemporalConditionIR> extractTemporalConditions(DrlxParser.OopathExpressionContext ctx) {
+        List<TemporalConditionIR> result = new ArrayList<>();
+        for (var de : collectDrlxExpressions(ctx)) {
+            if (de.customConstraint() != null) {
+                result.add(buildTemporalCondition(de.customConstraint()));
+            }
+        }
+        return List.copyOf(result);
+    }
+
+    private List<DrlxParser.DrlxExpressionContext> collectDrlxExpressions(
+            DrlxParser.OopathExpressionContext ctx) {
         List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
         if (!chunks.isEmpty()) {
-            DrlxParser.OopathChunkContext lastChunk = chunks.get(chunks.size() - 1);
-            return lastChunk.drlxExpression().stream()
-                    .map(this::getText)
-                    .toList();
+            return chunks.get(chunks.size() - 1).drlxExpression();
         }
         DrlxParser.OopathRootContext root = ctx.oopathRoot();
         if (root == null) {
             return List.of();
         }
-        return root.drlxExpression().stream()
-                .map(this::getText)
-                .toList();
+        return root.drlxExpression();
+    }
+
+    private TemporalConditionIR buildTemporalCondition(DrlxParser.CustomConstraintContext ctx) {
+        String operatorName = ctx.customOp().identifier().getText();
+        if (!TEMPORAL_OPERATORS.contains(operatorName)) {
+            throw new IllegalArgumentException(
+                    "Unknown custom operator '" + operatorName
+                    + "'. Supported temporal operators: " + TEMPORAL_OPERATORS);
+        }
+        boolean negated = ctx.NOT() != null;
+        List<String> params = List.of();
+        if (ctx.customOp().customOpParams() != null) {
+            String raw = getText(ctx.customOp().customOpParams());
+            params = java.util.Arrays.stream(raw.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .toList();
+        }
+        String rightBinding = getText(ctx.expression());
+        return new TemporalConditionIR(operatorName, negated, params, rightBinding);
     }
 
     private static String trimBraces(String text) {
