@@ -219,10 +219,27 @@ oopathChunk
     ;
 
 // DRLX expression used inside oopathChunk conditions
-// Allows optional binding (name: expression) or a plain expression
+// Allows optional binding (name: expression), custom constraint (temporal/pluggable),
+// or a plain expression
 drlxExpression
     : identifier ':' expression
+    | customConstraint
     | expression
+    ;
+
+// Custom constraint — generic rule for temporal/pluggable operators.
+// The operator identifier is validated at visitor level (avoids lexer keywords).
+// Grammar: (THIS | identifier) NOT? operatorName[params]? expression
+customConstraint
+    : (THIS | identifier) NOT? customOp expression
+    ;
+
+customOp
+    : identifier ('[' customOpParams ']')?
+    ;
+
+customOpParams
+    : ~']'+
     ;
 
 // Watch-list item on property-reactive pattern:
