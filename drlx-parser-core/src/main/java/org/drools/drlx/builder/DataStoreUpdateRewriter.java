@@ -3,7 +3,6 @@ package org.drools.drlx.builder;
 import java.util.Optional;
 import java.util.Set;
 
-import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.NodeList;
@@ -13,21 +12,14 @@ import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
 
-/**
- * Rewrites {@code <global>.update(<arg>)} in DRLX consequence bodies to the
- * handle-aware two-arg form
- * {@code <global>.update(java.util.Objects.requireNonNull(<global>.lookup(<arg>), "..."), <arg>)}.
- *
- * <p>Stateless apart from a reusable {@link JavaParser}. Pure: same input
- * yields same output. Cheap string guards skip the parse for bodies where
- * no rewrite could apply.
- */
+import org.mvel3.parser.MvelParser;
+
 public final class DataStoreUpdateRewriter {
 
-    private final JavaParser javaParser;
+    private final MvelParser mvelParser;
 
-    public DataStoreUpdateRewriter(JavaParser javaParser) {
-        this.javaParser = javaParser;
+    public DataStoreUpdateRewriter(MvelParser mvelParser) {
+        this.mvelParser = mvelParser;
     }
 
     public String rewrite(String consequenceBody, Set<String> dataStoreGlobalNames) {
@@ -48,7 +40,7 @@ public final class DataStoreUpdateRewriter {
         String wrapped = "{\n" + consequenceBody + "\n}";
         ParseResult<BlockStmt> parseResult;
         try {
-            parseResult = javaParser.parseBlock(wrapped);
+            parseResult = mvelParser.parseBlock(wrapped);
         } catch (RuntimeException e) {
             return consequenceBody;
         }

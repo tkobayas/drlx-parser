@@ -2,9 +2,9 @@ package org.drools.drlx.builder;
 
 import java.util.Set;
 
-import com.github.javaparser.JavaParser;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mvel3.parser.antlr4.Antlr4MvelParser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,7 +14,7 @@ class DataStoreUpdateRewriterTest {
 
     @BeforeEach
     void setUp() {
-        rewriter = new DataStoreUpdateRewriter(new JavaParser());
+        rewriter = new DataStoreUpdateRewriter(new Antlr4MvelParser());
     }
 
     @Test
@@ -106,5 +106,23 @@ class DataStoreUpdateRewriterTest {
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
         assertThat(result).contains("requireNonNull");
+    }
+
+    @Test
+    void compactWithPlusUpdateIsRewritten() {
+        String body = "p{age = 0}; alerts.update(p);";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("requireNonNull");
+        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, p)");
+    }
+
+    @Test
+    void compactWithMultipleAssignmentsPlusUpdateIsRewritten() {
+        String body = "p{name = \"Reset\", age = 0}; alerts.update(p);";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("requireNonNull");
+        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, p)");
     }
 }

@@ -63,7 +63,7 @@ import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
 import org.drools.util.TypeResolver;
 
-import com.github.javaparser.JavaParser;
+import org.mvel3.parser.antlr4.Antlr4MvelParser;
 import org.kie.api.definition.KiePackage;
 import org.mvel3.Type;
 
@@ -105,7 +105,7 @@ public class DrlxRuleAstRuntimeBuilder {
                 })
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
-        DataStoreUpdateRewriter updateRewriter = new DataStoreUpdateRewriter(new JavaParser());
+        DataStoreUpdateRewriter updateRewriter = new DataStoreUpdateRewriter(new Antlr4MvelParser());
 
         Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
         registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
