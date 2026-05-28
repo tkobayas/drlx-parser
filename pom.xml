@@ -24,7 +24,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <version.mvel3>3.0.0-SNAPSHOT</version.mvel3>
         <version.antlr4>4.13.1</version.antlr4>
-        <version.javaparser>3.25.5-mvel3-1</version.javaparser>
+        <version.javaparser>3.25.5-mvel3-SNAPSHOT</version.javaparser>
         <version.drools>10.1.0</version.drools>
         <version.protobuf>3.25.5</version.protobuf>
         <version.protobuf-maven-plugin>0.6.1</version.protobuf-maven-plugin>

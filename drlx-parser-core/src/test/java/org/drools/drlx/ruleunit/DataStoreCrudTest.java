@@ -10,12 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * End-to-end tests for issues #37 and #45 (DataStore CRUD): each rule
- * consequence calls a {@code DataStore} method on a unit-field reference
+ * End-to-end tests for issues #37, #45 (DataStore CRUD), and #34
+ * (compact setter blocks): each rule consequence calls a
+ * {@code DataStore} method on a unit-field reference
  * (e.g. {@code persons1.add(p)}, {@code persons.update(p)}), and
- * {@link DrlxRuleUnitInstance} provides the runtime surface. The class
- * covers add / remove(T) / update(T); the with-block compact update
- * (#34) is not yet covered.
+ * {@link DrlxRuleUnitInstance} provides the runtime surface.
  */
 @DisabledIfSystemProperty(named = "mvel3.compiler.lambda.persistence", matches = "false")
 class DataStoreCrudTest {
@@ -140,6 +139,61 @@ class DataStoreCrudTest {
 
             assertThat(instance.fire()).isEqualTo(1);
             assertThat(obs.updated()).hasSize(1);
+            assertThat(alice.getAge()).isEqualTo(0);
+        }
+    }
+
+    @Test
+    void compactWithStandaloneSetterBlock() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule ResetWithCompactWith {
+                    Person p : /persons[ age > 30 ],
+                    do p{age = 0};
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(alice.getAge()).isEqualTo(0);
+        }
+    }
+
+    @Test
+    void compactWithMultipleAssignments() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule RenameAndReset {
+                    Person p : /persons[ age > 30 ],
+                    do p{name = "Reset", age = 0};
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(alice.getName()).isEqualTo("Reset");
             assertThat(alice.getAge()).isEqualTo(0);
         }
     }
