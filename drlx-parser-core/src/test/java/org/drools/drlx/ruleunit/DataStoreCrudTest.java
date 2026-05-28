@@ -229,6 +229,36 @@ class DataStoreCrudTest {
     }
 
     @Test
+    void compactWithAsUpdateArg() {
+        String rule =
+                """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule ResetViaCompactWithArg {
+                    Person p : /persons[ age > 30 ],
+                    do { persons.update(p{age = 0}); }
+                }
+                """;
+        KieBase kieBase = new DrlxRuleBuilder().build(rule);
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            TestDataObserver<Person> obs = TestDataObserver.subscribeTo(unit.persons);
+
+            assertThat(instance.fire()).isEqualTo(1);
+            assertThat(alice.getAge()).isEqualTo(0);
+            assertThat(obs.updated()).hasSize(1);
+        }
+    }
+
+    @Test
     void updateOfMissingFactThrows() {
         String rule =
                 """

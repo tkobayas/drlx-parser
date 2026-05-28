@@ -125,4 +125,26 @@ class DataStoreUpdateRewriterTest {
         assertThat(result).contains("requireNonNull");
         assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, p)");
     }
+
+    @Test
+    void compactWithAsUpdateArgIsRewritten() {
+        String body = "alerts.update(t{status = RECEIVED});";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("requireNonNull");
+        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
+        assertThat(result).contains("t{status = RECEIVED}");
+        assertThat(result.replaceAll("\\s+", "")).contains(",t);");
+    }
+
+    @Test
+    void compactWithMultipleAssignmentsAsUpdateArgIsRewritten() {
+        String body = "alerts.update(t{status = RECEIVED, timestamp = new Date()});";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("requireNonNull");
+        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
+        assertThat(result).contains("t{status = RECEIVED, timestamp = new Date()}");
+        assertThat(result.replaceAll("\\s+", "")).contains(",t);");
+    }
 }

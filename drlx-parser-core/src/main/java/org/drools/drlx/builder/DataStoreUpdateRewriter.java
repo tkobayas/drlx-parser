@@ -11,8 +11,10 @@ import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.stmt.BlockStmt;
+import com.github.javaparser.ast.stmt.ExpressionStmt;
 
 import org.mvel3.parser.MvelParser;
+import org.mvel3.parser.ast.expr.CompactWithExpression;
 
 public final class DataStoreUpdateRewriter {
 
@@ -84,6 +86,21 @@ public final class DataStoreUpdateRewriter {
             return false;
         }
         Expression arg = call.getArgument(0);
+        if (arg instanceof CompactWithExpression compactWith) {
+            if (call.getParentNode().orElse(null) instanceof ExpressionStmt exprStmt
+                    && exprStmt.getParentNode().orElse(null) instanceof BlockStmt block) {
+                int index = block.getStatements().indexOf(exprStmt);
+                if (index >= 0) {
+                    block.addStatement(index, new ExpressionStmt(compactWith.clone()));
+                    arg = compactWith.getTarget().clone();
+                    call.setArgument(0, arg);
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
         if (!(arg instanceof NameExpr) && !(arg instanceof FieldAccessExpr)) {
             return false;
         }
