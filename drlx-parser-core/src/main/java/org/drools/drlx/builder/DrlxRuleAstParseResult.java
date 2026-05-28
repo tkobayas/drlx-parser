@@ -160,12 +160,19 @@ public final class DrlxRuleAstParseResult {
         String castTypeName = pattern.getCastTypeName().isEmpty() ? null : pattern.getCastTypeName();
         String windowType = pattern.getWindowType().isEmpty() ? null : pattern.getWindowType();
         String windowParameter = pattern.getWindowParameter().isEmpty() ? null : pattern.getWindowParameter();
+        List<DrlxRuleAstModel.TemporalConditionIR> temporalConditions =
+                pattern.getTemporalConditionsList().stream()
+                        .map(tc -> new DrlxRuleAstModel.TemporalConditionIR(
+                                tc.getOperator(), tc.getNegated(),
+                                List.copyOf(tc.getParametersList()),
+                                tc.getRightBinding()))
+                        .toList();
         return new PatternIR(
                 pattern.getTypeName(),
                 pattern.getBindName(),
                 pattern.getEntryPoint(),
                 List.copyOf(pattern.getConditionsList()),
-                List.of(),
+                temporalConditions,
                 castTypeName,
                 List.copyOf(pattern.getPositionalArgsList()),
                 pattern.getPassive(),
@@ -261,6 +268,14 @@ public final class DrlxRuleAstParseResult {
         p.conditions().forEach(pb::addConditions);
         p.positionalArgs().forEach(pb::addPositionalArgs);
         p.watchedProperties().forEach(pb::addWatchedProperties);
+        for (DrlxRuleAstModel.TemporalConditionIR tc : p.temporalConditions()) {
+            pb.addTemporalConditions(DrlxRuleAstProto.TemporalConditionParseResult.newBuilder()
+                    .setOperator(tc.operator())
+                    .setNegated(tc.negated())
+                    .addAllParameters(tc.parameters())
+                    .setRightBinding(tc.rightBinding())
+                    .build());
+        }
         if (p.windowType() != null) {
             pb.setWindowType(p.windowType());
             pb.setWindowParameter(p.windowParameter());

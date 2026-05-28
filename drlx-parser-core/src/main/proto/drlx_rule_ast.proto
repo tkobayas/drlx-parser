@@ -58,6 +58,14 @@ message PatternParseResult {
   repeated string watched_properties = 8;
   string window_type = 9;
   string window_parameter = 10;
+  repeated TemporalConditionParseResult temporal_conditions = 11;
+}
+
+message TemporalConditionParseResult {
+  string operator = 1;
+  bool negated = 2;
+  repeated string parameters = 3;
+  string right_binding = 4;
 }
 
 message ConsequenceParseResult {
