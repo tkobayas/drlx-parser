@@ -1260,6 +1260,30 @@ public class DrlxRuleAstRuntimeBuilder {
             pattern.addConstraint(constraint);
         }
 
+        for (DrlxRuleAstModel.TemporalConditionIR tc : parseResult.temporalConditions()) {
+            DrlxLambdaCompiler.BoundVariable ref = boundVariables.get(tc.rightBinding());
+            if (ref == null) {
+                throw new RuntimeException(
+                        "Temporal constraint references unknown binding '" + tc.rightBinding() + "'");
+            }
+            if (!pattern.getObjectType().isEvent()) {
+                throw new RuntimeException(
+                        "Temporal operator '" + tc.operator()
+                        + "' requires event types (@Role(Type.EVENT)) but '"
+                        + parseResult.typeName() + "' is not an event");
+            }
+            if (!ref.pattern().getObjectType().isEvent()) {
+                throw new RuntimeException(
+                        "Temporal operator '" + tc.operator()
+                        + "' requires event types (@Role(Type.EVENT)) but the referenced binding '"
+                        + tc.rightBinding() + "' is not an event");
+            }
+            org.drools.model.functions.temporal.TemporalPredicate predicate =
+                    TemporalPredicateFactory.create(tc.operator(), tc.negated(), tc.parameters());
+            pattern.addConstraint(
+                    new DrlxTemporalConstraint(predicate, new Declaration[] { ref.declaration() }));
+        }
+
         if (!parseResult.watchedProperties().isEmpty()) {
             List<String> validated = validateWatchedProperties(
                     parseResult.watchedProperties(), patternClass, parseResult.typeName());
