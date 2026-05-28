@@ -772,7 +772,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             windowParameter = ctx.windowFilter().windowParam().getText();
         }
-        return new PatternIR(typeName, bindName, entryPoint, conditions, castTypeName,
+        return new PatternIR(typeName, bindName, entryPoint, conditions, List.of(), castTypeName,
                               positionalArgs, passive, watchedProperties, windowType, windowParameter);
     }
 
@@ -783,7 +783,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
-        return new PatternIR("", "", entryPoint, conditions, castTypeName, positionalArgs, passive, watchedProperties, null, null);
+        return new PatternIR("", "", entryPoint, conditions, List.of(), castTypeName, positionalArgs, passive, watchedProperties, null, null);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx,
@@ -794,7 +794,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
-        return new PatternIR("", syntheticBindName, entryPoint, conditions, castTypeName,
+        return new PatternIR("", syntheticBindName, entryPoint, conditions, List.of(), castTypeName,
                               positionalArgs, passive, watchedProperties, null, null);
     }
 

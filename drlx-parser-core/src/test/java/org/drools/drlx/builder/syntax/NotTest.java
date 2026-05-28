@@ -92,7 +92,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
     @Test
     void protoRoundTrip_withNot() throws Exception {
-        PatternIR inner = new PatternIR("", "", "persons", List.of("age < 18"), null, List.of(), false, List.of(), null, null);
+        PatternIR inner = new PatternIR("", "", "persons", List.of("age < 18"), List.of(), null, List.of(), false, List.of(), null, null);
         GroupElementIR notGroup = new GroupElementIR(GroupElementIR.Kind.NOT, List.of(inner));
         RuleIR ruleIR = new RuleIR("OnlyAdults", List.of(), List.of(), List.of(notGroup),
                 new ConsequenceIR("System.out.println(\"only adults\");"));

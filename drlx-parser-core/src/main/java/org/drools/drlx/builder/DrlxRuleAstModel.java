@@ -39,12 +39,24 @@ public final class DrlxRuleAstModel {
                             String bindName,
                             String entryPoint,
                             List<String> conditions,
+                            List<TemporalConditionIR> temporalConditions,
                             String castTypeName,
                             List<String> positionalArgs,
                             boolean passive,
                             List<String> watchedProperties,
                             String windowType,
                             String windowParameter) implements LhsItemIR {
+    }
+
+    public record TemporalConditionIR(
+        String operator,
+        boolean negated,
+        List<String> parameters,
+        String rightBinding
+    ) {
+        public TemporalConditionIR {
+            parameters = List.copyOf(parameters);
+        }
     }
 
     public record GroupElementIR(Kind kind, List<LhsItemIR> children) implements LhsItemIR {

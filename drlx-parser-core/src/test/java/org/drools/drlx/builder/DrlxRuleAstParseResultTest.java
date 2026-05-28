@@ -49,6 +49,7 @@ class DrlxRuleAstParseResultTest {
         PatternIR ir = new PatternIR(
                 "Person", "p", "persons",
                 List.of("age > 18"),
+                List.of(),
                 null,
                 List.of(),
                 true,
@@ -88,6 +89,7 @@ class DrlxRuleAstParseResultTest {
         PatternIR ir = new PatternIR(
                 "ReactiveEmployee", "e", "reactiveEmployees",
                 List.of("salary > 0"),
+                List.of(),
                 null,
                 List.of(),
                 false,
@@ -124,7 +126,7 @@ class DrlxRuleAstParseResultTest {
     void accumulatePatternIrRoundTripsThroughProto() {
         DrlxRuleAstModel.PatternIR src = new DrlxRuleAstModel.PatternIR(
                 "var", "p", "persons",
-                List.of(), null, List.of(), false, List.of(), null, null);
+                List.of(), List.of(), null, List.of(), false, List.of(), null, null);
         DrlxRuleAstModel.AccumulatorIR acc1 = new DrlxRuleAstModel.AccumulatorIR(
                 "var", "avgAge", "avg", List.of("p.age"), List.of("p"));
         DrlxRuleAstModel.AccumulatorIR acc2 = new DrlxRuleAstModel.AccumulatorIR(
@@ -155,6 +157,7 @@ class DrlxRuleAstParseResultTest {
     void windowFieldsRoundTripThroughProto() {
         PatternIR ir = new PatternIR(
                 "Withdrawal", "w", "withdrawals",
+                List.of(),
                 List.of(),
                 null,
                 List.of(),

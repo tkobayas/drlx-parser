@@ -206,7 +206,7 @@ class AccumulateVisitorTest {
     @Test
     void customAccumulateIRProtobufRoundTrip() {
         var original = new DrlxRuleAstModel.CustomAccumulateIR(
-                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of(), null, null),
+                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), List.of(), null, List.of(), false, List.of(), null, null),
                 List.of(
                         new DrlxRuleAstModel.InitVarIR("int", "count", "0"),
                         new DrlxRuleAstModel.InitVarIR("int", "total", "0")),
@@ -237,7 +237,7 @@ class AccumulateVisitorTest {
     @Test
     void customAccumulateIRProtobufRoundTripNullReverse() {
         var original = new DrlxRuleAstModel.CustomAccumulateIR(
-                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of(), null, null),
+                new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), List.of(), null, List.of(), false, List.of(), null, null),
                 List.of(new DrlxRuleAstModel.InitVarIR("int", "s", "0")),
                 "s = s + p.age",
                 null,
@@ -629,8 +629,8 @@ class AccumulateVisitorTest {
         var src = new DrlxRuleAstModel.GroupElementIR(
                 DrlxRuleAstModel.GroupElementIR.Kind.AND,
                 List.of(
-                        new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), null, List.of(), false, List.of(), null, null),
-                        new DrlxRuleAstModel.PatternIR("var", "o", "orders", List.of("customerId == p.age"), null, List.of(), false, List.of(), null, null)));
+                        new DrlxRuleAstModel.PatternIR("var", "p", "persons", List.of(), List.of(), null, List.of(), false, List.of(), null, null),
+                        new DrlxRuleAstModel.PatternIR("var", "o", "orders", List.of("customerId == p.age"), List.of(), null, List.of(), false, List.of(), null, null)));
         var acc = new DrlxRuleAstModel.AccumulatorIR("var", "total", "sum", List.of("o.amount"), List.of("o"));
         var original = new DrlxRuleAstModel.AccumulatePatternIR(src, List.of(acc));
 

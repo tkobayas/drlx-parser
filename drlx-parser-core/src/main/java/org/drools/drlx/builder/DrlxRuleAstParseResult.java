@@ -165,6 +165,7 @@ public final class DrlxRuleAstParseResult {
                 pattern.getBindName(),
                 pattern.getEntryPoint(),
                 List.copyOf(pattern.getConditionsList()),
+                List.of(),
                 castTypeName,
                 List.copyOf(pattern.getPositionalArgsList()),
                 pattern.getPassive(),
