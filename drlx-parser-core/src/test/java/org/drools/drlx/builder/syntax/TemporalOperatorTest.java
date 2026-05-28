@@ -34,11 +34,13 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(1, TimeUnit.SECONDS);
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -56,9 +58,11 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(0);
         }
     }
@@ -76,11 +80,13 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(3, TimeUnit.SECONDS);
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -98,11 +104,13 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(10, TimeUnit.SECONDS);
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(0);
         }
     }
@@ -120,11 +128,13 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             clock.advanceTime(1, TimeUnit.SECONDS);
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -142,21 +152,16 @@ class TemporalOperatorTest {
                     do {}
                 }
                 """;
-        try (var instance = createStreamInstance(drlx)) {
-            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
-            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance = createInstance(drlx, unit)) {
+            unit.withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            unit.withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
 
-    private record StreamInstance<U extends org.drools.ruleunits.api.RuleUnitData>(
-            DrlxRuleUnitInstance<U> delegate, U unit) implements AutoCloseable {
-        SessionPseudoClock getClock() { return delegate.getClock(); }
-        int fire() { return delegate.fire(); }
-        @Override public void close() { delegate.close(); }
-    }
-
-    private static StreamInstance<WithdrawalUnit> createStreamInstance(String drlx) {
+    private static DrlxRuleUnitInstance<WithdrawalUnit> createInstance(String drlx, WithdrawalUnit unit) {
         KieBaseConfiguration kbConfig = RuleBaseFactory.newKnowledgeBaseConfiguration();
         kbConfig.setOption(EventProcessingOption.STREAM);
         KieBase kieBase = new DrlxRuleBuilder().build(drlx, kbConfig);
@@ -165,9 +170,6 @@ class TemporalOperatorTest {
                 .as(SessionConfiguration.KEY);
         sessionConfig.setClockType(ClockType.PSEUDO_CLOCK);
 
-        WithdrawalUnit unit = new WithdrawalUnit();
-        DrlxRuleUnitInstance<WithdrawalUnit> instance =
-                DrlxRuleUnitInstance.create(kieBase, unit, sessionConfig);
-        return new StreamInstance<>(instance, unit);
+        return DrlxRuleUnitInstance.create(kieBase, unit, sessionConfig);
     }
 }
