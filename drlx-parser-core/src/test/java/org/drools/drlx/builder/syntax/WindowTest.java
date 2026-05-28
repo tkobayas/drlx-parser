@@ -46,8 +46,8 @@ class WindowTest {
 
         try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
                      DrlxRuleUnitInstance.create(kieBase, unit)) {
-            unit.withdrawals.add(new Withdrawal("A1", 100.0));
-            unit.withdrawals.add(new Withdrawal("A2", 200.0));
+            unit.withdrawals.append(new Withdrawal("A1", 100.0));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0));
             assertThat(instance.fire()).isEqualTo(2);
         }
     }
@@ -61,7 +61,7 @@ class WindowTest {
         try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
                      DrlxRuleUnitInstance.create(kieBase, unit)) {
             for (int i = 1; i <= 7; i++) {
-                unit.withdrawals.add(new Withdrawal("A" + i, i * 100.0));
+                unit.withdrawals.append(new Withdrawal("A" + i, i * 100.0));
             }
             int fired = instance.fire();
             assertThat(fired).isEqualTo(5);
@@ -76,9 +76,9 @@ class WindowTest {
 
         try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
                      DrlxRuleUnitInstance.create(kieBase, unit)) {
-            unit.withdrawals.add(new Withdrawal("A1", 100.0));
-            unit.withdrawals.add(new Withdrawal("A2", 200.0));
-            unit.withdrawals.add(new Withdrawal("A3", 300.0));
+            unit.withdrawals.append(new Withdrawal("A1", 100.0));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0));
             assertThat(instance.fire()).isEqualTo(3);
         }
     }
@@ -97,12 +97,12 @@ class WindowTest {
                      DrlxRuleUnitInstance.create(kieBase, unit, sessionConfig)) {
             SessionPseudoClock clock = instance.getClock();
 
-            unit.withdrawals.add(new Withdrawal("A1", 100.0));
-            unit.withdrawals.add(new Withdrawal("A2", 200.0));
+            unit.withdrawals.append(new Withdrawal("A1", 100.0));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0));
 
             clock.advanceTime(6, TimeUnit.SECONDS);
 
-            unit.withdrawals.add(new Withdrawal("A3", 300.0));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -125,11 +125,11 @@ class WindowTest {
 
         try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
                      DrlxRuleUnitInstance.create(kieBase, unit)) {
-            unit.withdrawals.add(new Withdrawal("A1", 100.0, "GOLD"));
-            unit.withdrawals.add(new Withdrawal("A2", 200.0, "STANDARD"));
-            unit.withdrawals.add(new Withdrawal("A3", 300.0, "GOLD"));
-            unit.withdrawals.add(new Withdrawal("A4", 400.0, "STANDARD"));
-            unit.withdrawals.add(new Withdrawal("A5", 500.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A1", 100.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0, "STANDARD"));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A4", 400.0, "STANDARD"));
+            unit.withdrawals.append(new Withdrawal("A5", 500.0, "GOLD"));
             assertThat(instance.fire()).isEqualTo(3);
         }
     }
@@ -153,11 +153,11 @@ class WindowTest {
 
         try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
                      DrlxRuleUnitInstance.create(kieBase, unit)) {
-            unit.withdrawals.add(new Withdrawal("A1", 100.0, "GOLD"));
-            unit.withdrawals.add(new Withdrawal("A2", 200.0, "STANDARD"));
-            unit.withdrawals.add(new Withdrawal("A3", 300.0, "GOLD"));
-            unit.withdrawals.add(new Withdrawal("A4", 400.0, "STANDARD"));
-            unit.withdrawals.add(new Withdrawal("A5", 500.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A1", 100.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0, "STANDARD"));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0, "GOLD"));
+            unit.withdrawals.append(new Withdrawal("A4", 400.0, "STANDARD"));
+            unit.withdrawals.append(new Withdrawal("A5", 500.0, "GOLD"));
             assertThat(instance.fire()).isEqualTo(2);
         }
     }

@@ -36,9 +36,9 @@ class TemporalOperatorTest {
                 """;
         try (var instance = createStreamInstance(drlx)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(1, TimeUnit.SECONDS);
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -57,8 +57,8 @@ class TemporalOperatorTest {
                 }
                 """;
         try (var instance = createStreamInstance(drlx)) {
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(0);
         }
     }
@@ -78,9 +78,9 @@ class TemporalOperatorTest {
                 """;
         try (var instance = createStreamInstance(drlx)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(3, TimeUnit.SECONDS);
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -100,9 +100,9 @@ class TemporalOperatorTest {
                 """;
         try (var instance = createStreamInstance(drlx)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
             clock.advanceTime(10, TimeUnit.SECONDS);
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(0);
         }
     }
@@ -122,9 +122,9 @@ class TemporalOperatorTest {
                 """;
         try (var instance = createStreamInstance(drlx)) {
             SessionPseudoClock clock = instance.getClock();
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             clock.advanceTime(1, TimeUnit.SECONDS);
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
@@ -143,8 +143,8 @@ class TemporalOperatorTest {
                 }
                 """;
         try (var instance = createStreamInstance(drlx)) {
-            instance.unit().withdrawals.add(new Withdrawal("X", 100.0, "A"));
-            instance.unit().withdrawals.add(new Withdrawal("Y", 200.0, "B"));
+            instance.unit().withdrawals.append(new Withdrawal("X", 100.0, "A"));
+            instance.unit().withdrawals.append(new Withdrawal("Y", 200.0, "B"));
             assertThat(instance.fire()).isEqualTo(1);
         }
     }
