@@ -402,4 +402,68 @@ class QueryTest extends DrlxBuilderTestSupport {
             assertThat(unit.results).hasSize(2);
         }
     }
+
+    @Test
+    void queryResultBindingObjectsMethod() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do { results.add(t.objects().length); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            // PersonsByAge has 2 parameters (minAge, result) → objects() length is 2
+            assertThat(unit.results).containsExactly(2);
+        }
+    }
+
+    @Test
+    void queryResultBindingCoexistsWithOutputVariables() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do { results.add(p.name + ":" + ((org.drools.drlx.domain.Person)t.result).name); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            // p and t.result should refer to the same Person
+            assertThat(unit.results).containsExactly("Alice:Alice");
+        }
+    }
 }
