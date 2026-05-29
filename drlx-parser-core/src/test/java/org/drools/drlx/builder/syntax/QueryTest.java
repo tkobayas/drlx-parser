@@ -3,12 +3,14 @@ package org.drools.drlx.builder.syntax;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.domain.Trust;
 import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
 import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
+import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
 import org.kie.api.runtime.rule.Variable;
@@ -179,6 +181,82 @@ class QueryTest extends DrlxBuilderTestSupport {
         assertThatThrownBy(() -> newBuilder().build(source))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("expects 2 arguments but got 1");
+    }
+
+    @Test
+    void passiveQueryInvocationDoesNotWakeRule() {
+        final String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var l : /locations[city == "paris"],
+                    ?/personsByAge(25, var p),
+                    do { System.out.println("fired"); }
+                }
+                """;
+
+        withSession(source, (kieSession, listener) -> {
+            final EntryPoint locations = kieSession.getEntryPoint("locations");
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+
+            // 1. Reactive side first — no query match yet, no fire
+            locations.insert(new Location("paris", "centre"));
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+
+            // 2. Passive query side — a complete match now exists
+            //    (location × query result), but because the query invocation
+            //    is passive, this insertion MUST NOT wake R1
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            assertThat(listener.getAfterMatchFired()).isEmpty();
+        });
+    }
+
+    @Test
+    void passiveQueryInvocationWakesWhenReactiveSideFires() {
+        final String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Location;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var l : /locations[city == "paris"],
+                    ?/personsByAge(25, var p),
+                    do { System.out.println("fired"); }
+                }
+                """;
+
+        withSession(source, (kieSession, listener) -> {
+            final EntryPoint locations = kieSession.getEntryPoint("locations");
+            final EntryPoint persons = kieSession.getEntryPoint("persons");
+
+            // Passive side first — no fire
+            persons.insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+
+            // Reactive side triggers — picks up pending passive query results
+            locations.insert(new Location("paris", "centre"));
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("R1");
+        });
     }
 
     @Test

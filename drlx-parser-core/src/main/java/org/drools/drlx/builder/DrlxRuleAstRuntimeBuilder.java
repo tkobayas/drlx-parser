@@ -1003,13 +1003,19 @@ public class DrlxRuleAstRuntimeBuilder {
 
         int[] varIndexArray = varIndexes.stream().mapToInt(Integer::intValue).toArray();
 
+        if (patternIr.passive() && targetQuery.getConsequence() != null) {
+            throw new RuntimeException(
+                    "Cannot passively invoke query '" + targetQuery.getName()
+                    + "': the query has an agenda-based 'do' block which is incompatible with passive invocation");
+        }
+
         return new QueryElement(
                 resultPattern,
                 targetQuery.getName(),
                 arguments,
                 varIndexArray,
                 requiredDeclarations.toArray(new Declaration[0]),
-                true,
+                !patternIr.passive(),
                 false);
     }
 
