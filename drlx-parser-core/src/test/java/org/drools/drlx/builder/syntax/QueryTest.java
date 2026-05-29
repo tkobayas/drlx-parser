@@ -295,4 +295,40 @@ class QueryTest extends DrlxBuilderTestSupport {
             assertThat(unit.results).containsExactlyInAnyOrder("B", "C", "D");
         }
     }
+
+    @Test
+    void queryResultBindingNamedAccess() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do { results.add(t.result); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+        unit.persons.add(new Person("Bob", 20));
+        unit.persons.add(new Person("Charlie", 40));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            List<String> names = unit.results.stream()
+                    .map(o -> ((Person) o).getName())
+                    .toList();
+            assertThat(names).containsExactlyInAnyOrder("Alice", "Charlie");
+        }
+    }
 }

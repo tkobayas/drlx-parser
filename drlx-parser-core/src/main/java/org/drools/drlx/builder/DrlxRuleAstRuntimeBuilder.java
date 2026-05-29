@@ -44,6 +44,8 @@ import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.rule.constraint.QueryNameConstraint;
 import org.drools.base.util.PropertyReactivityUtil;
 import org.drools.drlx.builder.DrlxLambdaCompiler.BoundVariable;
+import org.drools.drlx.runtime.QueryResultRow;
+import org.drools.drlx.runtime.QueryResultRowReader;
 import org.kie.api.definition.type.Role;
 import org.kie.api.runtime.rule.AccumulateFunction;
 import org.kie.internal.builder.conf.PropertySpecificOption;
@@ -491,6 +493,19 @@ public class DrlxRuleAstRuntimeBuilder {
                                         new BoundVariable(varName, paramType, resultPattern, decl));
                             }
                         }
+                    }
+                    if (patternIr.bindName() != null) {
+                        Map<String, Integer> nameToIndex = new LinkedHashMap<>();
+                        Declaration[] qParams = targetQuery.getParameters();
+                        for (int i = 0; i < qParams.length; i++) {
+                            nameToIndex.put(qParams[i].getIdentifier(), i);
+                        }
+                        QueryResultRowReader rowReader = new QueryResultRowReader(nameToIndex);
+                        Pattern resultPattern = queryElement.getResultPattern();
+                        Declaration rowDecl = new Declaration(patternIr.bindName(), rowReader, resultPattern);
+                        resultPattern.addDeclaration(rowDecl);
+                        boundVariables.put(patternIr.bindName(),
+                                new BoundVariable(patternIr.bindName(), QueryResultRow.class, resultPattern, rowDecl));
                     }
                     continue;
                 }
