@@ -436,6 +436,107 @@ class QueryTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void queryResultBindingHandleIndexedAccess() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do { results.add(t.handles()[1].getObject()); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).hasSize(1);
+            assertThat(unit.results.get(0)).isInstanceOf(Person.class);
+            assertThat(((Person) unit.results.get(0)).getName()).isEqualTo("Alice");
+        }
+    }
+
+    @Test
+    void queryResultBindingHandleNamedAccess() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do { results.add(t.handles().result.getObject()); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).hasSize(1);
+            assertThat(unit.results.get(0)).isInstanceOf(Person.class);
+            assertThat(((Person) unit.results.get(0)).getName()).isEqualTo("Alice");
+        }
+    }
+
+    @Test
+    void queryResultBindingHandleIdentity() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge(25, var p),
+                    do {
+                        results.add(t.handles()[1].getObject() == t.result);
+                        results.add(t.handles().result.getObject() == t.result);
+                    }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).allMatch(o -> Boolean.TRUE.equals(o));
+            assertThat(unit.results).hasSize(2);
+        }
+    }
+
+    @Test
     void queryResultBindingCoexistsWithOutputVariables() {
         String source = """
                 package org.drools.drlx.parser;

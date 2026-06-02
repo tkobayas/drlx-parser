@@ -17,12 +17,12 @@ public final class QueryResultRowReader implements ReadAccessor {
 
     @Override
     public Object getValue(Object object) {
-        return new QueryResultRow((Object[]) object, nameToIndex);
+        return new QueryResultRow((Object[]) object, nameToIndex, null);
     }
 
     @Override
     public Object getValue(ValueResolver valueResolver, Object object) {
-        return new QueryResultRow((Object[]) object, nameToIndex);
+        return new QueryResultRow((Object[]) object, nameToIndex, valueResolver);
     }
 
     @Override public int getIndex() { return -1; }

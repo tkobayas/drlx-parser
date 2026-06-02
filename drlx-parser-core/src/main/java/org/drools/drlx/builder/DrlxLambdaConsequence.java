@@ -2,13 +2,14 @@ package org.drools.drlx.builder;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.drools.base.base.ValueResolver;
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.base.rule.Declaration;
 import org.drools.base.rule.consequence.Consequence;
+import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.core.rule.consequence.KnowledgeHelper;
 import org.mvel3.Evaluator;
 import org.mvel3.MVEL;
@@ -78,8 +79,12 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper>, Eval
     @Override
     public void evaluate(KnowledgeHelper knowledgeHelper, ValueResolver valueResolver) throws Exception {
         Map<String, Object> vars = new HashMap<>();
-        List<String> declarationIds = knowledgeHelper.getMatch().getDeclarationIds();
-        declarationIds.forEach(declarationId -> vars.put(declarationId, knowledgeHelper.getMatch().getDeclarationValue(declarationId)));
+        InternalMatch match = knowledgeHelper.getMatch();
+        Map<String, Declaration> declarations = match.getTerminalNode().getSubRule().getOuterDeclarations();
+        for (String declarationId : match.getDeclarationIds()) {
+            Declaration decl = declarations.get(declarationId);
+            vars.put(declarationId, decl.getValue(valueResolver, match.getTuple()));
+        }
         globalNames.forEach(name -> vars.put(name, valueResolver.getGlobal(name)));
 
         evaluator.eval(vars);

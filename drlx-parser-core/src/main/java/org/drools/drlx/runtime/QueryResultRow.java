@@ -7,14 +7,19 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.drools.base.base.ValueResolver;
+import org.drools.core.common.ReteEvaluator;
+
 public final class QueryResultRow extends AbstractMap<String, Object> implements Iterable<Object> {
 
     private final Object[] values;
     private final Map<String, Integer> nameToIndex;
+    private final ValueResolver valueResolver;
 
-    public QueryResultRow(Object[] values, Map<String, Integer> nameToIndex) {
+    public QueryResultRow(Object[] values, Map<String, Integer> nameToIndex, ValueResolver valueResolver) {
         this.values = values;
         this.nameToIndex = nameToIndex;
+        this.valueResolver = valueResolver;
     }
 
     @Override
@@ -32,9 +37,12 @@ public final class QueryResultRow extends AbstractMap<String, Object> implements
         return values;
     }
 
-    public Object handles() {
-        throw new UnsupportedOperationException(
-                "Handle access is not yet supported — see issue #82");
+    public QueryResultHandleRow handles() {
+        if (valueResolver == null) {
+            throw new UnsupportedOperationException(
+                    "Handle access requires a ValueResolver — not available in this context");
+        }
+        return new QueryResultHandleRow(values, nameToIndex, (ReteEvaluator) valueResolver);
     }
 
     @Override

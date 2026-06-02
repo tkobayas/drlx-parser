@@ -17,7 +17,7 @@ class QueryResultRowTest {
         Map<String, Integer> nameToIndex = new LinkedHashMap<>();
         nameToIndex.put("name", 0);
         nameToIndex.put("age", 1);
-        return new QueryResultRow(values, nameToIndex);
+        return new QueryResultRow(values, nameToIndex, null);
     }
 
     @Test
@@ -42,10 +42,11 @@ class QueryResultRowTest {
     }
 
     @Test
-    void handlesThrowsUnsupported() {
+    void handlesThrowsWhenNoValueResolver() {
         QueryResultRow row = createRow();
         assertThatThrownBy(row::handles)
-                .isInstanceOf(UnsupportedOperationException.class);
+                .isInstanceOf(UnsupportedOperationException.class)
+                .hasMessageContaining("ValueResolver");
     }
 
     @Test
