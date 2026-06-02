@@ -51,7 +51,7 @@ public class DrlxEvalExpression implements EvalExpression, EvaluatorSink {
         Map<String, Object> input = new HashMap<>(requiredDeclarations.length * 2);
         for (Declaration d : requiredDeclarations) {
             FactHandle fh = tuple.get(d);
-            input.put(d.getIdentifier(), fh != null ? fh.getObject() : null);
+            input.put(d.getIdentifier(), fh != null ? d.getValue(null, fh.getObject()) : null);
         }
         return Boolean.TRUE.equals(evaluator.eval(input));
     }

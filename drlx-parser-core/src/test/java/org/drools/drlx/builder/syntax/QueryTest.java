@@ -537,6 +537,42 @@ class QueryTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void testExpressionWithQueryOutputVariable() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge(20, var p),
+                    test p.age > 35,
+                    do { results.add(p); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+        unit.persons.add(new Person("Charlie", 40));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            List<String> names = unit.results.stream()
+                    .map(o -> ((Person) o).getName())
+                    .toList();
+            assertThat(names).containsExactly("Charlie");
+        }
+    }
+
+    @Test
     void queryResultBindingCoexistsWithOutputVariables() {
         String source = """
                 package org.drools.drlx.parser;
