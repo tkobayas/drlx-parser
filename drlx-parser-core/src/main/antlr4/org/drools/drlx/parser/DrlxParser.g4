@@ -219,10 +219,11 @@ oopathChunk
     ;
 
 // DRLX expression used inside oopathChunk conditions
-// Allows optional binding (name: expression), custom constraint (temporal/pluggable),
-// or a plain expression
+// Allows query output binding (var name : paramName), optional binding (name: expression),
+// custom constraint (temporal/pluggable), or a plain expression
 drlxExpression
-    : identifier ':' expression
+    : VAR varBind=identifier ':' varParam=identifier
+    | bind=identifier ':' expression
     | customConstraint
     | expression
     ;
