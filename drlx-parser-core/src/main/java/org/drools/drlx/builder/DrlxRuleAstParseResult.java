@@ -287,6 +287,7 @@ public final class DrlxRuleAstParseResult {
         return switch (k) {
             case ANNOTATION_KIND_SALIENCE -> RuleAnnotationIR.Kind.SALIENCE;
             case ANNOTATION_KIND_DESCRIPTION -> RuleAnnotationIR.Kind.DESCRIPTION;
+            case ANNOTATION_KIND_DATASOURCE -> RuleAnnotationIR.Kind.DATASOURCE;
             case ANNOTATION_KIND_UNSPECIFIED, UNRECOGNIZED ->
                     throw new IllegalStateException("Unknown proto annotation kind: " + k);
         };
@@ -296,6 +297,7 @@ public final class DrlxRuleAstParseResult {
         return switch (k) {
             case SALIENCE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_SALIENCE;
             case DESCRIPTION -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DESCRIPTION;
+            case DATASOURCE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DATASOURCE;
         };
     }
 

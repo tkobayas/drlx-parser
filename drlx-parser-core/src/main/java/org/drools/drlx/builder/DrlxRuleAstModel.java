@@ -28,7 +28,7 @@ public final class DrlxRuleAstModel {
     }
 
     public record RuleAnnotationIR(Kind kind, String rawValue) {
-        public enum Kind { SALIENCE, DESCRIPTION }
+        public enum Kind { SALIENCE, DESCRIPTION, DATASOURCE }
     }
 
     /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
