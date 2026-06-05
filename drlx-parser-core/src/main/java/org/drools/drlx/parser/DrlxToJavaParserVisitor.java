@@ -551,9 +551,20 @@ public class DrlxToJavaParserVisitor extends DrlxParserBaseVisitor<Node> {
 
     @Override
     public Node visitDrlxExpression(DrlxParser.DrlxExpressionContext ctx) {
-        SimpleName bind = ctx.identifier() != null ? new SimpleName(ctx.identifier().getText()) : null;
+        // VAR bindName : paramName — query output binding; store as opaque text node
+        if (ctx.VAR() != null) {
+            String text = ctx.VAR().getText() + " " + ctx.varBind.getText() + " : " + ctx.varParam.getText();
+            NameExpr nameExpr = new NameExpr(text);
+            nameExpr.setTokenRange(createTokenRange(ctx));
+            DrlxExpression drlxExpression = new DrlxExpression(null, nameExpr);
+            drlxExpression.setTokenRange(createTokenRange(ctx));
+            nameExpr.setParentNode(drlxExpression);
+            return drlxExpression;
+        }
+
+        SimpleName bind = ctx.bind != null ? new SimpleName(ctx.bind.getText()) : null;
         if (bind != null) {
-            bind.setTokenRange(createTokenRange(ctx.identifier()));
+            bind.setTokenRange(createTokenRange(ctx.bind));
         }
 
         Expression expr = (Expression) visit(ctx.expression());
