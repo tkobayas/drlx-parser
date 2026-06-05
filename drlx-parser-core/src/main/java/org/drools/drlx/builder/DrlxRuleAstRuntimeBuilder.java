@@ -445,6 +445,11 @@ public class DrlxRuleAstRuntimeBuilder {
             if (item instanceof PatternIR patternIr) {
                 QueryImpl targetQuery = queryRegistry.get(patternIr.entryPoint());
                 if (targetQuery != null && !patternIr.positionalArgs().isEmpty()) {
+                    if (!patternIr.conditions().isEmpty()) {
+                        throw new RuntimeException(
+                                "query '" + targetQuery.getName()
+                                + "' cannot mix positional arguments (...) with named access [...]");
+                    }
                     // Self-referencing query disambiguation heuristic:
                     // When a query's LHS references its own entry point with positional args,
                     // decide Pattern vs QueryElement based on whether any INPUT argument is
@@ -476,6 +481,56 @@ public class DrlxRuleAstRuntimeBuilder {
                     parent.addChild(queryElement);
                     Declaration[] queryParams = targetQuery.getParameters();
                     List<String> args = patternIr.positionalArgs();
+                    for (int i = 0; i < args.size(); i++) {
+                        String arg = args.get(i);
+                        String varName = null;
+                        if (arg.startsWith("var ")) {
+                            varName = arg.substring(4).trim();
+                        } else if (!boundVariables.containsKey(arg) && isSimpleIdentifier(arg)) {
+                            varName = arg;
+                        }
+                        if (varName != null) {
+                            Class<?> paramType = queryParams[i].getDeclarationClass();
+                            Pattern resultPattern = queryElement.getResultPattern();
+                            Declaration decl = resultPattern.getDeclarations().get(varName);
+                            if (decl != null) {
+                                boundVariables.put(varName,
+                                        new BoundVariable(varName, paramType, resultPattern, decl));
+                            }
+                        }
+                    }
+                    if (patternIr.bindName() != null) {
+                        Map<String, Integer> nameToIndex = new LinkedHashMap<>();
+                        Declaration[] qParams = targetQuery.getParameters();
+                        for (int i = 0; i < qParams.length; i++) {
+                            nameToIndex.put(qParams[i].getIdentifier(), i);
+                        }
+                        QueryResultRowReader rowReader = new QueryResultRowReader(nameToIndex);
+                        Pattern resultPattern = queryElement.getResultPattern();
+                        Declaration rowDecl = new Declaration(patternIr.bindName(), rowReader, resultPattern);
+                        resultPattern.addDeclaration(rowDecl);
+                        boundVariables.put(patternIr.bindName(),
+                                new BoundVariable(patternIr.bindName(), QueryResultRow.class, resultPattern, rowDecl));
+                    }
+                    continue;
+                }
+                if (targetQuery != null && !patternIr.conditions().isEmpty()) {
+                    // Named access path
+                    if (targetQuery == currentQuery) {
+                        throw new RuntimeException(
+                                "self-referencing query '" + targetQuery.getName()
+                                + "' cannot use named access; use positional syntax instead");
+                    }
+                    List<String> orderedArgs = buildNamedQueryArgs(patternIr.conditions(), targetQuery);
+                    PatternIR positionalIr = new PatternIR(
+                            patternIr.typeName(), patternIr.bindName(), patternIr.entryPoint(),
+                            List.of(), patternIr.temporalConditions(), patternIr.castTypeName(),
+                            orderedArgs, patternIr.passive(), patternIr.watchedProperties(),
+                            patternIr.windowType(), patternIr.windowParameter());
+                    QueryElement queryElement = buildQueryElement(positionalIr, targetQuery, boundVariables);
+                    parent.addChild(queryElement);
+                    Declaration[] queryParams = targetQuery.getParameters();
+                    List<String> args = orderedArgs;
                     for (int i = 0; i < args.size(); i++) {
                         String arg = args.get(i);
                         String varName = null;
@@ -1032,6 +1087,72 @@ public class DrlxRuleAstRuntimeBuilder {
                 requiredDeclarations.toArray(new Declaration[0]),
                 !patternIr.passive(),
                 false);
+    }
+
+    private static List<String> buildNamedQueryArgs(List<String> conditions, QueryImpl targetQuery) {
+        Declaration[] queryParams = targetQuery.getParameters();
+        Map<String, Integer> nameToIndex = new LinkedHashMap<>();
+        for (int i = 0; i < queryParams.length; i++) {
+            nameToIndex.put(queryParams[i].getIdentifier(), i);
+        }
+
+        String[] args = new String[queryParams.length];
+        for (String condition : conditions) {
+            condition = condition.trim();
+            if (condition.startsWith("var ")) {
+                // "var bindName : paramName"
+                int colonIdx = condition.indexOf(':');
+                if (colonIdx < 0) {
+                    throw new RuntimeException("invalid named query argument: '" + condition + "'");
+                }
+                String bindName = condition.substring(4, colonIdx).trim();
+                String paramName = condition.substring(colonIdx + 1).trim();
+                Integer index = nameToIndex.get(paramName);
+                if (index == null) {
+                    throw new RuntimeException(
+                            "unknown query parameter '" + paramName + "' in named access for query '"
+                            + targetQuery.getName() + "'. Known parameters: " + nameToIndex.keySet());
+                }
+                if (args[index] != null) {
+                    throw new RuntimeException(
+                            "duplicate assignment to query parameter '" + paramName + "' in named access for query '"
+                            + targetQuery.getName() + "'");
+                }
+                args[index] = "var " + bindName;
+            } else {
+                // "paramName == expr"
+                int eqIdx = condition.indexOf("==");
+                if (eqIdx < 0) {
+                    throw new RuntimeException("invalid named query argument: '" + condition
+                            + "'. Input arguments must use '==' (e.g., paramName == value)");
+                }
+                String paramName = condition.substring(0, eqIdx).trim();
+                String expr = condition.substring(eqIdx + 2).trim();
+                Integer index = nameToIndex.get(paramName);
+                if (index == null) {
+                    throw new RuntimeException(
+                            "unknown query parameter '" + paramName + "' in named access for query '"
+                            + targetQuery.getName() + "'. Known parameters: " + nameToIndex.keySet());
+                }
+                if (args[index] != null) {
+                    throw new RuntimeException(
+                            "duplicate assignment to query parameter '" + paramName + "' in named access for query '"
+                            + targetQuery.getName() + "'");
+                }
+                args[index] = expr;
+            }
+        }
+
+        // Validate all parameters assigned
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] == null) {
+                throw new RuntimeException(
+                        "named access for query '" + targetQuery.getName()
+                        + "' is missing parameter '" + queryParams[i].getIdentifier() + "'");
+            }
+        }
+
+        return List.of(args);
     }
 
     /**
