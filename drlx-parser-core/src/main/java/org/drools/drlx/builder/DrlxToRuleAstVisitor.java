@@ -36,10 +36,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
     private static final String SALIENCE_FQN = "org.drools.drlx.annotations.Salience";
     private static final String DESCRIPTION_FQN = "org.drools.drlx.annotations.Description";
+    private static final String DATASOURCE_FQN = "org.drools.drlx.annotations.DataSource";
 
     private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.of(
             SALIENCE_FQN, Kind.SALIENCE,
-            DESCRIPTION_FQN, Kind.DESCRIPTION);
+            DESCRIPTION_FQN, Kind.DESCRIPTION,
+            DATASOURCE_FQN, Kind.DATASOURCE);
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",
@@ -252,7 +254,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             throw new RuntimeException(
                     "unsupported DRLX rule annotation '@" + nameText + "' at "
-                    + line + ":" + col + " — supported: @Salience, @Description");
+                    + line + ":" + col + " — supported: @Salience, @Description, @DataSource");
         }
         String fqn = annotationImports.get(nameText);
         if (fqn != null) {
@@ -284,6 +286,18 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                 }
                 throw new RuntimeException(
                         "@Description expects string literal, got '" + text + "' at " + line + ":" + col);
+            }
+            case DATASOURCE -> {
+                if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
+                    String name = text.substring(1, text.length() - 1);
+                    if (name.isEmpty()) {
+                        throw new RuntimeException(
+                                "@Datasource expects non-empty string literal at " + line + ":" + col);
+                    }
+                    return name;
+                }
+                throw new RuntimeException(
+                        "@Datasource expects string literal, got '" + text + "' at " + line + ":" + col);
             }
             default -> throw new IllegalStateException("Unhandled annotation kind: " + kind);
         }

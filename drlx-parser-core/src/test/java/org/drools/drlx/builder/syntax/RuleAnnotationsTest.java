@@ -259,4 +259,28 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@Salience expects int literal");
     }
+
+    @Test
+    void testDataSourceEmptyStringFailsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource("")
+                rule Trusts(Object a, Object b) {
+                    Trust t : /trusts[a == a, b == b],
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Datasource expects non-empty string literal");
+    }
 }
