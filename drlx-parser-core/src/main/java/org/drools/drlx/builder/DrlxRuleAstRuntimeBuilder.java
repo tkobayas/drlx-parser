@@ -116,9 +116,17 @@ public class DrlxRuleAstRuntimeBuilder {
 
         for (RuleIR rule : parseResult.rules()) {
             if (!rule.parameters().isEmpty()) {
-                String entryPointName = Character.toLowerCase(rule.name().charAt(0)) + rule.name().substring(1);
+                String defaultName = Character.toLowerCase(rule.name().charAt(0)) + rule.name().substring(1);
+                String entryPointName = rule.annotations().stream()
+                        .filter(a -> a.kind() == RuleAnnotationIR.Kind.DATASOURCE)
+                        .map(RuleAnnotationIR::rawValue)
+                        .findFirst()
+                        .orElse(defaultName);
                 QueryImpl query = new QueryImpl(rule.name());
                 queryRegistry.put(entryPointName, query);
+                if (!entryPointName.equals(defaultName)) {
+                    queryRegistry.put(defaultName, query);
+                }
                 buildQuery(query, rule, pkg.getTypeResolver(), entryPointTypes, unitClass, queryRegistry);
                 pkg.addRule(query);
             }
@@ -126,6 +134,11 @@ public class DrlxRuleAstRuntimeBuilder {
 
         for (RuleIR rule : parseResult.rules()) {
             if (rule.parameters().isEmpty()) {
+                if (rule.annotations().stream().anyMatch(a -> a.kind() == RuleAnnotationIR.Kind.DATASOURCE)) {
+                    throw new RuntimeException(
+                            "@DataSource is only allowed on query rules (rules with parameters)"
+                            + " — rule '" + rule.name() + "' has no parameters");
+                }
                 pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass,
                                      globalTypes, dataStoreGlobalNames, updateRewriter, queryRegistry));
             }
@@ -1449,6 +1462,7 @@ public class DrlxRuleAstRuntimeBuilder {
             switch (ann.kind()) {
                 case SALIENCE -> rule.setSalience(new SalienceInteger(Integer.parseInt(ann.rawValue())));
                 case DESCRIPTION -> rule.addMetaAttribute("Description", ann.rawValue());
+                case DATASOURCE -> { }
             }
         }
     }

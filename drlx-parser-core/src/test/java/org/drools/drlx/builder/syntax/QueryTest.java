@@ -859,4 +859,73 @@ class QueryTest extends DrlxBuilderTestSupport {
             assertThat(unit.results).containsExactly("Alice:Alice");
         }
     }
+
+    @Test
+    void dataSourceAnnotationOverridesEntryPointApi() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource("trustworthy")
+                rule Trusts(String x, String y) {
+                    /trusts(x, y),
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.trusts.add(new Trust("Alice", "Bob"));
+        unit.trusts.add(new Trust("Alice", "Charlie"));
+        unit.trusts.add(new Trust("Dave", "Eve"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            QueryResults results = instance.executeQuery("Trusts", "Alice", Variable.v);
+
+            List<String> names = new ArrayList<>();
+            for (QueryResultsRow row : results) {
+                names.add((String) row.get("y"));
+            }
+            assertThat(names).containsExactlyInAnyOrder("Bob", "Charlie");
+        }
+    }
+
+    @Test
+    void dataSourceAnnotationOverridesEntryPoint() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource("trustworthy")
+                rule Trusts(String x, String y) {
+                    /trusts(x, y),
+                }
+
+                rule R1 {
+                    /trustworthy("Alice", var b),
+                    do { results.add(b); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.trusts.add(new Trust("Alice", "Bob"));
+        unit.trusts.add(new Trust("Alice", "Charlie"));
+        unit.trusts.add(new Trust("Dave", "Eve"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactlyInAnyOrder("Bob", "Charlie");
+        }
+    }
 }
