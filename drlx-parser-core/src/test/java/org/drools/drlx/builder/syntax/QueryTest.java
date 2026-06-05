@@ -607,6 +607,228 @@ class QueryTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void namedQueryAccessAllInputs() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAgeRange(int minAge, int maxAge, Person result) {
+                    Person result : /persons[age >= minAge, age <= maxAge],
+                }
+
+                rule R1 {
+                    /personsByAgeRange[minAge == 25, maxAge == 35, var p : result],
+                    do { results.add(p); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+        unit.persons.add(new Person("Bob", 20));
+        unit.persons.add(new Person("Charlie", 40));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            List<String> names = unit.results.stream()
+                    .map(o -> ((Person) o).getName())
+                    .toList();
+            assertThat(names).containsExactly("Alice");
+        }
+    }
+
+    @Test
+    void namedQueryAccessOrderIndependence() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge[var p : result, minAge == 25],
+                    do { results.add(p); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+        unit.persons.add(new Person("Bob", 20));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            List<String> names = unit.results.stream()
+                    .map(o -> ((Person) o).getName())
+                    .toList();
+            assertThat(names).containsExactly("Alice");
+        }
+    }
+
+    @Test
+    void namedQueryAccessErrorMissingParameter() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge[minAge == 25],
+                    do { results.add("wrong"); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(source))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("missing parameter")
+                .hasMessageContaining("result");
+    }
+
+    @Test
+    void namedQueryAccessErrorUnknownParameter() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge[badName == 25, var p : result],
+                    do { results.add(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(source))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("unknown query parameter")
+                .hasMessageContaining("badName");
+    }
+
+    @Test
+    void namedQueryAccessErrorMixingPositionalAndNamed() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge(25)[var p : result],
+                    do { results.add(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(source))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("cannot mix positional arguments");
+    }
+
+    @Test
+    void namedQueryAccessErrorSelfReferencing() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule Trusts(String a, String b) {
+                    or(
+                        /trusts[a == a, b == b],
+                        and(/trusts(a, var z), /trusts(z, b))
+                    ),
+                }
+
+                rule R1 {
+                    /trusts("A", var t),
+                    do { results.add(t); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(source))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("self-referencing query")
+                .hasMessageContaining("cannot use named access");
+    }
+
+    @Test
+    void namedQueryAccessErrorNonEqOperator() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    /personsByAge[minAge >= 25, var p : result],
+                    do { results.add(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(source))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("must use '=='");
+    }
+
+    @Test
+    void namedQueryAccessWithResultBinding() {
+        String source = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule PersonsByAge(int minAge, Person result) {
+                    Person result : /persons[age >= minAge],
+                }
+
+                rule R1 {
+                    var t : /personsByAge[minAge == 25, var p : result],
+                    do { results.add(t.result); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.persons.add(new Person("Alice", 30));
+        unit.persons.add(new Person("Bob", 20));
+        unit.persons.add(new Person("Charlie", 40));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            List<String> names = unit.results.stream()
+                    .map(o -> ((Person) o).getName())
+                    .toList();
+            assertThat(names).containsExactlyInAnyOrder("Alice", "Charlie");
+        }
+    }
+
+    @Test
     void queryResultBindingCoexistsWithOutputVariables() {
         String source = """
                 package org.drools.drlx.parser;
