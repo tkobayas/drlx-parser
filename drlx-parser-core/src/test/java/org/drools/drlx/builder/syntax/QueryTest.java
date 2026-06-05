@@ -928,4 +928,71 @@ class QueryTest extends DrlxBuilderTestSupport {
             assertThat(unit.results).containsExactlyInAnyOrder("Bob", "Charlie");
         }
     }
+
+    @Test
+    void dataSourceAnnotationFqnWithoutImport() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @org.drools.drlx.annotations.DataSource("trustworthy")
+                rule Trusts(String x, String y) {
+                    /trusts(x, y),
+                }
+
+                rule R1 {
+                    /trustworthy("Alice", var b),
+                    do { results.add(b); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.trusts.add(new Trust("Alice", "Bob"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactlyInAnyOrder("Bob");
+        }
+    }
+
+    @Test
+    void dataSourceAnnotationCombinedWithSalience() {
+        String source = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+                import org.drools.drlx.annotations.Salience;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Salience(10)
+                @DataSource("trustworthy")
+                rule Trusts(String x, String y) {
+                    /trusts(x, y),
+                }
+
+                rule R1 {
+                    /trustworthy("Alice", var b),
+                    do { results.add(b); }
+                }
+                """;
+
+        KieBase kieBase = newBuilder().build(source);
+        MyUnit unit = new MyUnit();
+        unit.trusts.add(new Trust("Alice", "Bob"));
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            instance.fire();
+
+            assertThat(unit.results).containsExactlyInAnyOrder("Bob");
+        }
+    }
 }

@@ -283,4 +283,77 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@Datasource expects non-empty string literal");
     }
+
+    @Test
+    void testDataSourceOnNonQueryRuleFailsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource("people")
+                rule NotAQuery {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@DataSource is only allowed on query rules");
+    }
+
+    @Test
+    void testDataSourceWithoutArgumentFailsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource
+                rule Trusts(Object a, Object b) {
+                    Trust t : /trusts[a == a, b == b],
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Datasource expects one argument");
+    }
+
+    @Test
+    void testDataSourceNonStringArgumentFailsLoud() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Trust;
+                import org.drools.drlx.annotations.DataSource;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DataSource(42)
+                rule Trusts(Object a, Object b) {
+                    Trust t : /trusts[a == a, b == b],
+                }
+                """;
+
+        final DrlxRuleBuilder builder = newBuilder();
+
+        assertThatThrownBy(() -> builder.build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Datasource expects string literal");
+    }
 }
