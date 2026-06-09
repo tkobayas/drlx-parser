@@ -34,11 +34,8 @@ public final class DrlxRuleAstModel {
             DATASOURCE(ArgShape.STRING),
             NO_LOOP(ArgShape.NONE),
             LOCK_ON_ACTIVE(ArgShape.NONE),
-            AUTO_FOCUS(ArgShape.NONE),
             DISABLED(ArgShape.NONE),
-            AGENDA_GROUP(ArgShape.STRING),
-            ACTIVATION_GROUP(ArgShape.STRING),
-            RULE_FLOW_GROUP(ArgShape.STRING);
+            ACTIVATION_GROUP(ArgShape.STRING);
 
             enum ArgShape { NONE, INT, STRING }
             final ArgShape argShape;

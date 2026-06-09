@@ -39,11 +39,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private static final String DATASOURCE_FQN = "org.drools.drlx.annotations.DataSource";
     private static final String NO_LOOP_FQN = "org.drools.drlx.annotations.NoLoop";
     private static final String LOCK_ON_ACTIVE_FQN = "org.drools.drlx.annotations.LockOnActive";
-    private static final String AUTO_FOCUS_FQN = "org.drools.drlx.annotations.AutoFocus";
     private static final String DISABLED_FQN = "org.drools.drlx.annotations.Disabled";
-    private static final String AGENDA_GROUP_FQN = "org.drools.drlx.annotations.AgendaGroup";
     private static final String ACTIVATION_GROUP_FQN = "org.drools.drlx.annotations.ActivationGroup";
-    private static final String RULEFLOW_GROUP_FQN = "org.drools.drlx.annotations.RuleFlowGroup";
 
     private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.ofEntries(
             Map.entry(SALIENCE_FQN, Kind.SALIENCE),
@@ -51,11 +48,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             Map.entry(DATASOURCE_FQN, Kind.DATASOURCE),
             Map.entry(NO_LOOP_FQN, Kind.NO_LOOP),
             Map.entry(LOCK_ON_ACTIVE_FQN, Kind.LOCK_ON_ACTIVE),
-            Map.entry(AUTO_FOCUS_FQN, Kind.AUTO_FOCUS),
             Map.entry(DISABLED_FQN, Kind.DISABLED),
-            Map.entry(AGENDA_GROUP_FQN, Kind.AGENDA_GROUP),
-            Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP),
-            Map.entry(RULEFLOW_GROUP_FQN, Kind.RULE_FLOW_GROUP));
+            Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP));
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",
@@ -273,8 +267,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             throw new RuntimeException(
                     "unsupported DRLX rule annotation '@" + nameText + "' at "
                     + line + ":" + col + " — supported: @Salience, @Description, @DataSource, "
-                    + "@NoLoop, @LockOnActive, @AutoFocus, @Disabled, "
-                    + "@AgendaGroup, @ActivationGroup, @RuleFlowGroup");
+                    + "@NoLoop, @LockOnActive, @Disabled, "
+                    + "@ActivationGroup");
         }
         String fqn = annotationImports.get(nameText);
         if (fqn != null) {

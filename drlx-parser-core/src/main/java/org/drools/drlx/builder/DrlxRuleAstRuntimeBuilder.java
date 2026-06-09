@@ -1470,11 +1470,8 @@ public class DrlxRuleAstRuntimeBuilder {
                 case DATASOURCE -> { }
                 case NO_LOOP -> { rule.setNoLoop(true); rule.setEager(true); }
                 case LOCK_ON_ACTIVE -> { rule.setLockOnActive(true); rule.setEager(true); }
-                case AUTO_FOCUS -> rule.setAutoFocus(true);
                 case DISABLED -> rule.setEnabled(EnabledBoolean.ENABLED_FALSE);
-                case AGENDA_GROUP -> rule.setAgendaGroup(ann.rawValue());
                 case ACTIVATION_GROUP -> rule.setActivationGroup(ann.rawValue());
-                case RULE_FLOW_GROUP -> rule.setRuleFlowGroup(ann.rawValue());
             }
         }
     }

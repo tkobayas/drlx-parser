@@ -6,7 +6,6 @@ import org.drools.drlx.domain.Person;
 import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
 import org.drools.drlx.ruleunit.MyUnit;
 import org.drools.drlx.ruleunit.TestDataObserver;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
 import org.kie.api.definition.rule.Rule;
@@ -409,29 +408,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
     }
 
     @Test
-    void testAutoFocusRejectsArgument() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.AutoFocus;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @AutoFocus(true)
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        assertThatThrownBy(() -> newBuilder().build(rule))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("@AutoFocus takes no arguments");
-    }
-
-    @Test
     void testDisabledRejectsArgument() {
         final String rule = """
                 package org.drools.drlx.parser;
@@ -455,29 +431,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
     }
 
     @Test
-    void testAgendaGroupRejectsEmptyString() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.AgendaGroup;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @AgendaGroup("")
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        assertThatThrownBy(() -> newBuilder().build(rule))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("@AgendaGroup expects non-empty string literal");
-    }
-
-    @Test
     void testActivationGroupRejectsEmptyString() {
         final String rule = """
                 package org.drools.drlx.parser;
@@ -498,29 +451,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         assertThatThrownBy(() -> newBuilder().build(rule))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@ActivationGroup expects non-empty string literal");
-    }
-
-    @Test
-    void testRuleFlowGroupRejectsEmptyString() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.RuleFlowGroup;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @RuleFlowGroup("")
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        assertThatThrownBy(() -> newBuilder().build(rule))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("@RuleFlowGroup expects non-empty string literal");
     }
 
     @Test
@@ -631,108 +561,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         }
     }
 
-    @Disabled("#88 — SimpleAgendaGroupsManager doesn't support agenda groups / setFocus")
-    @Test
-    void testAutoFocusActivatesGroup() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.AgendaGroup;
-                import org.drools.drlx.annotations.AutoFocus;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @AgendaGroup("g1")
-                @AutoFocus
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        final KieBase kieBase = newBuilder().build(rule);
-        MyUnit unit = new MyUnit();
-        unit.persons.add(new Person("Alice", 30));
-
-        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
-            assertThat(instance.fire(100)).isEqualTo(1);
-        }
-    }
-
-    @Disabled("#88 — requires agenda group support")
-    @Test
-    void testLockOnActivePreventsRefire() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.AgendaGroup;
-                import org.drools.drlx.annotations.AutoFocus;
-                import org.drools.drlx.annotations.LockOnActive;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @AgendaGroup("g1")
-                @AutoFocus
-                @LockOnActive
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { p.age += 1; persons.update(p); }
-                }
-                """;
-
-        final KieBase kieBase = newBuilder().build(rule);
-        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
-
-        assertThat(r).isNotNull();
-        assertThat(r.isLockOnActive()).isTrue();
-
-        MyUnit unit = new MyUnit();
-        Person alice = new Person("Alice", 40);
-        unit.persons.add(alice);
-
-        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
-            assertThat(instance.fire(100)).isEqualTo(1);
-            assertThat(alice.getAge()).isEqualTo(41);
-        }
-    }
-
-    @Disabled("#88 — SimpleAgendaGroupsManager doesn't enforce agenda groups")
-    @Test
-    void testAgendaGroupAssignment() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.AgendaGroup;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @AgendaGroup("g1")
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        final KieBase kieBase = newBuilder().build(rule);
-        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
-        assertThat(r).isNotNull();
-        assertThat(r.getAgendaGroup()).isEqualTo("g1");
-
-        MyUnit unit = new MyUnit();
-        unit.persons.add(new Person("Alice", 30));
-
-        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
-            // Without setFocus, rule should not fire
-            assertThat(instance.fire(100)).isEqualTo(0);
-        }
-    }
-
     @Test
     void testActivationGroupOnlyOneFiresPerGroup() {
         final String rule = """
@@ -766,73 +594,4 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         }
     }
 
-    @Disabled("#89 — SimpleAgendaGroupsManager doesn't enforce ruleflow groups")
-    @Test
-    void testRuleFlowGroupAssignment() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.RuleFlowGroup;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @RuleFlowGroup("rfg1")
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
-                }
-                """;
-
-        final KieBase kieBase = newBuilder().build(rule);
-        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
-        assertThat(r).isNotNull();
-        assertThat(r.getRuleFlowGroup()).isEqualTo("rfg1");
-
-        MyUnit unit = new MyUnit();
-        unit.persons.add(new Person("Alice", 30));
-
-        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
-            // RuleFlowGroup is not active, so rule should not fire
-            assertThat(instance.fire(100)).isEqualTo(0);
-        }
-    }
-
-    @Disabled("#88 — requires agenda group support")
-    @Test
-    void testMultipleAnnotationsCombined() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.Salience;
-                import org.drools.drlx.annotations.NoLoop;
-                import org.drools.drlx.annotations.AgendaGroup;
-                import org.drools.drlx.annotations.AutoFocus;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @Salience(5)
-                @NoLoop
-                @AgendaGroup("g1")
-                @AutoFocus
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { p.age += 1; persons.update(p); }
-                }
-                """;
-
-        final KieBase kieBase = newBuilder().build(rule);
-        MyUnit unit = new MyUnit();
-        Person alice = new Person("Alice", 40);
-        unit.persons.add(alice);
-
-        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
-            // @AutoFocus makes the agenda group active, @NoLoop prevents refire
-            assertThat(instance.fire(100)).isEqualTo(1);
-            assertThat(alice.getAge()).isEqualTo(41);
-        }
-    }
 }
