@@ -105,6 +105,10 @@ public final class DrlxRuleUnitInstance<T extends RuleUnitData> implements RuleU
         return reteEvaluator.fireAllRules();
     }
 
+    public int fire(int max) {
+        return reteEvaluator.fireAllRules(max);
+    }
+
     @Override
     public int fire(AgendaFilter agendaFilter) {
         return reteEvaluator.fireAllRules(agendaFilter);
