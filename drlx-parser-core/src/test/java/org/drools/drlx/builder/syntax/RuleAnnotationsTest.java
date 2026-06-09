@@ -561,6 +561,50 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
     }
 
     @Test
+    void testLockOnActiveAlonePreventsRefire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.LockOnActive;
+                import org.drools.drlx.annotations.Salience;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @LockOnActive
+                @Salience(10)
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { p.age += 1; persons.update(p); }
+                }
+
+                @LockOnActive
+                rule R2 {
+                    Person p : /persons[ age > 18 ],
+                    do { p.age += 10; persons.update(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+
+        assertThat(((RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1")).isLockOnActive()).isTrue();
+        assertThat(((RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R2")).isLockOnActive()).isTrue();
+
+        MyUnit unit = new MyUnit();
+        Person alice = new Person("Alice", 40);
+        unit.persons.add(alice);
+
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            // R1 fires first (salience 10): age 40 -> 41, update
+            // R2 fires: age 41 -> 51, update
+            // Both blocked from refiring by @LockOnActive — any rule's update is suppressed
+            assertThat(instance.fire(100)).isEqualTo(2);
+            assertThat(alice.getAge()).isEqualTo(51);
+        }
+    }
+
+    @Test
     void testDisabledRuleDoesNotFire() {
         final String rule = """
                 package org.drools.drlx.parser;
