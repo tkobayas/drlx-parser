@@ -448,4 +448,73 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@Disabled takes no arguments");
     }
+
+    @Test
+    void testAgendaGroupRejectsEmptyString() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.AgendaGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @AgendaGroup("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@AgendaGroup expects non-empty string literal");
+    }
+
+    @Test
+    void testActivationGroupRejectsEmptyString() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.ActivationGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @ActivationGroup("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@ActivationGroup expects non-empty string literal");
+    }
+
+    @Test
+    void testRuleFlowGroupRejectsEmptyString() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.RuleFlowGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @RuleFlowGroup("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@RuleflowGroup expects non-empty string literal");
+    }
 }
