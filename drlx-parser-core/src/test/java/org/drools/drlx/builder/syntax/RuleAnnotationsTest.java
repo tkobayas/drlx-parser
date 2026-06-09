@@ -627,4 +627,97 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         assertThat(r).isNotNull();
         assertThat(r.isLockOnActive()).isTrue();
     }
+
+    @Test
+    void testAgendaGroupAssignment() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.AgendaGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @AgendaGroup("g1")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 30));
+
+            // Without setFocus, rule should not fire
+            int firedCount = kieSession.fireAllRules();
+            assertThat(firedCount).isEqualTo(0);
+
+            // After setFocus, rule fires
+            kieSession.getAgenda().getAgendaGroup("g1").setFocus();
+            firedCount = kieSession.fireAllRules();
+            assertThat(firedCount).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("R1");
+        });
+    }
+
+    @Test
+    void testActivationGroupOnlyOneFiresPerGroup() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.ActivationGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @ActivationGroup("only-one")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("R1"); }
+                }
+
+                @ActivationGroup("only-one")
+                rule R2 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("R2"); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 30));
+
+            final int firedCount = kieSession.fireAllRules();
+
+            assertThat(firedCount).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void testRuleFlowGroupAssignment() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.RuleFlowGroup;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @RuleFlowGroup("rfg1")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
+
+        assertThat(r).isNotNull();
+        assertThat(r.getRuleFlowGroup()).isEqualTo("rfg1");
+    }
 }
