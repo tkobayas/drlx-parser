@@ -17,6 +17,7 @@ import java.io.Serializable;
 import java.util.function.Function;
 
 import org.drools.base.base.ClassObjectType;
+import org.drools.base.base.EnabledBoolean;
 import org.drools.base.base.ObjectType;
 import org.drools.base.base.SalienceInteger;
 import org.drools.base.base.extractors.ArrayElementReader;
@@ -1463,6 +1464,13 @@ public class DrlxRuleAstRuntimeBuilder {
                 case SALIENCE -> rule.setSalience(new SalienceInteger(Integer.parseInt(ann.rawValue())));
                 case DESCRIPTION -> rule.addMetaAttribute("Description", ann.rawValue());
                 case DATASOURCE -> { }
+                case NO_LOOP -> rule.setNoLoop(true);
+                case LOCK_ON_ACTIVE -> rule.setLockOnActive(true);
+                case AUTO_FOCUS -> rule.setAutoFocus(true);
+                case DISABLED -> rule.setEnabled(EnabledBoolean.ENABLED_FALSE);
+                case AGENDA_GROUP -> rule.setAgendaGroup(ann.rawValue());
+                case ACTIVATION_GROUP -> rule.setActivationGroup(ann.rawValue());
+                case RULEFLOW_GROUP -> rule.setRuleFlowGroup(ann.rawValue());
             }
         }
     }
