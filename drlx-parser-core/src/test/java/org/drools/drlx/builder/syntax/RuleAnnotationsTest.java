@@ -1,5 +1,6 @@
 package org.drools.drlx.builder.syntax;
 
+import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
@@ -516,5 +517,114 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         assertThatThrownBy(() -> newBuilder().build(rule))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@RuleFlowGroup expects non-empty string literal");
+    }
+
+    @Test
+    void testNoLoopAttributeApplied() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.NoLoop;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @NoLoop
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
+
+        assertThat(r).isNotNull();
+        assertThat(r.isNoLoop()).isTrue();
+    }
+
+    @Test
+    void testDisabledRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Disabled;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Disabled
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 30));
+
+            final int firedCount = kieSession.fireAllRules();
+
+            assertThat(firedCount).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void testAutoFocusActivatesGroup() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.AgendaGroup;
+                import org.drools.drlx.annotations.AutoFocus;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @AgendaGroup("g1")
+                @AutoFocus
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 30));
+
+            final int firedCount = kieSession.fireAllRules();
+
+            assertThat(firedCount).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("R1");
+        });
+    }
+
+    @Test
+    void testLockOnActiveAttributeApplied() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.LockOnActive;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @LockOnActive
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final RuleImpl r = (RuleImpl) kieBase.getRule("org.drools.drlx.parser", "R1");
+
+        assertThat(r).isNotNull();
+        assertThat(r.isLockOnActive()).isTrue();
     }
 }
