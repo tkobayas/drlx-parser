@@ -28,7 +28,22 @@ public final class DrlxRuleAstModel {
     }
 
     public record RuleAnnotationIR(Kind kind, String rawValue) {
-        public enum Kind { SALIENCE, DESCRIPTION, DATASOURCE }
+        public enum Kind {
+            SALIENCE(ArgShape.INT),
+            DESCRIPTION(ArgShape.STRING),
+            DATASOURCE(ArgShape.STRING),
+            NO_LOOP(ArgShape.NONE),
+            LOCK_ON_ACTIVE(ArgShape.NONE),
+            AUTO_FOCUS(ArgShape.NONE),
+            DISABLED(ArgShape.NONE),
+            AGENDA_GROUP(ArgShape.STRING),
+            ACTIVATION_GROUP(ArgShape.STRING),
+            RULEFLOW_GROUP(ArgShape.STRING);
+
+            enum ArgShape { NONE, INT, STRING }
+            final ArgShape argShape;
+            Kind(ArgShape argShape) { this.argShape = argShape; }
+        }
     }
 
     /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
