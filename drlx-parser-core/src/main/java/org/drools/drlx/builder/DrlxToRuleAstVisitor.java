@@ -37,11 +37,25 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private static final String SALIENCE_FQN = "org.drools.drlx.annotations.Salience";
     private static final String DESCRIPTION_FQN = "org.drools.drlx.annotations.Description";
     private static final String DATASOURCE_FQN = "org.drools.drlx.annotations.DataSource";
+    private static final String NO_LOOP_FQN = "org.drools.drlx.annotations.NoLoop";
+    private static final String LOCK_ON_ACTIVE_FQN = "org.drools.drlx.annotations.LockOnActive";
+    private static final String AUTO_FOCUS_FQN = "org.drools.drlx.annotations.AutoFocus";
+    private static final String DISABLED_FQN = "org.drools.drlx.annotations.Disabled";
+    private static final String AGENDA_GROUP_FQN = "org.drools.drlx.annotations.AgendaGroup";
+    private static final String ACTIVATION_GROUP_FQN = "org.drools.drlx.annotations.ActivationGroup";
+    private static final String RULEFLOW_GROUP_FQN = "org.drools.drlx.annotations.RuleFlowGroup";
 
-    private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.of(
-            SALIENCE_FQN, Kind.SALIENCE,
-            DESCRIPTION_FQN, Kind.DESCRIPTION,
-            DATASOURCE_FQN, Kind.DATASOURCE);
+    private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.ofEntries(
+            Map.entry(SALIENCE_FQN, Kind.SALIENCE),
+            Map.entry(DESCRIPTION_FQN, Kind.DESCRIPTION),
+            Map.entry(DATASOURCE_FQN, Kind.DATASOURCE),
+            Map.entry(NO_LOOP_FQN, Kind.NO_LOOP),
+            Map.entry(LOCK_ON_ACTIVE_FQN, Kind.LOCK_ON_ACTIVE),
+            Map.entry(AUTO_FOCUS_FQN, Kind.AUTO_FOCUS),
+            Map.entry(DISABLED_FQN, Kind.DISABLED),
+            Map.entry(AGENDA_GROUP_FQN, Kind.AGENDA_GROUP),
+            Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP),
+            Map.entry(RULEFLOW_GROUP_FQN, Kind.RULEFLOW_GROUP));
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",
@@ -229,7 +243,11 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private static String kindDisplayName(Kind kind) {
-        return kind.name().charAt(0) + kind.name().substring(1).toLowerCase();
+        StringBuilder sb = new StringBuilder();
+        for (String part : kind.name().split("_")) {
+            sb.append(part.charAt(0)).append(part.substring(1).toLowerCase());
+        }
+        return sb.toString();
     }
 
     private static String annotationNameText(DrlxParser.AnnotationContext annCtx) {
@@ -254,7 +272,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             throw new RuntimeException(
                     "unsupported DRLX rule annotation '@" + nameText + "' at "
-                    + line + ":" + col + " — supported: @Salience, @Description, @DataSource");
+                    + line + ":" + col + " — supported: @Salience, @Description, @DataSource, "
+                    + "@NoLoop, @LockOnActive, @AutoFocus, @Disabled, "
+                    + "@AgendaGroup, @ActivationGroup, @RuleFlowGroup");
         }
         String fqn = annotationImports.get(nameText);
         if (fqn != null) {
@@ -267,39 +287,46 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
     private static String extractAnnotationLiteral(DrlxParser.AnnotationContext annCtx,
                                                    Kind kind, int line, int col) {
-        if (annCtx.elementValue() == null) {
-            throw new RuntimeException("@" + kindDisplayName(kind) + " expects one argument at " + line + ":" + col);
-        }
-        String text = annCtx.elementValue().getText();
-        switch (kind) {
-            case SALIENCE -> {
+        String displayName = kindDisplayName(kind);
+        switch (kind.argShape) {
+            case NONE -> {
+                if (annCtx.elementValue() != null) {
+                    throw new RuntimeException(
+                            "@" + displayName + " takes no arguments at " + line + ":" + col);
+                }
+                return "";
+            }
+            case INT -> {
+                if (annCtx.elementValue() == null) {
+                    throw new RuntimeException(
+                            "@" + displayName + " expects one argument at " + line + ":" + col);
+                }
+                String text = annCtx.elementValue().getText();
                 try {
                     return String.valueOf(Integer.parseInt(text));
                 } catch (NumberFormatException e) {
                     throw new RuntimeException(
-                            "@Salience expects int literal, got '" + text + "' at " + line + ":" + col);
+                            "@" + displayName + " expects int literal, got '" + text + "' at " + line + ":" + col);
                 }
             }
-            case DESCRIPTION -> {
-                if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
-                    return text.substring(1, text.length() - 1);
+            case STRING -> {
+                if (annCtx.elementValue() == null) {
+                    throw new RuntimeException(
+                            "@" + displayName + " expects one argument at " + line + ":" + col);
                 }
-                throw new RuntimeException(
-                        "@Description expects string literal, got '" + text + "' at " + line + ":" + col);
-            }
-            case DATASOURCE -> {
+                String text = annCtx.elementValue().getText();
                 if (text.length() >= 2 && text.startsWith("\"") && text.endsWith("\"")) {
-                    String name = text.substring(1, text.length() - 1);
-                    if (name.isEmpty()) {
+                    String value = text.substring(1, text.length() - 1);
+                    if (value.isEmpty()) {
                         throw new RuntimeException(
-                                "@Datasource expects non-empty string literal at " + line + ":" + col);
+                                "@" + displayName + " expects non-empty string literal at " + line + ":" + col);
                     }
-                    return name;
+                    return value;
                 }
                 throw new RuntimeException(
-                        "@Datasource expects string literal, got '" + text + "' at " + line + ":" + col);
+                        "@" + displayName + " expects string literal, got '" + text + "' at " + line + ":" + col);
             }
-            default -> throw new IllegalStateException("Unhandled annotation kind: " + kind);
+            default -> throw new IllegalStateException("Unhandled arg shape: " + kind.argShape);
         }
     }
 
