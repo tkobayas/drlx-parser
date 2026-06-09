@@ -356,4 +356,96 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("@Datasource expects string literal");
     }
+
+    @Test
+    void testNoLoopRejectsArgument() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.NoLoop;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @NoLoop(true)
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@NoLoop takes no arguments");
+    }
+
+    @Test
+    void testLockOnActiveRejectsArgument() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.LockOnActive;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @LockOnActive(true)
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@LockOnActive takes no arguments");
+    }
+
+    @Test
+    void testAutoFocusRejectsArgument() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.AutoFocus;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @AutoFocus(true)
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@AutoFocus takes no arguments");
+    }
+
+    @Test
+    void testDisabledRejectsArgument() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Disabled;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Disabled(false)
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Disabled takes no arguments");
+    }
 }
