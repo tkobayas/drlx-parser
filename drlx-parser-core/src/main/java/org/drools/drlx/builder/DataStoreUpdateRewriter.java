@@ -5,7 +5,6 @@ import java.util.Set;
 
 import com.github.javaparser.ParseResult;
 import com.github.javaparser.StaticJavaParser;
-import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
 import com.github.javaparser.ast.expr.MethodCallExpr;
@@ -107,17 +106,12 @@ public final class DataStoreUpdateRewriter {
 
         String globalName = scopeName.getNameAsString();
         String argText = arg.toString();
-        String message = "\"DataStore '" + globalName + "' has no DataHandle for the given fact\"";
-        Expression requireNonNullCall = StaticJavaParser.parseExpression(
-                "java.util.Objects.requireNonNull("
-                        + "org.drools.drlx.builder.DataStoreSupport.lookup("
-                        + globalName + ", " + argText + "), "
-                        + message + ")");
+        Expression updateCall = StaticJavaParser.parseExpression(
+                "org.drools.drlx.builder.DataStoreSupport.update("
+                        + globalName + ", " + argText + ", __match__, "
+                        + "\"" + globalName + "\")");
 
-        NodeList<Expression> newArgs = new NodeList<>();
-        newArgs.add(requireNonNullCall);
-        newArgs.add(arg.clone());
-        call.setArguments(newArgs);
+        call.replace(updateCall);
         return true;
     }
 }

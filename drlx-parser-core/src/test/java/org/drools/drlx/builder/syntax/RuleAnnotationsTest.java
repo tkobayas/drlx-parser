@@ -523,7 +523,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .hasMessageContaining("@RuleFlowGroup expects non-empty string literal");
     }
 
-    @Disabled("#87 — DataStore update doesn't propagate terminal node origin, so no-loop is not enforced")
     @Test
     void testNoLoopAttributeApplied() {
         final String rule = """
@@ -618,7 +617,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         }
     }
 
-    @Disabled("#87 #88 — requires both no-loop terminal node propagation and agenda group support")
+    @Disabled("#88 — requires agenda group support")
     @Test
     void testLockOnActivePreventsRefire() {
         final String rule = """
@@ -756,7 +755,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         }
     }
 
-    @Disabled("#87 #88 — requires both no-loop and agenda group runtime support")
+    @Disabled("#88 — requires agenda group support")
     @Test
     void testMultipleAnnotationsCombined() {
         final String rule = """

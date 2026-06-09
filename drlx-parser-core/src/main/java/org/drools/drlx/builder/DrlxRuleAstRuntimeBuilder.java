@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.io.Serializable;
 import java.util.function.Function;
 
+import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.EnabledBoolean;
 import org.drools.base.base.ObjectType;
@@ -395,6 +396,9 @@ public class DrlxRuleAstRuntimeBuilder {
                 if (raw != null) {
                     types.put(e.getKey(), Type.type(raw));
                 }
+            }
+            if (!dataStoreGlobalNames.isEmpty()) {
+                types.put("__match__", Type.type(InternalMatch.class));
             }
             String body = updateRewriter.rewrite(parseResult.rhs().block(), dataStoreGlobalNames);
             rule.setConsequence(lambdaCompiler.createLambdaConsequence(body, types, globalTypes.keySet()));
@@ -1464,8 +1468,8 @@ public class DrlxRuleAstRuntimeBuilder {
                 case SALIENCE -> rule.setSalience(new SalienceInteger(Integer.parseInt(ann.rawValue())));
                 case DESCRIPTION -> rule.addMetaAttribute("Description", ann.rawValue());
                 case DATASOURCE -> { }
-                case NO_LOOP -> rule.setNoLoop(true);
-                case LOCK_ON_ACTIVE -> rule.setLockOnActive(true);
+                case NO_LOOP -> { rule.setNoLoop(true); rule.setEager(true); }
+                case LOCK_ON_ACTIVE -> { rule.setLockOnActive(true); rule.setEager(true); }
                 case AUTO_FOCUS -> rule.setAutoFocus(true);
                 case DISABLED -> rule.setEnabled(EnabledBoolean.ENABLED_FALSE);
                 case AGENDA_GROUP -> rule.setAgendaGroup(ann.rawValue());

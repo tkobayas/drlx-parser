@@ -34,10 +34,8 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("alerts.update(");
-        assertThat(result).contains("java.util.Objects.requireNonNull(org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
-        assertThat(result).contains("DataStore 'alerts' has no DataHandle");
-        assertThat(result.replaceAll("\\s+", "")).contains(",t);");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
+        assertThat(result).doesNotContain("alerts.update(");
     }
 
     @Test
@@ -45,8 +43,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(this.t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, this.t)");
-        assertThat(result.replaceAll("\\s+", "")).contains(",this.t);");
+        assertThat(result).contains("DataStoreSupport.update(alerts, this.t, __match__,");
     }
 
     @Test
@@ -56,7 +53,7 @@ class DataStoreUpdateRewriterTest {
 
         assertThat(result.replaceAll("\\s+", ""))
                 .isEqualTo("alerts.update(getThing(t));");
-        assertThat(result).doesNotContain("requireNonNull");
+        assertThat(result).doesNotContain("DataStoreSupport");
     }
 
     @Test
@@ -72,7 +69,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t); alerts.update(u);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        long count = result.split("requireNonNull", -1).length - 1;
+        long count = result.split("DataStoreSupport\\.update", -1).length - 1;
         assertThat(count).isEqualTo(2);
     }
 
@@ -81,7 +78,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t); alerts.update(getThing(u));";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        long count = result.split("requireNonNull", -1).length - 1;
+        long count = result.split("DataStoreSupport\\.update", -1).length - 1;
         assertThat(count).isEqualTo(1);
         assertThat(result).contains("alerts.update(getThing(u))");
     }
@@ -91,7 +88,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.add(t); getStore().update(t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).doesNotContain("requireNonNull");
+        assertThat(result).doesNotContain("DataStoreSupport");
     }
 
     @Test
@@ -105,7 +102,7 @@ class DataStoreUpdateRewriterTest {
         String body = "DataStore<Person> alerts = other; alerts.update(t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("requireNonNull");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
     }
 
     @Test
@@ -113,8 +110,7 @@ class DataStoreUpdateRewriterTest {
         String body = "p{age = 0}; alerts.update(p);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("requireNonNull");
-        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, p)");
+        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__,");
     }
 
     @Test
@@ -122,8 +118,7 @@ class DataStoreUpdateRewriterTest {
         String body = "p{name = \"Reset\", age = 0}; alerts.update(p);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("requireNonNull");
-        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, p)");
+        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__,");
     }
 
     @Test
@@ -131,10 +126,8 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t{status = RECEIVED});";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("requireNonNull");
-        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
         assertThat(result).contains("t{status = RECEIVED}");
-        assertThat(result.replaceAll("\\s+", "")).contains(",t);");
     }
 
     @Test
@@ -142,9 +135,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t{status = RECEIVED, timestamp = new Date()});";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("requireNonNull");
-        assertThat(result).contains("org.drools.drlx.builder.DataStoreSupport.lookup(alerts, t)");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
         assertThat(result).contains("t{status = RECEIVED, timestamp = new Date()}");
-        assertThat(result.replaceAll("\\s+", "")).contains(",t);");
     }
 }
