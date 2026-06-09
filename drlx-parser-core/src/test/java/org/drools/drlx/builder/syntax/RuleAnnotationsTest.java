@@ -720,4 +720,40 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         assertThat(r).isNotNull();
         assertThat(r.getRuleFlowGroup()).isEqualTo("rfg1");
     }
+
+    @Test
+    void testMultipleAnnotationsCombined() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Salience;
+                import org.drools.drlx.annotations.NoLoop;
+                import org.drools.drlx.annotations.AgendaGroup;
+                import org.drools.drlx.annotations.AutoFocus;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Salience(5)
+                @NoLoop
+                @AgendaGroup("g1")
+                @AutoFocus
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+            entryPoint.insert(new Person("Alice", 30));
+
+            final int firedCount = kieSession.fireAllRules();
+
+            // @AutoFocus makes the agenda group active, @NoLoop prevents refire
+            assertThat(firedCount).isEqualTo(1);
+            assertThat(listener.getAfterMatchFired()).containsExactly("R1");
+        });
+    }
 }
