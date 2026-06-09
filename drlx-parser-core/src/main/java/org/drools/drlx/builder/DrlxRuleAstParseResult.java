@@ -294,7 +294,7 @@ public final class DrlxRuleAstParseResult {
             case ANNOTATION_KIND_DISABLED -> RuleAnnotationIR.Kind.DISABLED;
             case ANNOTATION_KIND_AGENDA_GROUP -> RuleAnnotationIR.Kind.AGENDA_GROUP;
             case ANNOTATION_KIND_ACTIVATION_GROUP -> RuleAnnotationIR.Kind.ACTIVATION_GROUP;
-            case ANNOTATION_KIND_RULEFLOW_GROUP -> RuleAnnotationIR.Kind.RULEFLOW_GROUP;
+            case ANNOTATION_KIND_RULEFLOW_GROUP -> RuleAnnotationIR.Kind.RULE_FLOW_GROUP;
             case ANNOTATION_KIND_UNSPECIFIED, UNRECOGNIZED ->
                     throw new IllegalStateException("Unknown proto annotation kind: " + k);
         };
@@ -311,7 +311,7 @@ public final class DrlxRuleAstParseResult {
             case DISABLED -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DISABLED;
             case AGENDA_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_AGENDA_GROUP;
             case ACTIVATION_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_ACTIVATION_GROUP;
-            case RULEFLOW_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_RULEFLOW_GROUP;
+            case RULE_FLOW_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_RULEFLOW_GROUP;
         };
     }
 

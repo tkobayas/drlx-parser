@@ -55,7 +55,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             Map.entry(DISABLED_FQN, Kind.DISABLED),
             Map.entry(AGENDA_GROUP_FQN, Kind.AGENDA_GROUP),
             Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP),
-            Map.entry(RULEFLOW_GROUP_FQN, Kind.RULEFLOW_GROUP));
+            Map.entry(RULEFLOW_GROUP_FQN, Kind.RULE_FLOW_GROUP));
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",

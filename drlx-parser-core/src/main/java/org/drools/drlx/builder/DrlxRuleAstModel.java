@@ -38,7 +38,7 @@ public final class DrlxRuleAstModel {
             DISABLED(ArgShape.NONE),
             AGENDA_GROUP(ArgShape.STRING),
             ACTIVATION_GROUP(ArgShape.STRING),
-            RULEFLOW_GROUP(ArgShape.STRING);
+            RULE_FLOW_GROUP(ArgShape.STRING);
 
             enum ArgShape { NONE, INT, STRING }
             final ArgShape argShape;

@@ -1470,7 +1470,7 @@ public class DrlxRuleAstRuntimeBuilder {
                 case DISABLED -> rule.setEnabled(EnabledBoolean.ENABLED_FALSE);
                 case AGENDA_GROUP -> rule.setAgendaGroup(ann.rawValue());
                 case ACTIVATION_GROUP -> rule.setActivationGroup(ann.rawValue());
-                case RULEFLOW_GROUP -> rule.setRuleFlowGroup(ann.rawValue());
+                case RULE_FLOW_GROUP -> rule.setRuleFlowGroup(ann.rawValue());
             }
         }
     }

@@ -515,6 +515,6 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
 
         assertThatThrownBy(() -> newBuilder().build(rule))
                 .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("@RuleflowGroup expects non-empty string literal");
+                .hasMessageContaining("@RuleFlowGroup expects non-empty string literal");
     }
 }
