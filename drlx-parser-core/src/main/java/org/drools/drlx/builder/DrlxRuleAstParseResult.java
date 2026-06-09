@@ -288,6 +288,13 @@ public final class DrlxRuleAstParseResult {
             case ANNOTATION_KIND_SALIENCE -> RuleAnnotationIR.Kind.SALIENCE;
             case ANNOTATION_KIND_DESCRIPTION -> RuleAnnotationIR.Kind.DESCRIPTION;
             case ANNOTATION_KIND_DATASOURCE -> RuleAnnotationIR.Kind.DATASOURCE;
+            case ANNOTATION_KIND_NO_LOOP -> RuleAnnotationIR.Kind.NO_LOOP;
+            case ANNOTATION_KIND_LOCK_ON_ACTIVE -> RuleAnnotationIR.Kind.LOCK_ON_ACTIVE;
+            case ANNOTATION_KIND_AUTO_FOCUS -> RuleAnnotationIR.Kind.AUTO_FOCUS;
+            case ANNOTATION_KIND_DISABLED -> RuleAnnotationIR.Kind.DISABLED;
+            case ANNOTATION_KIND_AGENDA_GROUP -> RuleAnnotationIR.Kind.AGENDA_GROUP;
+            case ANNOTATION_KIND_ACTIVATION_GROUP -> RuleAnnotationIR.Kind.ACTIVATION_GROUP;
+            case ANNOTATION_KIND_RULEFLOW_GROUP -> RuleAnnotationIR.Kind.RULEFLOW_GROUP;
             case ANNOTATION_KIND_UNSPECIFIED, UNRECOGNIZED ->
                     throw new IllegalStateException("Unknown proto annotation kind: " + k);
         };
@@ -298,6 +305,13 @@ public final class DrlxRuleAstParseResult {
             case SALIENCE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_SALIENCE;
             case DESCRIPTION -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DESCRIPTION;
             case DATASOURCE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DATASOURCE;
+            case NO_LOOP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_NO_LOOP;
+            case LOCK_ON_ACTIVE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_LOCK_ON_ACTIVE;
+            case AUTO_FOCUS -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_AUTO_FOCUS;
+            case DISABLED -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DISABLED;
+            case AGENDA_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_AGENDA_GROUP;
+            case ACTIVATION_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_ACTIVATION_GROUP;
+            case RULEFLOW_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_RULEFLOW_GROUP;
         };
     }
 
