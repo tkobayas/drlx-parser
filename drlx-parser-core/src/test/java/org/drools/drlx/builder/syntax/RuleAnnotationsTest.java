@@ -594,4 +594,121 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         }
     }
 
+    @Test
+    void testTimerWithoutArgumentFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Timer expects one argument");
+    }
+
+    @Test
+    void testDurationWithoutArgumentFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Duration;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Duration
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Duration expects one argument");
+    }
+
+    @Test
+    void testTimerEmptyStringFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Timer expects non-empty string literal");
+    }
+
+    @Test
+    void testDurationEmptyStringFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Duration;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Duration("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Duration expects non-empty string literal");
+    }
+
+    @Test
+    void testTimerAndDurationTogetherFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+                import org.drools.drlx.annotations.Duration;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("int: 1s")
+                @Duration("5s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("@Timer and @Duration cannot be used together");
+    }
+
 }

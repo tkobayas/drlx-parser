@@ -41,6 +41,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private static final String LOCK_ON_ACTIVE_FQN = "org.drools.drlx.annotations.LockOnActive";
     private static final String DISABLED_FQN = "org.drools.drlx.annotations.Disabled";
     private static final String ACTIVATION_GROUP_FQN = "org.drools.drlx.annotations.ActivationGroup";
+    private static final String TIMER_FQN = "org.drools.drlx.annotations.Timer";
+    private static final String DURATION_FQN = "org.drools.drlx.annotations.Duration";
 
     private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.ofEntries(
             Map.entry(SALIENCE_FQN, Kind.SALIENCE),
@@ -49,7 +51,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             Map.entry(NO_LOOP_FQN, Kind.NO_LOOP),
             Map.entry(LOCK_ON_ACTIVE_FQN, Kind.LOCK_ON_ACTIVE),
             Map.entry(DISABLED_FQN, Kind.DISABLED),
-            Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP));
+            Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP),
+            Map.entry(TIMER_FQN, Kind.TIMER),
+            Map.entry(DURATION_FQN, Kind.DURATION));
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",
@@ -229,6 +233,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                         "duplicate @" + kindDisplayName(kind) + " at " + line + ":" + col);
             }
 
+            if ((kind == Kind.TIMER && seen.contains(Kind.DURATION))
+                    || (kind == Kind.DURATION && seen.contains(Kind.TIMER))) {
+                throw new RuntimeException(
+                        "@Timer and @Duration cannot be used together at " + line + ":" + col);
+            }
+
             String rawValue = extractAnnotationLiteral(annCtx, kind, line, col);
             annotations.add(new RuleAnnotationIR(kind, rawValue));
         }
@@ -268,7 +278,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     "unsupported DRLX rule annotation '@" + nameText + "' at "
                     + line + ":" + col + " — supported: @Salience, @Description, @DataSource, "
                     + "@NoLoop, @LockOnActive, @Disabled, "
-                    + "@ActivationGroup");
+                    + "@ActivationGroup, @Timer, @Duration");
         }
         String fqn = annotationImports.get(nameText);
         if (fqn != null) {
