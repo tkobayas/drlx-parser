@@ -35,7 +35,9 @@ public final class DrlxRuleAstModel {
             NO_LOOP(ArgShape.NONE),
             LOCK_ON_ACTIVE(ArgShape.NONE),
             DISABLED(ArgShape.NONE),
-            ACTIVATION_GROUP(ArgShape.STRING);
+            ACTIVATION_GROUP(ArgShape.STRING),
+            TIMER(ArgShape.STRING),
+            DURATION(ArgShape.STRING);
 
             enum ArgShape { NONE, INT, STRING }
             final ArgShape argShape;

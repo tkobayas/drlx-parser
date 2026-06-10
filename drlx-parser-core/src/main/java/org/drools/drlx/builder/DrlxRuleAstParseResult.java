@@ -292,6 +292,8 @@ public final class DrlxRuleAstParseResult {
             case ANNOTATION_KIND_LOCK_ON_ACTIVE -> RuleAnnotationIR.Kind.LOCK_ON_ACTIVE;
             case ANNOTATION_KIND_DISABLED -> RuleAnnotationIR.Kind.DISABLED;
             case ANNOTATION_KIND_ACTIVATION_GROUP -> RuleAnnotationIR.Kind.ACTIVATION_GROUP;
+            case ANNOTATION_KIND_TIMER -> RuleAnnotationIR.Kind.TIMER;
+            case ANNOTATION_KIND_DURATION -> RuleAnnotationIR.Kind.DURATION;
             case ANNOTATION_KIND_UNSPECIFIED, UNRECOGNIZED ->
                     throw new IllegalStateException("Unknown proto annotation kind: " + k);
         };
@@ -306,6 +308,8 @@ public final class DrlxRuleAstParseResult {
             case LOCK_ON_ACTIVE -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_LOCK_ON_ACTIVE;
             case DISABLED -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DISABLED;
             case ACTIVATION_GROUP -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_ACTIVATION_GROUP;
+            case TIMER -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_TIMER;
+            case DURATION -> DrlxRuleAstProto.AnnotationKind.ANNOTATION_KIND_DURATION;
         };
     }
 
