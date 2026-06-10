@@ -1,6 +1,11 @@
 package org.drools.drlx.builder.syntax;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.drools.base.definitions.rule.impl.RuleImpl;
+import org.drools.core.ClockType;
+import org.drools.core.time.impl.PseudoClockScheduler;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
 import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
@@ -8,7 +13,13 @@ import org.drools.drlx.ruleunit.MyUnit;
 import org.drools.drlx.ruleunit.TestDataObserver;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
+import org.kie.api.KieServices;
 import org.kie.api.definition.rule.Rule;
+import org.kie.api.event.rule.AfterMatchFiredEvent;
+import org.kie.api.event.rule.DefaultAgendaEventListener;
+import org.kie.api.runtime.KieSession;
+import org.kie.api.runtime.KieSessionConfiguration;
+import org.kie.api.runtime.conf.ClockTypeOption;
 import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -775,6 +786,200 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
 
         assertThatThrownBy(() -> newBuilder().build(rule))
                 .isInstanceOf(RuntimeException.class);
+    }
+
+    private static KieSession pseudoClockSession(KieBase kieBase) {
+        KieSessionConfiguration config = KieServices.Factory.get().newKieSessionConfiguration();
+        config.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.toString()));
+        return kieBase.newKieSession(config, null);
+    }
+
+    @Test
+    void testIntervalTimerFiresRepeatedly() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("int: 1s 1s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("timer fired for " + p.getName()); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            AtomicInteger fireCount = new AtomicInteger();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fireCount.incrementAndGet();
+                }
+            });
+
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(0);
+
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(1);
+
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(2);
+
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(3);
+        } finally {
+            kieSession.dispose();
+        }
+    }
+
+    @Test
+    void testDurationDelayedFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Duration;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Duration("5s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("duration fired for " + p.getName()); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            AtomicInteger fireCount = new AtomicInteger();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fireCount.incrementAndGet();
+                }
+            });
+
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(0);
+
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(0);
+
+            clock.advanceTime(3, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(1);
+
+            clock.advanceTime(10, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(1);
+        } finally {
+            kieSession.dispose();
+        }
+    }
+
+    @Test
+    void testCronTimerFires() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("cron: 0/5 * * * * ?")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("cron fired for " + p.getName()); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            AtomicInteger fireCount = new AtomicInteger();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fireCount.incrementAndGet();
+                }
+            });
+
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+
+            kieSession.fireAllRules();
+            int initial = fireCount.get();
+
+            clock.advanceTime(10, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isGreaterThan(initial);
+        } finally {
+            kieSession.dispose();
+        }
+    }
+
+    @Test
+    void testTimerDefaultProtocol() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("1s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println("default protocol fired"); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            AtomicInteger fireCount = new AtomicInteger();
+            kieSession.addEventListener(new DefaultAgendaEventListener() {
+                @Override
+                public void afterMatchFired(AfterMatchFiredEvent event) {
+                    fireCount.incrementAndGet();
+                }
+            });
+
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(0);
+
+            clock.advanceTime(1, TimeUnit.SECONDS);
+            kieSession.fireAllRules();
+            assertThat(fireCount.get()).isEqualTo(1);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
 }
