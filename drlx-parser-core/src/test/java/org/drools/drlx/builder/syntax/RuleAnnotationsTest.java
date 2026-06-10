@@ -1181,7 +1181,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
     }
 
     @Test
-    void testDateEffectivePastDateRuleFires() {
+    void testDateEffectiveAfterEffectiveDateRuleFires() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1191,22 +1191,27 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateEffective("2020-01-01")
+                @DateEffective("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-07-01"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(1);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
     @Test
-    void testDateEffectiveFutureDateRuleDoesNotFire() {
+    void testDateEffectiveBeforeEffectiveDateRuleDoesNotFire() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1216,22 +1221,27 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateEffective("2099-01-01")
+                @DateEffective("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-05-01"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(0);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
     @Test
-    void testDateExpiresFutureDateRuleFires() {
+    void testDateExpiresBeforeExpiryDateRuleFires() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1241,22 +1251,27 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateExpires("2099-01-01")
+                @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-06-01"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(1);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
     @Test
-    void testDateExpiresPastDateRuleDoesNotFire() {
+    void testDateExpiresAfterExpiryDateRuleDoesNotFire() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1266,49 +1281,27 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateExpires("2020-01-01")
+                @DateExpires("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-07-01"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(0);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
     @Test
-    void testDateWindowCurrentlyActiveRuleFires() {
-        final String rule = """
-                package org.drools.drlx.parser;
-
-                import org.drools.drlx.domain.Person;
-                import org.drools.drlx.annotations.DateEffective;
-                import org.drools.drlx.annotations.DateExpires;
-
-                import org.drools.drlx.ruleunit.MyUnit;
-                unit MyUnit;
-
-                @DateEffective("2020-01-01")
-                @DateExpires("2099-12-31")
-                rule R1 {
-                    Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
-                }
-                """;
-
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(1);
-        });
-    }
-
-    @Test
-    void testDateWindowFutureRuleDoesNotFire() {
+    void testDateWindowInsideWindowRuleFires() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1319,23 +1312,28 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateEffective("2098-01-01")
-                @DateExpires("2099-12-31")
+                @DateEffective("2025-01-01")
+                @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-06-15"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(0);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        } finally {
+            kieSession.dispose();
+        }
     }
 
     @Test
-    void testDateWindowExpiredRuleDoesNotFire() {
+    void testDateWindowBeforeWindowRuleDoesNotFire() {
         final String rule = """
                 package org.drools.drlx.parser;
 
@@ -1346,19 +1344,64 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 import org.drools.drlx.ruleunit.MyUnit;
                 unit MyUnit;
 
-                @DateEffective("2019-01-01")
-                @DateExpires("2020-01-01")
+                @DateEffective("2025-06-01")
+                @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
                     do { System.out.println(p.getName()); }
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-03-01"));
             kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            int fired = kieSession.fireAllRules();
-            assertThat(fired).isEqualTo(0);
-        });
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+        } finally {
+            kieSession.dispose();
+        }
+    }
+
+    @Test
+    void testDateWindowAfterWindowRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2025-01-01")
+                @DateExpires("2025-06-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        final KieSession kieSession = pseudoClockSession(kieBase);
+        try {
+            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            clock.setStartupTime(toEpochMillis("2025-09-01"));
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+        } finally {
+            kieSession.dispose();
+        }
+    }
+
+    private static long toEpochMillis(String isoDate) {
+        return java.time.LocalDate.parse(isoDate)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .plusHours(12)
+                .toInstant()
+                .toEpochMilli();
     }
 
     @Test
