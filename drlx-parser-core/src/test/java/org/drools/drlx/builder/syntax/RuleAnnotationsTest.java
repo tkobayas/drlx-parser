@@ -1,5 +1,6 @@
 package org.drools.drlx.builder.syntax;
 
+import java.util.Calendar;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -980,6 +981,407 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
         } finally {
             kieSession.dispose();
         }
+    }
+
+    @Test
+    void testDateEffectiveParsed() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2020-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        Rule r = kieBase.getRule("org.drools.drlx.parser", "R1");
+        assertThat(r).isNotNull();
+        RuleImpl impl = (RuleImpl) r;
+        assertThat(impl.getDateEffective()).isNotNull();
+        assertThat(impl.getDateEffective().get(Calendar.YEAR)).isEqualTo(2020);
+        assertThat(impl.getDateEffective().get(Calendar.MONTH)).isEqualTo(Calendar.JANUARY);
+        assertThat(impl.getDateEffective().get(Calendar.DAY_OF_MONTH)).isEqualTo(1);
+    }
+
+    @Test
+    void testDateExpiresParsed() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateExpires("2099-12-31")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        Rule r = kieBase.getRule("org.drools.drlx.parser", "R1");
+        assertThat(r).isNotNull();
+        RuleImpl impl = (RuleImpl) r;
+        assertThat(impl.getDateExpires()).isNotNull();
+        assertThat(impl.getDateExpires().get(Calendar.YEAR)).isEqualTo(2099);
+        assertThat(impl.getDateExpires().get(Calendar.MONTH)).isEqualTo(Calendar.DECEMBER);
+        assertThat(impl.getDateExpires().get(Calendar.DAY_OF_MONTH)).isEqualTo(31);
+    }
+
+    @Test
+    void testDateEffectiveAndExpiresTogether() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2020-01-01")
+                @DateExpires("2099-12-31")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        Rule r = kieBase.getRule("org.drools.drlx.parser", "R1");
+        assertThat(r).isNotNull();
+        RuleImpl impl = (RuleImpl) r;
+        assertThat(impl.getDateEffective()).isNotNull();
+        assertThat(impl.getDateExpires()).isNotNull();
+    }
+
+    @Test
+    void testDateEffectiveFqnWithoutImport() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @org.drools.drlx.annotations.DateEffective("2020-06-15")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        final KieBase kieBase = newBuilder().build(rule);
+        Rule r = kieBase.getRule("org.drools.drlx.parser", "R1");
+        assertThat(r).isNotNull();
+        RuleImpl impl = (RuleImpl) r;
+        assertThat(impl.getDateEffective()).isNotNull();
+        assertThat(impl.getDateEffective().get(Calendar.YEAR)).isEqualTo(2020);
+    }
+
+    @Test
+    void testDateEffectiveWithoutArgumentFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testDateEffectiveEmptyStringFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testDateEffectiveMalformedDateFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("not-a-date")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testDateEffectiveLegacyFormatFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("01-Jan-2025")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testDateEffectivePastDateRuleFires() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2020-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void testDateEffectiveFutureDateRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2099-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void testDateExpiresFutureDateRuleFires() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateExpires("2099-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void testDateExpiresPastDateRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateExpires("2020-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void testDateWindowCurrentlyActiveRuleFires() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2020-01-01")
+                @DateExpires("2099-12-31")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(1);
+        });
+    }
+
+    @Test
+    void testDateWindowFutureRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2098-01-01")
+                @DateExpires("2099-12-31")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void testDateWindowExpiredRuleDoesNotFire() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+                import org.drools.drlx.annotations.DateExpires;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2019-01-01")
+                @DateExpires("2020-01-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p.getName()); }
+                }
+                """;
+
+        withSession(rule, (kieSession, listener) -> {
+            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
+            int fired = kieSession.fireAllRules();
+            assertThat(fired).isEqualTo(0);
+        });
+    }
+
+    @Test
+    void testDuplicateDateEffectiveFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.DateEffective;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @DateEffective("2025-01-01")
+                @DateEffective("2025-06-01")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
     }
 
 }

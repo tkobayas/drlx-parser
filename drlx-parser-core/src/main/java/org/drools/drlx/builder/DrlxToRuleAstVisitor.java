@@ -43,6 +43,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private static final String ACTIVATION_GROUP_FQN = "org.drools.drlx.annotations.ActivationGroup";
     private static final String TIMER_FQN = "org.drools.drlx.annotations.Timer";
     private static final String DURATION_FQN = "org.drools.drlx.annotations.Duration";
+    private static final String DATE_EFFECTIVE_FQN = "org.drools.drlx.annotations.DateEffective";
+    private static final String DATE_EXPIRES_FQN = "org.drools.drlx.annotations.DateExpires";
 
     private static final Map<String, Kind> SUPPORTED_ANNOTATION_KINDS = Map.ofEntries(
             Map.entry(SALIENCE_FQN, Kind.SALIENCE),
@@ -53,7 +55,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             Map.entry(DISABLED_FQN, Kind.DISABLED),
             Map.entry(ACTIVATION_GROUP_FQN, Kind.ACTIVATION_GROUP),
             Map.entry(TIMER_FQN, Kind.TIMER),
-            Map.entry(DURATION_FQN, Kind.DURATION));
+            Map.entry(DURATION_FQN, Kind.DURATION),
+            Map.entry(DATE_EFFECTIVE_FQN, Kind.DATE_EFFECTIVE),
+            Map.entry(DATE_EXPIRES_FQN, Kind.DATE_EXPIRES));
 
     private static final java.util.Set<String> TEMPORAL_OPERATORS = java.util.Set.of(
             "after", "before", "coincides", "during",
@@ -278,7 +282,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     "unsupported DRLX rule annotation '@" + nameText + "' at "
                     + line + ":" + col + " — supported: @Salience, @Description, @DataSource, "
                     + "@NoLoop, @LockOnActive, @Disabled, "
-                    + "@ActivationGroup, @Timer, @Duration");
+                    + "@ActivationGroup, @Timer, @Duration, "
+                    + "@DateEffective, @DateExpires");
         }
         String fqn = annotationImports.get(nameText);
         if (fqn != null) {

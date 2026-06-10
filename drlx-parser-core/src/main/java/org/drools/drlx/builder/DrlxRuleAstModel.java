@@ -37,7 +37,9 @@ public final class DrlxRuleAstModel {
             DISABLED(ArgShape.NONE),
             ACTIVATION_GROUP(ArgShape.STRING),
             TIMER(ArgShape.STRING),
-            DURATION(ArgShape.STRING);
+            DURATION(ArgShape.STRING),
+            DATE_EFFECTIVE(ArgShape.STRING),
+            DATE_EXPIRES(ArgShape.STRING);
 
             enum ArgShape { NONE, INT, STRING }
             final ArgShape argShape;

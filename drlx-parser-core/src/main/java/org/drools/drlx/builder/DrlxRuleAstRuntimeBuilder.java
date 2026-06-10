@@ -1,9 +1,13 @@
 package org.drools.drlx.builder;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.TypeVariable;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -1499,6 +1503,18 @@ public class DrlxRuleAstRuntimeBuilder {
                 case DURATION -> {
                     long ms = TimeUtils.parseTimeString(ann.rawValue());
                     rule.setTimer(new DurationTimer(ms));
+                }
+                case DATE_EFFECTIVE -> {
+                    LocalDate date = LocalDate.parse(ann.rawValue());
+                    Calendar cal = GregorianCalendar.from(
+                            date.atStartOfDay(ZoneId.systemDefault()));
+                    rule.setDateEffective(cal);
+                }
+                case DATE_EXPIRES -> {
+                    LocalDate date = LocalDate.parse(ann.rawValue());
+                    Calendar cal = GregorianCalendar.from(
+                            date.atStartOfDay(ZoneId.systemDefault()));
+                    rule.setDateExpires(cal);
                 }
             }
         }
