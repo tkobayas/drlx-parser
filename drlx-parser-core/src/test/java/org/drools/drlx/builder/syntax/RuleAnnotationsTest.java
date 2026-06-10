@@ -711,4 +711,70 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .hasMessageContaining("@Timer and @Duration cannot be used together");
     }
 
+    @Test
+    void testTimerInvalidProtocolFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("xyz: 1s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testTimerMissingColonFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Timer;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Timer("int 1s")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    void testDurationInvalidTimeStringFails() {
+        final String rule = """
+                package org.drools.drlx.parser;
+
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.annotations.Duration;
+
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                @Duration("abc")
+                rule R1 {
+                    Person p : /persons[ age > 18 ],
+                    do { System.out.println(p); }
+                }
+                """;
+
+        assertThatThrownBy(() -> newBuilder().build(rule))
+                .isInstanceOf(RuntimeException.class);
+    }
+
 }

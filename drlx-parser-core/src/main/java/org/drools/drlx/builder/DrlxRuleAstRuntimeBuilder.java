@@ -37,6 +37,11 @@ import org.drools.base.rule.Pattern;
 import org.drools.base.rule.SingleAccumulate;
 import org.drools.base.rule.TypeDeclaration;
 import org.drools.base.time.TimeUtils;
+import org.drools.core.time.impl.DurationTimer;
+import org.drools.core.time.TimerExpression;
+import org.drools.base.base.ValueResolver;
+import org.drools.base.reteoo.BaseTuple;
+import org.drools.compiler.rule.builder.RuleBuilder;
 import org.drools.core.rule.SlidingLengthWindow;
 import org.drools.core.rule.SlidingTimeWindow;
 import org.drools.base.rule.accessor.ReadAccessor;
@@ -1472,6 +1477,29 @@ public class DrlxRuleAstRuntimeBuilder {
                 case LOCK_ON_ACTIVE -> { rule.setLockOnActive(true); rule.setEager(true); }
                 case DISABLED -> rule.setEnabled(EnabledBoolean.ENABLED_FALSE);
                 case ACTIVATION_GROUP -> rule.setActivationGroup(ann.rawValue());
+                case TIMER -> {
+                    org.drools.base.time.impl.Timer timer = RuleBuilder.buildTimer(
+                            ann.rawValue(),
+                            null,
+                            s -> {
+                                if (s == null) return null;
+                                long ms = TimeUtils.parseTimeString(s);
+                                return new TimerExpression() {
+                                    @Override public Declaration[] getDeclarations() { return new Declaration[0]; }
+                                    @Override public Object getValue(BaseTuple leftTuple, Declaration[] declrs, ValueResolver valueResolver) { return ms; }
+                                };
+                            },
+                            err -> { throw new RuntimeException(err); }
+                    );
+                    if (timer == null) {
+                        throw new RuntimeException("Failed to build timer from: " + ann.rawValue());
+                    }
+                    rule.setTimer(timer);
+                }
+                case DURATION -> {
+                    long ms = TimeUtils.parseTimeString(ann.rawValue());
+                    rule.setTimer(new DurationTimer(ms));
+                }
             }
         }
     }
