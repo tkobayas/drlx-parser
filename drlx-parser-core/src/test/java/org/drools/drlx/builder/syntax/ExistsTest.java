@@ -3,7 +3,6 @@ package org.drools.drlx.builder.syntax;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,20 +27,18 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // No facts → EXISTS unsatisfied, rule does not fire.
-            assertThat(kieSession.fireAllRules()).isZero();
+            assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).isEmpty();
 
             // Insert a child → still no adult, EXISTS unsatisfied.
-            persons.insert(new Person("Charlie", 10));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Charlie", 10));
+            assertThat(instance.fire()).isZero();
 
             // Insert an adult → EXISTS satisfied, rule fires once.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("HasAdult");
         });
     }
@@ -72,18 +69,15 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-            final EntryPoint orders = kieSession.getEntryPoint("orders");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Person but no order → EXISTS unsatisfied, no firing.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).isEmpty();
 
             // Add a matching order (customerId == Alice.age = 30) → fires.
-            orders.insert(new Order("O1", 30, 100));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.orders.add(new Order("O1", 30, 100));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("ConfirmedPerson");
         });
     }
@@ -109,21 +103,18 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-            final EntryPoint orders = kieSession.getEntryPoint("orders");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Neither side → EXISTS unsatisfied, no firing.
-            assertThat(kieSession.fireAllRules()).isZero();
+            assertThat(instance.fire()).isZero();
 
             // Only adult → EXISTS still unsatisfied (missing order side).
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isZero();
 
             // Add a high-value order → both sides match → EXISTS satisfied,
             // rule fires once.
-            orders.insert(new Order("O1", 99, 5000));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.orders.add(new Order("O1", 99, 5000));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("HasAdultWithHighValueOrder");
         });
     }
@@ -147,7 +138,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error")
                 .hasMessageContaining("var");
     }
@@ -170,7 +161,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -27,13 +26,11 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint seniors = kieSession.getEntryPoint("seniors");
+        withInstance(rule, (instance, unit, listener) -> {
+            assertThat(instance.fire()).isZero();
 
-            assertThat(kieSession.fireAllRules()).isZero();
-
-            seniors.insert(new Person("Grandpa", 75));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.seniors.add(new Person("Grandpa", 75));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("SeniorOrJunior");
         });
     }
@@ -57,17 +54,14 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint seniors = kieSession.getEntryPoint("seniors");
-            final EntryPoint juniors = kieSession.getEntryPoint("juniors");
-
-            seniors.insert(new Person("Grandpa", 75));
-            juniors.insert(new Person("Kid", 10));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.seniors.add(new Person("Grandpa", 75));
+            unit.juniors.add(new Person("Kid", 10));
 
             // Two firings — one per branch — since LogicTransformer splits OR
             // into two rule instances. Each instance's conditions are
             // satisfied once by the single matching fact on its branch.
-            assertThat(kieSession.fireAllRules()).isEqualTo(2);
+            assertThat(instance.fire()).isEqualTo(2);
             assertThat(listener.getAfterMatchFired()).containsExactly("SeniorOrJunior", "SeniorOrJunior");
         });
     }
@@ -89,15 +83,12 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint seniors = kieSession.getEntryPoint("seniors");
-            final EntryPoint juniors = kieSession.getEntryPoint("juniors");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Middle-aged → neither branch.
-            seniors.insert(new Person("Middle1", 40));
-            juniors.insert(new Person("Middle2", 40));
+            unit.seniors.add(new Person("Middle1", 40));
+            unit.juniors.add(new Person("Middle2", 40));
 
-            assertThat(kieSession.fireAllRules()).isZero();
+            assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
@@ -119,7 +110,7 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

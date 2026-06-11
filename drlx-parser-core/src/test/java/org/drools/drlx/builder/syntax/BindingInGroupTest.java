@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,17 +26,14 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
-            persons1.insert(new Person("Alice", 30));
-            persons1.insert(new Person("Bob", 40));
-            persons2.insert(new Person("Alice", 25));
-            persons2.insert(new Person("Carol", 50));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons1.add(new Person("Bob", 40));
+            unit.persons2.add(new Person("Alice", 25));
+            unit.persons2.add(new Person("Carol", 50));
 
             // Exactly one pair joins: (Alice/persons1, Alice/persons2).
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("JoinByName");
         });
     }
@@ -61,14 +57,11 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons2.add(new Person("Alice", 25));
 
-            persons1.insert(new Person("Alice", 30));
-            persons2.insert(new Person("Alice", 25));
-
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("JoinByNameExplicitType");
         });
     }
@@ -92,16 +85,13 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
-            persons1.insert(new Person("Alice", 30));
-            persons2.insert(new Person("Alice", 25));
-            persons2.insert(new Person("Bob", 40));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons2.add(new Person("Alice", 25));
+            unit.persons2.add(new Person("Bob", 40));
 
             // One matching pair: (Alice, Alice).
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("BothBound");
         });
     }
@@ -124,15 +114,12 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
-            persons1.insert(new Person("Alice", 30));
-            persons2.insert(new Person("Bob", 40));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons2.add(new Person("Bob", 40));
 
             // No join constraint — fires once per Cartesian match (1×1 = 1).
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("BareOopathsInAnd");
         });
     }

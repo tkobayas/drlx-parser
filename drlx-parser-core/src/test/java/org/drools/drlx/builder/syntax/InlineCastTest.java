@@ -3,7 +3,6 @@ package org.drools.drlx.builder.syntax;
 import org.drools.drlx.domain.Employee;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -28,16 +27,15 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
+        withInstance(rule, (instance, unit, listener) -> {
             // Insert a plain Person — should NOT match
-            entryPoint.insert(new Person("Alice", 30));
+            unit.persons.add(new Person("Alice", 30));
             // Insert an Employee with matching department — should match
-            entryPoint.insert(new Employee("Bob", 25, "Engineering"));
+            unit.persons.add(new Employee("Bob", 25, "Engineering"));
             // Insert an Employee with non-matching department — should NOT match
-            entryPoint.insert(new Employee("Carol", 28, "Marketing"));
+            unit.persons.add(new Employee("Carol", 28, "Marketing"));
 
-            final int fired = kieSession.fireAllRules();
+            final int fired = instance.fire();
 
             assertThat(fired).isEqualTo(1);
         });
@@ -61,13 +59,12 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("Alice", 30));
-            entryPoint.insert(new Employee("Bob", 25, "Engineering"));
-            entryPoint.insert(new Employee("Carol", 28, "Marketing"));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 30));
+            unit.persons.add(new Employee("Bob", 25, "Engineering"));
+            unit.persons.add(new Employee("Carol", 28, "Marketing"));
 
-            final int fired = kieSession.fireAllRules();
+            final int fired = instance.fire();
 
             // Only the 2 Employees should match, not the plain Person
             assertThat(fired).isEqualTo(2);

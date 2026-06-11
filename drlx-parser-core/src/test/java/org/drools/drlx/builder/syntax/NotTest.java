@@ -13,7 +13,6 @@ import org.drools.drlx.builder.DrlxRuleAstParseResult;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -37,17 +36,15 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // No under-18 → rule fires once.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdults");
 
             // Insert an under-18 → the NOT becomes unsatisfied; no further firings.
-            persons.insert(new Person("Charlie", 10));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Charlie", 10));
+            assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdults");
         });
     }
@@ -77,16 +74,13 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-            final EntryPoint orders = kieSession.getEntryPoint("orders");
-
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("OrphanedPerson");
 
-            orders.insert(new Order("O1", 30, 100));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.orders.add(new Order("O1", 30, 100));
+            assertThat(instance.fire()).isZero();
         });
     }
 
@@ -137,7 +131,7 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error")
                 .hasMessageContaining("var");
     }
@@ -160,15 +154,13 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("OnlyAdultsParen");
 
-            persons.insert(new Person("Charlie", 10));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Charlie", 10));
+            assertThat(instance.fire()).isZero();
         });
     }
 
@@ -192,25 +184,22 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-            final EntryPoint orders = kieSession.getEntryPoint("orders");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Neither side present → NOT satisfied, rule fires once.
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("NoUnderageHighValuePair");
 
             // Only under-18 person → NOT still satisfied (no order match), no new firing.
-            persons.insert(new Person("Charlie", 10));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Charlie", 10));
+            assertThat(instance.fire()).isZero();
 
             // Add high-value order → both sides match, NOT unsatisfied, still no firing.
-            orders.insert(new Order("O1", 99, 5000));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.orders.add(new Order("O1", 99, 5000));
+            assertThat(instance.fire()).isZero();
 
             // Add orphan adult person — doesn't affect NOT state.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isZero();
         });
     }
 
@@ -232,7 +221,7 @@ class NotTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

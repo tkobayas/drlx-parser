@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -29,17 +28,14 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // First branch satisfied: adult in persons1, young adult in persons2.
-            persons1.insert(new Person("Alice", 25));
-            persons2.insert(new Person("Bob", 22));
+            unit.persons1.add(new Person("Alice", 25));
+            unit.persons2.add(new Person("Bob", 22));
 
             // Second branch unsatisfied (no senior in persons1, no kid in persons3).
             // First branch fires once.
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("OrOfAnds");
         });
     }
@@ -63,16 +59,14 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Adult with no Bob → fires.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
 
             // Insert Bob → NOT now unsatisfied, rule no longer activates.
-            persons.insert(new Person("Bob", 40));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Bob", 40));
+            assertThat(instance.fire()).isZero();
 
             // Still one total firing.
             assertThat(listener.getAfterMatchFired()).containsExactly("AdultWithoutBob");
@@ -98,20 +92,18 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Empty — NOT satisfied (vacuously), rule fires once.
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
 
             // Insert Charlie — still no Alice, no Bob — NOT still satisfied.
             // Match already fired; no new activation.
-            persons.insert(new Person("Charlie", 50));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Charlie", 50));
+            assertThat(instance.fire()).isZero();
 
             // Insert Alice — OR becomes satisfied, so NOT is not. No fire.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isZero();
 
             assertThat(listener.getAfterMatchFired()).containsExactly("NoAliceNoBob");
         });
@@ -138,18 +130,15 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Alice and Bob in persons1; only Alice in persons2.
             // → For Bob, no match in persons2 → fires.
             // → For Alice, match in persons2 → does not fire.
-            persons1.insert(new Person("Alice", 30));
-            persons1.insert(new Person("Bob", 40));
-            persons2.insert(new Person("Alice", 25));
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons1.add(new Person("Bob", 40));
+            unit.persons2.add(new Person("Alice", 25));
 
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("NoSameNameInOther");
         });
     }

@@ -3,7 +3,6 @@ package org.drools.drlx.builder.syntax;
 import org.drools.drlx.domain.Location;
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -41,19 +40,16 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // 1. Reactive-side data first. No person yet — no match.
-            locations.insert(new Location("paris", "centre"));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.locations.add(new Location("paris", "centre"));
+            assertThat(instance.fire()).isEqualTo(0);
 
             // 2. Passive-side insertion alone. A match now exists in the
             //    right-side memory (location × person), but because the
             //    pattern is passive, this insertion MUST NOT wake the rule.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
             assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
@@ -79,18 +75,15 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // Insert passive-side first — match is pending in memory
             // but rule does not wake.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
 
             // Reactive-side insertion wakes the rule — one match fires.
-            locations.insert(new Location("paris", "centre"));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.locations.add(new Location("paris", "centre"));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }
@@ -114,16 +107,13 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
-            locations.insert(new Location("paris", "centre"));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.locations.add(new Location("paris", "centre"));
+            assertThat(instance.fire()).isEqualTo(0);
 
             // Passive-side insertion — must not wake.
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
             assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }

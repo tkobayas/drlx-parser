@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.drools.drlx.domain.Container;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,11 +26,10 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint containers = kieSession.getEntryPoint("containers");
-            containers.insert(new Container("match", List.of("apple", "banana"), Map.of()));
-            containers.insert(new Container("noMatch", List.of("cherry", "banana"), Map.of()));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.containers.add(new Container("match", List.of("apple", "banana"), Map.of()));
+            unit.containers.add(new Container("noMatch", List.of("cherry", "banana"), Map.of()));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -51,11 +49,10 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint containers = kieSession.getEntryPoint("containers");
-            containers.insert(new Container("match", List.of(), Map.of("color", "red")));
-            containers.insert(new Container("noMatch", List.of(), Map.of("color", "blue")));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.containers.add(new Container("match", List.of(), Map.of("color", "red")));
+            unit.containers.add(new Container("noMatch", List.of(), Map.of("color", "blue")));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -75,11 +72,10 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint containers = kieSession.getEntryPoint("containers");
-            containers.insert(new Container("match", List.of("apple", "banana"), Map.of()));
-            containers.insert(new Container("noMatch", List.of("apple", "cherry"), Map.of()));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.containers.add(new Container("match", List.of("apple", "banana"), Map.of()));
+            unit.containers.add(new Container("noMatch", List.of("apple", "cherry"), Map.of()));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 }

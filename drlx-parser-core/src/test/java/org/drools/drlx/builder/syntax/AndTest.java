@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,19 +27,17 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
-            assertThat(kieSession.fireAllRules()).isZero();
+        withInstance(rule, (instance, unit, listener) -> {
+            assertThat(instance.fire()).isZero();
 
             // Adult only → AND unsatisfied (no Bob yet).
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isZero();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isZero();
 
             // Add Bob (child) → Alice is adult and Bob matches name=="Bob".
             // AND satisfied; rule fires.
-            persons.insert(new Person("Bob", 10));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.persons.add(new Person("Bob", 10));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("AdultAndBob");
         });
     }
@@ -64,13 +61,11 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
+        withInstance(rule, (instance, unit, listener) -> {
+            assertThat(instance.fire()).isZero();
 
-            assertThat(kieSession.fireAllRules()).isZero();
-
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("SingleChildAnd");
         });
     }
@@ -92,7 +87,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 
@@ -114,7 +109,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (kieSession, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

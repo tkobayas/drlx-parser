@@ -2,7 +2,6 @@ package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,20 +30,16 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-            final EntryPoint persons3 = kieSession.getEntryPoint("persons3");
-
+        withInstance(rule, (instance, unit, listener) -> {
             // First branch satisfied: Alice in persons1 and persons2.
-            persons1.insert(new Person("Alice", 30));
-            persons2.insert(new Person("Alice", 25));
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons2.add(new Person("Alice", 25));
             // Second branch satisfied: Bob in persons2 and persons3.
-            persons2.insert(new Person("Bob", 40));
-            persons3.insert(new Person("Bob", 50));
+            unit.persons2.add(new Person("Bob", 40));
+            unit.persons3.add(new Person("Bob", 50));
 
             // Each branch fires once (Drools OR-expansion).
-            assertThat(kieSession.fireAllRules()).isEqualTo(2);
+            assertThat(instance.fire()).isEqualTo(2);
             assertThat(listener.getAfterMatchFired()).containsExactly("BranchLocalJoin", "BranchLocalJoin");
         });
     }
@@ -68,15 +63,12 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons1 = kieSession.getEntryPoint("persons1");
-            final EntryPoint persons2 = kieSession.getEntryPoint("persons2");
-
-            persons1.insert(new Person("Alice", 30));
-            persons2.insert(new Person("Bob", 40));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons1.add(new Person("Alice", 30));
+            unit.persons2.add(new Person("Bob", 40));
 
             // Each branch fires once — both matched.
-            assertThat(kieSession.fireAllRules()).isEqualTo(2);
+            assertThat(instance.fire()).isEqualTo(2);
             assertThat(listener.getAfterMatchFired()).containsExactly("DirectBranchLocal", "DirectBranchLocal");
         });
     }
@@ -105,7 +97,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withSession(rule, (ks, listener) -> { /* never runs */ }))
+        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* never runs */ }))
                 .isInstanceOf(RuntimeException.class);
     }
 }
