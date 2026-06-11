@@ -38,10 +38,15 @@ public final class DataStoreSupport {
         callback.update(handle, fact, mask, fact.getClass(), null);
     }
 
-    public static void update(DataStore<?> store, Object fact, InternalMatch match, String storeName) {
+    public static void update(DataStore<?> store, Object fact, InternalMatch match,
+                              InternalRuleBase ruleBase, String storeName,
+                              String... modifiedProperties) {
         InternalStoreCallback callback = (InternalStoreCallback) store;
         DataHandle handle = Objects.requireNonNull(callback.lookup(fact),
                 "DataStore '" + storeName + "' has no DataHandle for the given fact");
-        callback.update(handle, fact, AllSetBitMask.get(), fact.getClass(), match);
+        BitMask mask = modifiedProperties.length == 0
+                ? AllSetBitMask.get()
+                : calculateUpdateBitMask(ruleBase, fact, modifiedProperties);
+        callback.update(handle, fact, mask, fact.getClass(), match);
     }
 }

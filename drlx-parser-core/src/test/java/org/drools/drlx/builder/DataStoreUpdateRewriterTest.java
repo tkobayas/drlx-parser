@@ -34,7 +34,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__,");
         assertThat(result).doesNotContain("alerts.update(");
     }
 
@@ -43,7 +43,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(this.t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, this.t, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, this.t, __match__, __ruleBase__,");
     }
 
     @Test
@@ -102,7 +102,7 @@ class DataStoreUpdateRewriterTest {
         String body = "DataStore<Person> alerts = other; alerts.update(t);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__,");
     }
 
     @Test
@@ -110,7 +110,7 @@ class DataStoreUpdateRewriterTest {
         String body = "p{age = 0}; alerts.update(p);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__, __ruleBase__,");
     }
 
     @Test
@@ -118,7 +118,7 @@ class DataStoreUpdateRewriterTest {
         String body = "p{name = \"Reset\", age = 0}; alerts.update(p);";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, p, __match__, __ruleBase__,");
     }
 
     @Test
@@ -126,7 +126,7 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t{status = RECEIVED});";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__,");
         assertThat(result).contains("t{status = RECEIVED}");
     }
 
@@ -135,7 +135,32 @@ class DataStoreUpdateRewriterTest {
         String body = "alerts.update(t{status = RECEIVED, timestamp = new Date()});";
         String result = rewriter.rewrite(body, Set.of("alerts"));
 
-        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__,");
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__,");
         assertThat(result).contains("t{status = RECEIVED, timestamp = new Date()}");
+    }
+
+    @Test
+    void compactWithAsUpdateArgExtractsPropertyNames() {
+        String body = "alerts.update(t{salary = 7000});";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__, \"alerts\", \"salary\")");
+    }
+
+    @Test
+    void compactWithMultipleAssignmentsExtractsAllPropertyNames() {
+        String body = "alerts.update(t{salary = 7000, basePay = 5000});";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("\"alerts\", \"salary\", \"basePay\"");
+    }
+
+    @Test
+    void plainUpdateDoesNotIncludePropertyNames() {
+        String body = "alerts.update(t);";
+        String result = rewriter.rewrite(body, Set.of("alerts"));
+
+        assertThat(result).contains("DataStoreSupport.update(alerts, t, __match__, __ruleBase__, \"alerts\")");
+        assertThat(result).doesNotContain("\"alerts\",");
     }
 }

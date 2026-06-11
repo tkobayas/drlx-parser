@@ -144,7 +144,7 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
 
                 rule R1 {
-                    var e : /reactiveEmployees[basePay > 3000],
+                    var e : /reactiveEmployees[basePay > 3000 && bonusPay < 9000],
                     do { e.setBonusPay(9999); reactiveEmployees.update(e); }
                 }
 
@@ -158,10 +158,10 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
             ReactiveEmployee emp = new ReactiveEmployee(5000, 4000, 1000);
             unit.reactiveEmployees.add(emp);
 
-            // R1 fires (basePay 4000 > 3000) and calls update with AllSetBitMask.
+            // R1 fires (basePay 4000 > 3000, bonusPay 1000 < 9000), sets bonusPay to 9999.
+            // R1 does not re-fire (bonusPay 9999 < 9000 is now false).
             // R2 fires because AllSetBitMask treats all properties (including salary)
             // as changed, even though only bonusPay was actually modified.
-            // Use fire(10) to cap iterations — AllSetBitMask causes R1 to re-fire.
             instance.fire(10);
             assertThat(listener.getAfterMatchFired()).contains("R1", "R2");
         });

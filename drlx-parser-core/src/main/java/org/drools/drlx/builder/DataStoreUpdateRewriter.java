@@ -1,5 +1,6 @@
 package org.drools.drlx.builder;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -14,6 +15,8 @@ import com.github.javaparser.ast.stmt.ExpressionStmt;
 
 import org.mvel3.parser.MvelParser;
 import org.mvel3.parser.ast.expr.CompactWithExpression;
+
+
 
 public final class DataStoreUpdateRewriter {
 
@@ -85,12 +88,14 @@ public final class DataStoreUpdateRewriter {
             return false;
         }
         Expression arg = call.getArgument(0);
+        List<String> extractedProperties = List.of();
         if (arg instanceof CompactWithExpression compactWith) {
             if (call.getParentNode().orElse(null) instanceof ExpressionStmt exprStmt
                     && exprStmt.getParentNode().orElse(null) instanceof BlockStmt block) {
                 int index = block.getStatements().indexOf(exprStmt);
                 if (index >= 0) {
                     block.addStatement(index, new ExpressionStmt(compactWith.clone()));
+                    extractedProperties = extractPropertyNames(compactWith);
                     arg = compactWith.getTarget().clone();
                     call.setArgument(0, arg);
                 } else {
@@ -106,12 +111,24 @@ public final class DataStoreUpdateRewriter {
 
         String globalName = scopeName.getNameAsString();
         String argText = arg.toString();
-        Expression updateCall = StaticJavaParser.parseExpression(
-                "org.drools.drlx.builder.DataStoreSupport.update("
-                        + globalName + ", " + argText + ", __match__, "
-                        + "\"" + globalName + "\")");
+        StringBuilder sb = new StringBuilder();
+        sb.append("org.drools.drlx.builder.DataStoreSupport.update(")
+                .append(globalName).append(", ")
+                .append(argText).append(", __match__, __ruleBase__, ")
+                .append("\"").append(globalName).append("\"");
+        for (String prop : extractedProperties) {
+            sb.append(", \"").append(prop).append("\"");
+        }
+        sb.append(")");
+        Expression updateCall = StaticJavaParser.parseExpression(sb.toString());
 
         call.replace(updateCall);
         return true;
+    }
+
+    private static List<String> extractPropertyNames(CompactWithExpression compactWith) {
+        return compactWith.getAssignments().stream()
+                .map(assign -> assign.getTarget().toString())
+                .toList();
     }
 }
