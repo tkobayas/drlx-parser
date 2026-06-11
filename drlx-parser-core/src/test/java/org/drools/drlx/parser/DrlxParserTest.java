@@ -330,4 +330,112 @@ class DrlxParserTest {
         assertThat(accSource.andElement()).isNotNull();
         assertThat(accSource.andElement().groupChild()).hasSize(2);
     }
+
+    // --- groupBy parser tests ---
+
+    @Test
+    void parsesGroupByUnboundKeySingleFunction() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R {
+                    groupBy(var p : /persons,
+                            p.name,
+                            var avgAge = avg(p.age)),
+                    do {}
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
+        assertThat(tree).isNotNull();
+        var groupBy = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .groupByKeywordItem();
+        assertThat(groupBy).isNotNull();
+        assertThat(groupBy.identifier().getText()).isEqualTo("groupBy");
+        assertThat(groupBy.accSource().boundOopath()).isNotNull();
+        assertThat(groupBy.groupByKey().VAR()).isNull();
+        assertThat(groupBy.groupByKey().expression()).isNotNull();
+    }
+
+    @Test
+    void parsesGroupByBoundKey() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R {
+                    groupBy(var p : /persons,
+                            var g = p.name,
+                            var avgAge = avg(p.age)),
+                    do {}
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
+        assertThat(tree).isNotNull();
+        var groupByKey = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .groupByKeywordItem().groupByKey();
+        assertThat(groupByKey.VAR()).isNotNull();
+        assertThat(groupByKey.identifier().getText()).isEqualTo("g");
+    }
+
+    @Test
+    void parsesGroupByMultipleFunctions() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R {
+                    groupBy(var p : /persons,
+                            var g = p.name,
+                            (var minAge = min(p.age),
+                             var maxAge = max(p.age))),
+                    do {}
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
+        assertThat(tree).isNotNull();
+        var accBody = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .groupByKeywordItem().accBody();
+        assertThat(accBody.accFunctionList()).isNotNull();
+        assertThat(accBody.accFunctionList().accumulateItem()).hasSize(2);
+    }
+
+    @Test
+    void parsesGroupByWithAndSource() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R {
+                    groupBy(and(var p : /persons, var o : /orders[customerId == p.age]),
+                            p.name,
+                            var total = sum(o.amount)),
+                    do {}
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
+        assertThat(tree).isNotNull();
+        var accSource = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .groupByKeywordItem().accSource();
+        assertThat(accSource.andElement()).isNotNull();
+        assertThat(accSource.andElement().groupChild()).hasSize(2);
+    }
+
+    @Test
+    void parsesGroupByCustomAccumulator() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R {
+                    groupBy(var p : /persons,
+                            p.name,
+                            int s = 0;,
+                            s = s + p.age,
+                            int total = s),
+                    do {}
+                }
+                """;
+        var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
+        assertThat(tree).isNotNull();
+        var accBody = tree.ruleDeclaration(0).ruleBody().ruleItem(0)
+                .groupByKeywordItem().accBody();
+        assertThat(accBody.accInitVars()).isNotNull();
+        assertThat(accBody.accResultBinding()).isNotNull();
+    }
 }

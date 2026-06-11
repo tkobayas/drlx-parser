@@ -48,7 +48,7 @@ public final class DrlxRuleAstModel {
     }
 
     /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
-    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR, CustomAccumulateIR {
+    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR, CustomAccumulateIR, GroupByAccumulateIR, GroupByCustomAccumulateIR {
     }
 
     public record PatternIR(String typeName,
@@ -132,5 +132,38 @@ public final class DrlxRuleAstModel {
         String name,
         String initializer
     ) {
+    }
+
+    public record GroupByAccumulateIR(
+        LhsItemIR source,
+        List<AccumulatorIR> accumulators,
+        String groupKeyExpression,
+        String groupKeyBindName,
+        List<String> groupKeyReferencedBindings
+    ) implements LhsItemIR {
+        public GroupByAccumulateIR {
+            accumulators = List.copyOf(accumulators);
+            groupKeyReferencedBindings = List.copyOf(groupKeyReferencedBindings);
+        }
+    }
+
+    public record GroupByCustomAccumulateIR(
+        LhsItemIR source,
+        List<InitVarIR> initVars,
+        String actionBlock,
+        String reverseBlock,
+        String resultTypeName,
+        String resultBindName,
+        String resultExpression,
+        List<String> referencedBindings,
+        String groupKeyExpression,
+        String groupKeyBindName,
+        List<String> groupKeyReferencedBindings
+    ) implements LhsItemIR {
+        public GroupByCustomAccumulateIR {
+            initVars = List.copyOf(initVars);
+            referencedBindings = List.copyOf(referencedBindings);
+            groupKeyReferencedBindings = List.copyOf(groupKeyReferencedBindings);
+        }
     }
 }

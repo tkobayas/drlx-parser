@@ -14,6 +14,8 @@ import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupByAccumulateIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupByCustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
@@ -178,6 +180,13 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     pendingPattern = null;
                     pendingAccs = new ArrayList<>();
                     lhs.add(buildAccKeywordItem(itemCtx.accKeywordItem()));
+                    continue;
+                }
+                if (itemCtx.groupByKeywordItem() != null) {
+                    flushPending(lhs, pendingPattern, pendingAccs);
+                    pendingPattern = null;
+                    pendingAccs = new ArrayList<>();
+                    lhs.add(buildGroupByKeywordItem(itemCtx.groupByKeywordItem()));
                     continue;
                 }
                 // Any non-accumulate item flushes the pending pattern (with or without accs).
@@ -509,6 +518,101 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             accumulators.add(buildAccumulator(accItemCtx));
         }
         return new AccumulatePatternIR(source, accumulators);
+    }
+
+    private LhsItemIR buildGroupByKeywordItem(DrlxParser.GroupByKeywordItemContext ctx) {
+        String keyword = ctx.identifier().getText();
+        if (!"groupBy".equals(keyword)) {
+            throw new RuntimeException(
+                    "expected 'groupBy' keyword but found '" + keyword + "' at "
+                    + ctx.getStart().getLine() + ":" + ctx.getStart().getCharPositionInLine());
+        }
+
+        LhsItemIR source;
+        if (ctx.accSource().boundOopath() != null) {
+            source = buildPatternFromBoundOopath(ctx.accSource().boundOopath());
+        } else {
+            source = buildGroupElementFromChildren(
+                    ctx.accSource().andElement().groupChild(),
+                    GroupElementIR.Kind.AND);
+        }
+
+        java.util.Set<String> sourceBindNames;
+        if (source instanceof PatternIR pat) {
+            sourceBindNames = java.util.Set.of(pat.bindName());
+        } else if (source instanceof GroupElementIR group) {
+            sourceBindNames = group.children().stream()
+                    .filter(PatternIR.class::isInstance)
+                    .map(c -> ((PatternIR) c).bindName())
+                    .collect(java.util.stream.Collectors.toSet());
+        } else {
+            sourceBindNames = java.util.Set.of();
+        }
+
+        DrlxParser.GroupByKeyContext keyCtx = ctx.groupByKey();
+        String groupKeyExpression;
+        String groupKeyBindName;
+        if (keyCtx.VAR() != null) {
+            groupKeyBindName = keyCtx.identifier().getText();
+            groupKeyExpression = getText(keyCtx.expression());
+        } else {
+            groupKeyBindName = null;
+            groupKeyExpression = getText(keyCtx.expression());
+        }
+        List<String> groupKeyRefs = extractIdentifiers(groupKeyExpression);
+
+        DrlxParser.AccBodyContext body = ctx.accBody();
+
+        if (body.accFunctionList() != null) {
+            List<AccumulatorIR> accumulators = new ArrayList<>();
+            for (DrlxParser.AccumulateItemContext accItemCtx : body.accFunctionList().accumulateItem()) {
+                accumulators.add(buildAccumulator(accItemCtx));
+            }
+            return new GroupByAccumulateIR(source, accumulators,
+                    groupKeyExpression, groupKeyBindName, groupKeyRefs);
+        }
+
+        List<DrlxParser.AccActionBlockContext> actionBlocks = body.accActionBlock();
+        boolean is5Param = actionBlocks.size() == 2;
+
+        List<InitVarIR> initVars = buildInitVars(body.accInitVars(), sourceBindNames);
+
+        String actionBlock;
+        String reverseBlock;
+
+        if (is5Param) {
+            actionBlock = extractActionBlockText(actionBlocks.get(0), true);
+            reverseBlock = extractActionBlockText(actionBlocks.get(1), true);
+        } else {
+            DrlxParser.AccActionBlockContext actionCtx = actionBlocks.get(0);
+            if (actionCtx.expression().size() == 2 && actionCtx.getChild(0).getText().equals("(")) {
+                actionBlock = getText(actionCtx.expression(0));
+                reverseBlock = getText(actionCtx.expression(1));
+            } else {
+                actionBlock = extractActionBlockText(actionCtx, false);
+                reverseBlock = null;
+            }
+        }
+
+        DrlxParser.AccResultBindingContext resultCtx = body.accResultBinding();
+        String resultTypeName = resultCtx.typeType().getText();
+        String resultBindName = resultCtx.identifier().getText();
+        String resultExpression = getText(resultCtx.expression());
+
+        if (source instanceof PatternIR pat) {
+            validateResultExpression(resultExpression, pat.bindName());
+        }
+
+        java.util.LinkedHashSet<String> refs = new java.util.LinkedHashSet<>();
+        refs.addAll(extractIdentifiers(actionBlock));
+        if (reverseBlock != null) {
+            refs.addAll(extractIdentifiers(reverseBlock));
+        }
+        refs.addAll(extractIdentifiers(resultExpression));
+
+        return new GroupByCustomAccumulateIR(source, initVars, actionBlock, reverseBlock,
+                resultTypeName, resultBindName, resultExpression, List.copyOf(refs),
+                groupKeyExpression, groupKeyBindName, groupKeyRefs);
     }
 
     private List<InitVarIR> buildInitVars(DrlxParser.AccInitVarsContext ctx,

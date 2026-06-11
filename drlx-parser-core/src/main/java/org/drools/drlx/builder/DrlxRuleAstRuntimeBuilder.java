@@ -64,6 +64,8 @@ import org.kie.internal.builder.conf.PropertySpecificOption;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatePatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.AccumulatorIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupByAccumulateIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.GroupByCustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
@@ -220,6 +222,18 @@ public class DrlxRuleAstRuntimeBuilder {
                 if (customAcc.source() instanceof PatternIR p) {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
                 } else if (customAcc.source() instanceof GroupElementIR g) {
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                }
+            } else if (item instanceof GroupByAccumulateIR gbAcc) {
+                if (gbAcc.source() instanceof PatternIR p) {
+                    classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                } else if (gbAcc.source() instanceof GroupElementIR g) {
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                }
+            } else if (item instanceof GroupByCustomAccumulateIR gbCustom) {
+                if (gbCustom.source() instanceof PatternIR p) {
+                    classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                } else if (gbCustom.source() instanceof GroupElementIR g) {
                     collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
                 }
             }
@@ -635,6 +649,12 @@ public class DrlxRuleAstRuntimeBuilder {
             } else if (item instanceof CustomAccumulateIR customAcc) {
                 buildCustomAccumulatePattern(customAcc, parent, typeResolver, entryPointTypes,
                                               unitClass, boundVariables, queryRegistry, currentQuery);
+            } else if (item instanceof GroupByAccumulateIR gbAcc) {
+                buildGroupByAccumulatePattern(gbAcc, parent, typeResolver, entryPointTypes,
+                                              unitClass, boundVariables, queryRegistry, currentQuery);
+            } else if (item instanceof GroupByCustomAccumulateIR gbCustom) {
+                buildGroupByCustomAccumulatePattern(gbCustom, parent, typeResolver, entryPointTypes,
+                                                    unitClass, boundVariables, queryRegistry, currentQuery);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
@@ -855,6 +875,246 @@ public class DrlxRuleAstRuntimeBuilder {
                 }
             }
         };
+    }
+
+    private void buildGroupByAccumulatePattern(GroupByAccumulateIR gbAcc,
+                                                GroupElement parent,
+                                                TypeResolver typeResolver,
+                                                Map<String, Class<?>> entryPointTypes,
+                                                Class<?> unitClass,
+                                                Map<String, BoundVariable> outerScope,
+                                                Map<String, QueryImpl> queryRegistry,
+                                                QueryImpl currentQuery) {
+        LhsItemIR srcIr = gbAcc.source();
+        Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
+        org.drools.base.rule.RuleConditionElement srcElement;
+        boolean multiSource;
+
+        if (srcIr instanceof GroupElementIR groupIr
+                && groupIr.children().size() == 1
+                && groupIr.children().get(0) instanceof PatternIR) {
+            srcIr = groupIr.children().get(0);
+        }
+
+        if (srcIr instanceof PatternIR patIr) {
+            Pattern srcPattern = buildPattern(patIr, typeResolver, entryPointTypes, unitClass, outerScope);
+            srcElement = srcPattern;
+            multiSource = false;
+            Declaration srcDecl = srcPattern.getDeclaration();
+            if (srcDecl != null) {
+                Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+                innerScope.put(srcDecl.getIdentifier(),
+                        new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
+            }
+        } else if (srcIr instanceof GroupElementIR groupIr) {
+            GroupElement andGroup = GroupElementFactory.newAndInstance();
+            buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
+                     unitClass, innerScope, queryRegistry, currentQuery);
+            srcElement = andGroup;
+            multiSource = true;
+        } else {
+            throw new IllegalArgumentException("Unsupported groupBy source: " + srcIr.getClass());
+        }
+
+        List<AccumulatorIR> accumulators = gbAcc.accumulators();
+        int n = accumulators.size();
+
+        Map<String, BoundVariable> sourceScope = null;
+        if (multiSource) {
+            sourceScope = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    sourceScope.put(e.getKey(), e.getValue());
+                }
+            }
+        }
+
+        org.drools.base.rule.accessor.Accumulator[] accs =
+                new org.drools.base.rule.accessor.Accumulator[n];
+        for (int i = 0; i < n; i++) {
+            if (multiSource) {
+                accs[i] = buildSingleAccumulatorMulti(accumulators.get(i), sourceScope, typeResolver);
+            } else {
+                Declaration srcDecl = ((Pattern) srcElement).getDeclaration();
+                Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+                String srcBindingName = srcDecl != null ? srcDecl.getIdentifier() : null;
+                accs[i] = buildSingleAccumulator(accumulators.get(i), srcClass, srcBindingName, typeResolver);
+            }
+        }
+
+        org.drools.base.rule.Accumulate innerAccumulate;
+        if (n == 1) {
+            Declaration[] required = multiSource
+                    ? new Declaration[0]
+                    : requiredFor(accumulators.get(0), innerScope);
+            innerAccumulate = new SingleAccumulate(srcElement, required, accs[0]);
+        } else {
+            innerAccumulate = new MultiAccumulate(srcElement, new Declaration[0], accs, n + 1);
+        }
+
+        DrlxGroupByAccumulate groupByAccumulate;
+        if (multiSource) {
+            DrlxValueExtractor keyExtractor = lambdaCompiler.createValueExtractor(
+                    gbAcc.groupKeyExpression(), sourceScope);
+            groupByAccumulate = new DrlxGroupByAccumulate(innerAccumulate, keyExtractor);
+        } else {
+            Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+            String srcBindingName = ((Pattern) srcElement).getDeclaration().getIdentifier();
+            DrlxValueExtractor keyExtractor = lambdaCompiler.createValueExtractor(
+                    gbAcc.groupKeyExpression(), srcClass, srcBindingName);
+            groupByAccumulate = new DrlxGroupByAccumulate(innerAccumulate, (Function<Object, Object>) keyExtractor);
+        }
+
+        ReadAccessor selfReader = new SelfReferenceClassFieldReader(Object[].class);
+        Pattern wrap = new Pattern(0, new ClassObjectType(Object[].class));
+
+        if (n == 1) {
+            Class<?> rType = resultClassFor(accumulators.get(0), typeResolver);
+            wrap.addDeclaration(new Declaration(
+                    accumulators.get(0).resultBindName(),
+                    new ArrayElementReader(selfReader, 0, rType),
+                    wrap, true));
+        } else {
+            for (int i = 0; i < n; i++) {
+                Class<?> rType = resultClassFor(accumulators.get(i), typeResolver);
+                wrap.addDeclaration(new Declaration(
+                        accumulators.get(i).resultBindName(),
+                        new ArrayElementReader(selfReader, i, rType),
+                        wrap, true));
+            }
+        }
+
+        int keyIndex = (n == 1) ? 1 : n;
+        if (gbAcc.groupKeyBindName() != null) {
+            wrap.addDeclaration(new Declaration(
+                    gbAcc.groupKeyBindName(),
+                    new ArrayElementReader(selfReader, keyIndex, Object.class),
+                    wrap, true));
+        }
+
+        wrap.setSource(groupByAccumulate);
+        parent.addChild(wrap);
+
+        for (int i = 0; i < n; i++) {
+            AccumulatorIR acc = accumulators.get(i);
+            Class<?> resultClass = resultClassFor(acc, typeResolver);
+            Declaration decl = wrap.getDeclarations().get(acc.resultBindName());
+            outerScope.put(acc.resultBindName(),
+                    new BoundVariable(acc.resultBindName(), resultClass, wrap, decl));
+        }
+        if (gbAcc.groupKeyBindName() != null) {
+            Declaration keyDecl = wrap.getDeclarations().get(gbAcc.groupKeyBindName());
+            outerScope.put(gbAcc.groupKeyBindName(),
+                    new BoundVariable(gbAcc.groupKeyBindName(), Object.class, wrap, keyDecl));
+        }
+    }
+
+    private void buildGroupByCustomAccumulatePattern(GroupByCustomAccumulateIR gbCustom,
+                                                       GroupElement parent,
+                                                       TypeResolver typeResolver,
+                                                       Map<String, Class<?>> entryPointTypes,
+                                                       Class<?> unitClass,
+                                                       Map<String, BoundVariable> outerScope,
+                                                       Map<String, QueryImpl> queryRegistry,
+                                                       QueryImpl currentQuery) {
+        LhsItemIR srcIr = gbCustom.source();
+
+        if (srcIr instanceof GroupElementIR groupIr
+                && groupIr.children().size() == 1
+                && groupIr.children().get(0) instanceof PatternIR) {
+            srcIr = groupIr.children().get(0);
+        }
+
+        Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
+        org.drools.base.rule.RuleConditionElement srcElement;
+        boolean multiSource;
+
+        if (srcIr instanceof PatternIR patIr) {
+            Pattern srcPattern = buildPattern(patIr, typeResolver, entryPointTypes, unitClass, outerScope);
+            srcElement = srcPattern;
+            multiSource = false;
+            Declaration srcDecl = srcPattern.getDeclaration();
+            if (srcDecl != null) {
+                Class<?> srcClass = ((ClassObjectType) srcPattern.getObjectType()).getClassType();
+                innerScope.put(srcDecl.getIdentifier(),
+                        new BoundVariable(srcDecl.getIdentifier(), srcClass, srcPattern, srcDecl));
+            }
+        } else if (srcIr instanceof GroupElementIR groupIr) {
+            GroupElement andGroup = GroupElementFactory.newAndInstance();
+            buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
+                     unitClass, innerScope, queryRegistry, currentQuery);
+            srcElement = andGroup;
+            multiSource = true;
+        } else {
+            throw new IllegalArgumentException("Unsupported groupBy source: " + srcIr.getClass());
+        }
+
+        CustomAccumulateIR asCustom = new CustomAccumulateIR(
+                gbCustom.source(), gbCustom.initVars(),
+                gbCustom.actionBlock(), gbCustom.reverseBlock(),
+                gbCustom.resultTypeName(), gbCustom.resultBindName(),
+                gbCustom.resultExpression(), gbCustom.referencedBindings());
+
+        DrlxCustomAccumulator accumulator;
+        if (multiSource) {
+            Map<String, BoundVariable> sourceScope = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    sourceScope.put(e.getKey(), e.getValue());
+                }
+            }
+            accumulator = lambdaCompiler.createCustomAccumulator(asCustom, sourceScope);
+        } else {
+            Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+            String srcBindingName = ((Pattern) srcElement).getDeclaration() != null
+                    ? ((Pattern) srcElement).getDeclaration().getIdentifier() : null;
+            accumulator = lambdaCompiler.createCustomAccumulator(asCustom, srcClass, srcBindingName);
+        }
+
+        Declaration[] required = new Declaration[0];
+        SingleAccumulate innerAccumulate = new SingleAccumulate(srcElement, required, accumulator);
+
+        DrlxGroupByAccumulate groupByAccumulate;
+        if (multiSource) {
+            Map<String, BoundVariable> sourceScope = new java.util.LinkedHashMap<>();
+            for (Map.Entry<String, BoundVariable> e : innerScope.entrySet()) {
+                if (!outerScope.containsKey(e.getKey())) {
+                    sourceScope.put(e.getKey(), e.getValue());
+                }
+            }
+            DrlxValueExtractor keyExtractor = lambdaCompiler.createValueExtractor(
+                    gbCustom.groupKeyExpression(), sourceScope);
+            groupByAccumulate = new DrlxGroupByAccumulate(innerAccumulate, keyExtractor);
+        } else {
+            Class<?> srcClass = ((ClassObjectType) ((Pattern) srcElement).getObjectType()).getClassType();
+            String srcBindingName = ((Pattern) srcElement).getDeclaration().getIdentifier();
+            DrlxValueExtractor keyExtractor = lambdaCompiler.createValueExtractor(
+                    gbCustom.groupKeyExpression(), srcClass, srcBindingName);
+            groupByAccumulate = new DrlxGroupByAccumulate(innerAccumulate, (Function<Object, Object>) keyExtractor);
+        }
+
+        Class<?> resultClass = resolveCustomResultType(gbCustom.resultTypeName(), typeResolver);
+        ReadAccessor selfReader = new SelfReferenceClassFieldReader(Object[].class);
+        Pattern wrap = new Pattern(lambdaCompiler.nextPatternId(), new ClassObjectType(Object[].class));
+        wrap.addDeclaration(new Declaration(gbCustom.resultBindName(),
+                new ArrayElementReader(selfReader, 0, resultClass), wrap, true));
+
+        if (gbCustom.groupKeyBindName() != null) {
+            wrap.addDeclaration(new Declaration(gbCustom.groupKeyBindName(),
+                    new ArrayElementReader(selfReader, 1, Object.class), wrap, true));
+        }
+
+        wrap.setSource(groupByAccumulate);
+        parent.addChild(wrap);
+
+        Declaration decl = wrap.getDeclarations().get(gbCustom.resultBindName());
+        outerScope.put(gbCustom.resultBindName(),
+                new BoundVariable(gbCustom.resultBindName(), resultClass, wrap, decl));
+        if (gbCustom.groupKeyBindName() != null) {
+            Declaration keyDecl = wrap.getDeclarations().get(gbCustom.groupKeyBindName());
+            outerScope.put(gbCustom.groupKeyBindName(),
+                    new BoundVariable(gbCustom.groupKeyBindName(), Object.class, wrap, keyDecl));
+        }
     }
 
     /**

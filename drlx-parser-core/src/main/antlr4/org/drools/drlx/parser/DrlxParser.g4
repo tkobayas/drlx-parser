@@ -65,6 +65,7 @@ ruleItem
     | oopathExpression ','
     | accumulateItem ','
     | accKeywordItem ','
+    | groupByKeywordItem ','
     | notElement ','
     | existsElement ','
     | andElement ','
@@ -305,4 +306,15 @@ accActionBlock
 
 accResultBinding
     : typeType identifier '=' expression
+    ;
+
+// groupBy(...) keyword form — DRLXXXX §Group By.
+// `groupBy` is contextual: parsed as an identifier, validated at visitor level.
+groupByKeywordItem
+    : identifier '(' accSource ',' groupByKey ',' accBody ')'
+    ;
+
+groupByKey
+    : VAR identifier '=' expression
+    | expression
     ;
