@@ -6,6 +6,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.core.ClockType;
+import org.drools.core.SessionConfiguration;
+import org.drools.core.impl.RuleBaseFactory;
 import org.drools.core.time.impl.PseudoClockScheduler;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Person;
@@ -14,14 +16,9 @@ import org.drools.drlx.ruleunit.MyUnit;
 import org.drools.drlx.ruleunit.TestDataObserver;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
-import org.kie.api.KieServices;
 import org.kie.api.definition.rule.Rule;
 import org.kie.api.event.rule.AfterMatchFiredEvent;
 import org.kie.api.event.rule.DefaultAgendaEventListener;
-import org.kie.api.runtime.KieSession;
-import org.kie.api.runtime.KieSessionConfiguration;
-import org.kie.api.runtime.conf.ClockTypeOption;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,11 +51,10 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("Alice", 30));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 30));
 
-            final int firedCount = kieSession.fireAllRules();
+            final int firedCount = instance.fire();
 
             assertThat(firedCount).isEqualTo(2);
             assertThat(listener.getAfterMatchFired()).containsExactly("HighSalience", "LowSalience");
@@ -789,10 +785,11 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 .isInstanceOf(RuntimeException.class);
     }
 
-    private static KieSession pseudoClockSession(KieBase kieBase) {
-        KieSessionConfiguration config = KieServices.Factory.get().newKieSessionConfiguration();
-        config.setOption(ClockTypeOption.get(ClockType.PSEUDO_CLOCK.toString()));
-        return kieBase.newKieSession(config, null);
+    private static DrlxRuleUnitInstance<MyUnit> pseudoClockInstance(KieBase kieBase, MyUnit unit) {
+        SessionConfiguration config = RuleBaseFactory.newKnowledgeSessionConfiguration()
+                .as(SessionConfiguration.KEY);
+        config.setClockType(ClockType.PSEUDO_CLOCK);
+        return DrlxRuleUnitInstance.create(kieBase, unit, config);
     }
 
     @Test
@@ -814,35 +811,33 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
             AtomicInteger fireCount = new AtomicInteger();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
+            instance.addEventListener(new DefaultAgendaEventListener() {
                 @Override
                 public void afterMatchFired(AfterMatchFiredEvent event) {
                     fireCount.incrementAndGet();
                 }
             });
 
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            unit.persons.add(new Person("Alice", 30));
+            PseudoClockScheduler clock = instance.getClock();
 
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(0);
 
             clock.advanceTime(1, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(1);
 
             clock.advanceTime(1, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(2);
 
             clock.advanceTime(1, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(3);
-        } finally {
-            kieSession.dispose();
         }
     }
 
@@ -865,35 +860,33 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
             AtomicInteger fireCount = new AtomicInteger();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
+            instance.addEventListener(new DefaultAgendaEventListener() {
                 @Override
                 public void afterMatchFired(AfterMatchFiredEvent event) {
                     fireCount.incrementAndGet();
                 }
             });
 
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            unit.persons.add(new Person("Alice", 30));
+            PseudoClockScheduler clock = instance.getClock();
 
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(0);
 
             clock.advanceTime(3, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(0);
 
             clock.advanceTime(3, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(1);
 
             clock.advanceTime(10, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(1);
-        } finally {
-            kieSession.dispose();
         }
     }
 
@@ -916,27 +909,25 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
             AtomicInteger fireCount = new AtomicInteger();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
+            instance.addEventListener(new DefaultAgendaEventListener() {
                 @Override
                 public void afterMatchFired(AfterMatchFiredEvent event) {
                     fireCount.incrementAndGet();
                 }
             });
 
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            unit.persons.add(new Person("Alice", 30));
+            PseudoClockScheduler clock = instance.getClock();
 
-            kieSession.fireAllRules();
+            instance.fire();
             int initial = fireCount.get();
 
             clock.advanceTime(10, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isGreaterThan(initial);
-        } finally {
-            kieSession.dispose();
         }
     }
 
@@ -959,27 +950,25 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
             AtomicInteger fireCount = new AtomicInteger();
-            kieSession.addEventListener(new DefaultAgendaEventListener() {
+            instance.addEventListener(new DefaultAgendaEventListener() {
                 @Override
                 public void afterMatchFired(AfterMatchFiredEvent event) {
                     fireCount.incrementAndGet();
                 }
             });
 
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+            unit.persons.add(new Person("Alice", 30));
+            PseudoClockScheduler clock = instance.getClock();
 
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(0);
 
             clock.advanceTime(1, TimeUnit.SECONDS);
-            kieSession.fireAllRules();
+            instance.fire();
             assertThat(fireCount.get()).isEqualTo(1);
-        } finally {
-            kieSession.dispose();
         }
     }
 
@@ -1199,14 +1188,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-07-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
         }
     }
 
@@ -1229,14 +1216,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-05-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
         }
     }
 
@@ -1259,14 +1244,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-06-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
         }
     }
 
@@ -1289,14 +1272,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-07-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
         }
     }
 
@@ -1321,14 +1302,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-06-15"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(1);
         }
     }
 
@@ -1353,14 +1332,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-03-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
         }
     }
 
@@ -1385,14 +1362,12 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 """;
 
         final KieBase kieBase = newBuilder().build(rule);
-        final KieSession kieSession = pseudoClockSession(kieBase);
-        try {
-            PseudoClockScheduler clock = (PseudoClockScheduler) kieSession.getSessionClock();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = pseudoClockInstance(kieBase, unit)) {
+            PseudoClockScheduler clock = instance.getClock();
             clock.setStartupTime(toEpochMillis("2025-09-01"));
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
-        } finally {
-            kieSession.dispose();
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
         }
     }
 
