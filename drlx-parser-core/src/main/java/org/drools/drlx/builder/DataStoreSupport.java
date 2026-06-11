@@ -2,11 +2,15 @@ package org.drools.drlx.builder;
 
 import java.util.Objects;
 
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.ruleunits.api.DataHandle;
 import org.drools.ruleunits.api.DataStore;
 import org.drools.ruleunits.impl.InternalStoreCallback;
 import org.drools.util.bitmask.AllSetBitMask;
+import org.drools.util.bitmask.BitMask;
+
+import static org.drools.kiesession.entrypoints.NamedEntryPoint.calculateUpdateBitMask;
 
 /**
  * Runtime helper called from rewritten DRLX consequences. The
@@ -23,6 +27,15 @@ public final class DataStoreSupport {
 
     public static DataHandle lookup(DataStore<?> store, Object fact) {
         return ((InternalStoreCallback) store).lookup(fact);
+    }
+
+    public static void update(DataStore<?> store, DataHandle handle, Object fact,
+                              InternalRuleBase ruleBase, String... modifiedProperties) {
+        InternalStoreCallback callback = (InternalStoreCallback) store;
+        BitMask mask = modifiedProperties.length == 0
+                ? AllSetBitMask.get()
+                : calculateUpdateBitMask(ruleBase, fact, modifiedProperties);
+        callback.update(handle, fact, mask, fact.getClass(), null);
     }
 
     public static void update(DataStore<?> store, Object fact, InternalMatch match, String storeName) {

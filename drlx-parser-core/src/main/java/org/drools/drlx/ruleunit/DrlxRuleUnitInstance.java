@@ -46,6 +46,10 @@ public final class DrlxRuleUnitInstance<T extends RuleUnitData> implements RuleU
     private final T unitData;
     private final ReteEvaluator reteEvaluator;
 
+    public InternalRuleBase getRuleBase() {
+        return (InternalRuleBase) reteEvaluator.getKnowledgeBase();
+    }
+
     public static <T extends RuleUnitData> DrlxRuleUnitInstance<T> create(KieBase kieBase, T unitData) {
         return new DrlxRuleUnitInstance<>(kieBase, unitData, null);
     }
