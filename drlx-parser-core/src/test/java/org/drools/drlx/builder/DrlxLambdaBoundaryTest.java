@@ -7,8 +7,9 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.io.TempDir;
+import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
+import org.drools.drlx.ruleunit.MyUnit;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.KieSession;
 import org.mvel3.ClassManager;
 import org.mvel3.MVELCompiler;
 import org.mvel3.lambdaextractor.ArtifactRef;
@@ -56,8 +57,8 @@ class DrlxLambdaBoundaryTest {
                 .as("Runtime build with pre-built metadata must not recompile lambdas")
                 .isEqualTo(before);
 
-        try (KieSession session = kieBase.newKieSession()) {
-            assertThat(session).isNotNull();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, new MyUnit())) {
+            assertThat(instance).isNotNull();
         }
     }
 

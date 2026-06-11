@@ -7,10 +7,11 @@ import java.util.stream.Stream;
 
 import org.drools.drlx.domain.Address;
 import org.drools.drlx.domain.Person;
+import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
+import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.KieSession;
 import org.mvel3.lambdaextractor.LambdaRuntime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,11 +69,12 @@ class DrlxCompilerNoPersistTest {
 
         KieBase kieBase = compiler.build(SINGLE_RULE);
 
-        KieSession kieSession = kieBase.newKieSession();
-        kieSession.getEntryPoint("persons").insert(new Person("John", 25));
-        int fired = kieSession.fireAllRules();
-        assertThat(fired).isEqualTo(1);
-        kieSession.dispose();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            unit.persons.add(new Person("John", 25));
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(1);
+        }
     }
 
     @Test
@@ -81,12 +83,13 @@ class DrlxCompilerNoPersistTest {
 
         KieBase kieBase = compiler.build(MULTI_RULE);
 
-        KieSession kieSession = kieBase.newKieSession();
-        kieSession.getEntryPoint("persons").insert(new Person("John", 25));
-        kieSession.getEntryPoint("addresses").insert(new Address("Tokyo"));
-        int fired = kieSession.fireAllRules();
-        assertThat(fired).isEqualTo(2);
-        kieSession.dispose();
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            unit.persons.add(new Person("John", 25));
+            unit.addresses.add(new Address("Tokyo"));
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(2);
+        }
     }
 
     @Test
