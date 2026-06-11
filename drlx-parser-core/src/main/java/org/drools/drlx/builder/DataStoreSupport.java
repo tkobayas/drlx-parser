@@ -29,6 +29,7 @@ public final class DataStoreSupport {
         return ((InternalStoreCallback) store).lookup(fact);
     }
 
+    // Removable once drools DataStore.update() supports property-name-aware updates
     public static void update(DataStore<?> store, DataHandle handle, Object fact,
                               InternalRuleBase ruleBase, String... modifiedProperties) {
         InternalStoreCallback callback = (InternalStoreCallback) store;
