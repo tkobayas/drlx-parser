@@ -20,6 +20,7 @@ import java.util.stream.Collectors;
 import java.io.Serializable;
 import java.util.function.Function;
 
+import org.drools.core.impl.InternalRuleBase;
 import org.drools.core.rule.consequence.InternalMatch;
 import org.drools.base.base.ClassObjectType;
 import org.drools.base.base.EnabledBoolean;
@@ -408,6 +409,7 @@ public class DrlxRuleAstRuntimeBuilder {
             }
             if (!dataStoreGlobalNames.isEmpty()) {
                 types.put("__match__", Type.type(InternalMatch.class));
+                types.put("__ruleBase__", Type.type(InternalRuleBase.class));
             }
             String body = updateRewriter.rewrite(parseResult.rhs().block(), dataStoreGlobalNames);
             rule.setConsequence(lambdaCompiler.createLambdaConsequence(body, types, globalTypes.keySet()));

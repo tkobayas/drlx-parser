@@ -87,6 +87,7 @@ public class DrlxLambdaConsequence implements Consequence<KnowledgeHelper>, Eval
         }
         globalNames.forEach(name -> vars.put(name, valueResolver.getGlobal(name)));
         vars.put("__match__", match);
+        vars.put("__ruleBase__", valueResolver.getRuleBase());
 
         evaluator.eval(vars);
     }
