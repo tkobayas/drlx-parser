@@ -4,8 +4,8 @@ import org.drools.drlx.domain.Customer;
 import org.drools.drlx.domain.Product;
 import org.drools.drlx.domain.Rates;
 import org.drools.drlx.domain.Rating;
+import org.drools.ruleunits.api.DataHandle;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,13 +31,11 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("budget", Rates.LOW));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("budget", Rates.LOW));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }
@@ -46,12 +44,10 @@ class IfElseTest extends DrlxBuilderTestSupport {
     void sameNameBindingFlowsToBranchSpecificProduct_lowOnlyHigh() {
         // LOW customer + only HIGH product → matches the LOW branch only.
         String rule = sameNameBindingRule();
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("luxury", Rates.HIGH));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -59,12 +55,10 @@ class IfElseTest extends DrlxBuilderTestSupport {
     void sameNameBindingFlowsToBranchSpecificProduct_lowOnlyLow_doesNotFire() {
         // LOW customer + only LOW product → LOW branch needs HIGH product, no match.
         String rule = sameNameBindingRule();
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("budget", Rates.LOW));
-            assertThat(session.fireAllRules()).isZero();
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("budget", Rates.LOW));
+            assertThat(instance.fire()).isZero();
         });
     }
 
@@ -111,13 +105,11 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p1 + " " + p2); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("standard", Rates.MEDIUM));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("standard", Rates.MEDIUM));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -142,12 +134,10 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("standard", Rates.MEDIUM));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("standard", Rates.MEDIUM));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -175,13 +165,11 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.LOW));
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("standard", Rates.MEDIUM));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.LOW));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("standard", Rates.MEDIUM));
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -211,20 +199,18 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
+        withCreditInstance(rule, (instance, unit, listener) -> {
             Customer alice = new Customer("Alice", Rating.HIGH);   // initial: else branch
-            org.kie.api.runtime.rule.FactHandle handle = customers.insert(alice);
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("budget", Rates.LOW));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+            DataHandle handle = unit.customers.add(alice);
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("budget", Rates.LOW));
+            assertThat(instance.fire()).isEqualTo(1);
             listener.getAfterMatchFired().clear();
 
             alice.setCreditRating(Rating.LOW);
-            customers.update(handle, alice);
+            unit.customers.update(handle, alice);
             // ALWAYS-mode property reactivity — re-evaluates without explicit watch list.
-            assertThat(session.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -248,13 +234,11 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Carol", Rating.HIGH));    // matches no branch
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("standard", Rates.MEDIUM));
-            assertThat(session.fireAllRules()).isZero();
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Carol", Rating.HIGH));    // matches no branch
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("standard", Rates.MEDIUM));
+            assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
@@ -281,14 +265,12 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Alice", Rating.MEDIUM));
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("standard", Rates.MEDIUM));
-            products.insert(new Product("budget", Rates.LOW));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Alice", Rating.MEDIUM));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("standard", Rates.MEDIUM));
+            unit.products.add(new Product("budget", Rates.LOW));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }
@@ -313,13 +295,11 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint customers = session.getEntryPoint("customers");
-            EntryPoint products = session.getEntryPoint("products");
-            customers.insert(new Customer("Bob", Rating.HIGH));
-            products.insert(new Product("luxury", Rates.HIGH));
-            products.insert(new Product("budget", Rates.LOW));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withCreditInstance(rule, (instance, unit, listener) -> {
+            unit.customers.add(new Customer("Bob", Rating.HIGH));
+            unit.products.add(new Product("luxury", Rates.HIGH));
+            unit.products.add(new Product("budget", Rates.LOW));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }

@@ -10,7 +10,6 @@ import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
 import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.rule.EntryPoint;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.runtime.rule.QueryResultsRow;
 import org.kie.api.runtime.rule.Variable;
@@ -205,19 +204,16 @@ class QueryTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(source, (kieSession, listener) -> {
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(source, (instance, unit, listener) -> {
             // 1. Reactive side first — no query match yet, no fire
-            locations.insert(new Location("paris", "centre"));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.locations.add(new Location("paris", "centre"));
+            assertThat(instance.fire()).isEqualTo(0);
 
             // 2. Passive query side — a complete match now exists
             //    (location × query result), but because the query invocation
             //    is passive, this insertion MUST NOT wake R1
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
             assertThat(listener.getAfterMatchFired()).isEmpty();
         });
     }
@@ -244,17 +240,14 @@ class QueryTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(source, (kieSession, listener) -> {
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-
+        withInstance(source, (instance, unit, listener) -> {
             // Passive side first — no fire
-            persons.insert(new Person("Alice", 30));
-            assertThat(kieSession.fireAllRules()).isEqualTo(0);
+            unit.persons.add(new Person("Alice", 30));
+            assertThat(instance.fire()).isEqualTo(0);
 
             // Reactive side triggers — picks up pending passive query results
-            locations.insert(new Location("paris", "centre"));
-            assertThat(kieSession.fireAllRules()).isEqualTo(1);
+            unit.locations.add(new Location("paris", "centre"));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R1");
         });
     }

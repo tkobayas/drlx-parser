@@ -1,8 +1,8 @@
 package org.drools.drlx.builder.syntax;
 
 import org.drools.drlx.domain.Person;
+import org.drools.ruleunits.api.DataHandle;
 import org.junit.jupiter.api.Test;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -21,11 +21,10 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint persons = session.getEntryPoint("persons");
-            persons.insert(new Person("Alice", 40));
-            persons.insert(new Person("Bob", 25));
-            assertThat(session.fireAllRules()).isEqualTo(1);
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 40));
+            unit.persons.add(new Person("Bob", 25));
+            assertThat(instance.fire()).isEqualTo(1);
             assertThat(listener.getAfterMatchFired()).containsExactly("R");
         });
     }
@@ -44,12 +43,11 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p + " > " + q); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint persons = session.getEntryPoint("persons");
-            persons.insert(new Person("Alice", 40));
-            persons.insert(new Person("Bob", 25));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 40));
+            unit.persons.add(new Person("Bob", 25));
             // Pairs: (Alice,Alice) eq, (Alice,Bob) Alice>Bob ✓, (Bob,Alice) Bob<Alice ✗, (Bob,Bob) eq
-            assertThat(session.fireAllRules()).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -75,15 +73,14 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint persons = session.getEntryPoint("persons");
+        withInstance(rule, (instance, unit, listener) -> {
             Person alice = new Person("Alice", 25);
-            org.kie.api.runtime.rule.FactHandle handle = persons.insert(alice);
-            assertThat(session.fireAllRules()).isZero();
+            DataHandle handle = unit.persons.add(alice);
+            assertThat(instance.fire()).isZero();
 
             alice.setAge(40);
-            persons.update(handle, alice);
-            assertThat(session.fireAllRules()).isEqualTo(1);
+            unit.persons.update(handle, alice);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -100,10 +97,9 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withSession(rule, (session, listener) -> {
-            EntryPoint persons = session.getEntryPoint("persons");
-            persons.insert(new Person("Alice", 40));
-            assertThat(session.fireAllRules()).isZero();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 40));
+            assertThat(instance.fire()).isZero();
         });
     }
 }

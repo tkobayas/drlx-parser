@@ -27,10 +27,9 @@ import org.drools.base.rule.SingleAccumulate;
 import org.drools.drlx.builder.DrlxRuleBuilder;
 import org.drools.drlx.domain.Order;
 import org.drools.drlx.domain.Person;
+import org.drools.ruleunits.api.DataHandle;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.rule.EntryPoint;
-import org.kie.api.runtime.rule.FactHandle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -54,16 +53,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(40.0);
         });
-        assertThat(observed).containsExactly(40.0);  // avg(20, 40, 60) = 40.0
     }
 
     @Test
@@ -85,16 +81,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(20, 60, 40.0);
         });
-        assertThat(observed).containsExactly(20, 60, 40.0);
     }
 
     @Test
@@ -114,15 +107,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            instance.fire();
+            assertThat(unit.results).containsExactly(2L);
         });
-        assertThat(observed).containsExactly(2L);
     }
 
     @Test
@@ -142,17 +132,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 10));
-            entryPoint.insert(new Person("B", 30));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 10));
+            unit.persons.add(new Person("B", 30));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            // Drools' SumAccumulateFunction normalises to Double regardless of input type.
+            assertThat(unit.results).containsExactly(100.0);
         });
-        // Drools' SumAccumulateFunction normalises to Double regardless of input type.
-        assertThat(observed).containsExactly(100.0);  // sum(10,30,60) = 100.0
     }
 
     @Test
@@ -173,15 +160,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 3));
-            entryPoint.insert(new Person("B", 4));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 3));
+            unit.persons.add(new Person("B", 4));
+            instance.fire();
+            assertThat(unit.results).containsExactly(25.0);
         });
-        assertThat(observed).containsExactly(25.0);  // 3² + 4² = 9 + 16 = 25.0
     }
 
     @Test
@@ -203,16 +187,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 3));
-            entryPoint.insert(new Person("B", 4));
-            entryPoint.insert(new Person("C", 5));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 3));
+            unit.persons.add(new Person("B", 4));
+            unit.persons.add(new Person("C", 5));
+            instance.fire();
+            assertThat(unit.results).containsExactly(50.0, 6L);
         });
-        assertThat(observed).containsExactly(50.0, 6L);  // 9+16+25=50.0, count=3 × 2=6
     }
 
     @Test
@@ -234,15 +215,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 3));
-            entryPoint.insert(new Person("B", 4));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 3));
+            unit.persons.add(new Person("B", 4));
+            instance.fire();
+            assertThat(unit.results).containsExactly(3.5, 25.0);
         });
-        assertThat(observed).containsExactly(3.5, 25.0);  // avg(3,4)=3.5, 9+16=25.0
     }
 
     @Test
@@ -377,18 +355,15 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 10));
-            entryPoint.insert(new Person("B", 30));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 10));
+            unit.persons.add(new Person("B", 30));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            // sum((10+1) + (30+1) + (60+1)) = 11 + 31 + 61 = 103
+            // SumAccumulateFunction normalises to Double.
+            assertThat(unit.results).containsExactly(103.0);
         });
-        // sum((10+1) + (30+1) + (60+1)) = 11 + 31 + 61 = 103
-        // SumAccumulateFunction normalises to Double.
-        assertThat(observed).containsExactly(103.0);
     }
 
     @Test
@@ -408,16 +383,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("AA", 10));    // length 2
-            entryPoint.insert(new Person("BBB", 20));   // length 3
-            entryPoint.insert(new Person("CCCC", 30));  // length 4
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("AA", 10));    // length 2
+            unit.persons.add(new Person("BBB", 20));   // length 3
+            unit.persons.add(new Person("CCCC", 30));  // length 4
+            instance.fire();
+            assertThat(unit.results).containsExactly(9.0);
         });
-        assertThat(observed).containsExactly(9.0);  // 2 + 3 + 4 = 9
     }
 
     @Test
@@ -437,16 +409,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 2));
-            entryPoint.insert(new Person("B", 3));
-            entryPoint.insert(new Person("C", 4));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 2));
+            unit.persons.add(new Person("B", 3));
+            unit.persons.add(new Person("C", 4));
+            instance.fire();
+            assertThat(unit.results).containsExactly(29.0);
         });
-        assertThat(observed).containsExactly(29.0);  // 4 + 9 + 16 = 29
     }
 
     @Test
@@ -467,16 +436,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(41.0);
         });
-        assertThat(observed).containsExactly(41.0);  // avg(21, 41, 61) = 41.0
     }
 
     @Test
@@ -519,16 +485,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(40.0);
         });
-        assertThat(observed).containsExactly(40.0);
     }
 
     @Test
@@ -547,15 +510,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            instance.fire();
+            assertThat(unit.results).containsExactly(2L);
         });
-        assertThat(observed).containsExactly(2L);
     }
 
     @Test
@@ -576,16 +536,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(20, 60, 40.0);
         });
-        assertThat(observed).containsExactly(20, 60, 40.0);
     }
 
     @Test
@@ -604,16 +561,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(100.0);
         });
-        assertThat(observed).containsExactly(100.0);
     }
 
     @Test
@@ -633,15 +587,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("Alice", 20));
-            entryPoint.insert(new Person("Bob", 40));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 20));
+            unit.persons.add(new Person("Bob", 40));
+            instance.fire();
+            assertThat(unit.results).containsExactlyInAnyOrder("Alice", 2L, "Bob", 2L);
         });
-        assertThat(observed).containsExactlyInAnyOrder("Alice", 2L, "Bob", 2L);
     }
 
     @Test
@@ -877,16 +828,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 10));
-            entryPoint.insert(new Person("B", 20));
-            entryPoint.insert(new Person("C", 30));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 10));
+            unit.persons.add(new Person("B", 20));
+            unit.persons.add(new Person("C", 30));
+            instance.fire();
+            assertThat(unit.results).containsExactly(3L, 60.0);
         });
-        assertThat(observed).containsExactly(3L, 60.0);
     }
 
     @Test
@@ -907,18 +855,15 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 10));
-            entryPoint.insert(new Person("B", 20));
-            entryPoint.insert(new Person("C", 30));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 10));
+            unit.persons.add(new Person("B", 20));
+            unit.persons.add(new Person("C", 30));
+            instance.fire();
+            // sum(age+1) = 11+21+31 = 63   |   sum(age*2) = 20+40+60 = 120
+            // SumAccumulateFunction normalises to Double.
+            assertThat(unit.results).containsExactly(63.0, 120.0);
         });
-        // sum(age+1) = 11+21+31 = 63   |   sum(age*2) = 20+40+60 = 120
-        // SumAccumulateFunction normalises to Double.
-        assertThat(observed).containsExactly(63.0, 120.0);
     }
 
     // --- acc() keyword form tests ---
@@ -942,16 +887,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(120);
         });
-        assertThat(observed).containsExactly(120);
     }
 
     @Test
@@ -971,16 +913,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(40.0);
         });
-        assertThat(observed).containsExactly(40.0);
     }
 
     @Test
@@ -1001,16 +940,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(60, 20);
         });
-        assertThat(observed).containsExactly(60, 20);
     }
 
     @Test
@@ -1032,20 +968,17 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            FactHandle h1 = entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            DataHandle h1 = unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
 
-            observed.clear();
-            entryPoint.delete(h1);
-            kieSession.fireAllRules();
+            unit.results.clear();
+            unit.persons.remove(h1);
+            instance.fire();
+            assertThat(unit.results).containsExactly(100);
         });
-        assertThat(observed).containsExactly(100);
     }
 
     @Test
@@ -1068,16 +1001,13 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(40.0);
         });
-        assertThat(observed).containsExactly(40.0);
     }
 
     @Test
@@ -1100,20 +1030,17 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            final EntryPoint entryPoint = kieSession.getEntryPoint("persons");
-            FactHandle h1 = entryPoint.insert(new Person("A", 20));
-            entryPoint.insert(new Person("B", 40));
-            entryPoint.insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            DataHandle h1 = unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
 
-            observed.clear();
-            entryPoint.delete(h1);
-            kieSession.fireAllRules();
+            unit.results.clear();
+            unit.persons.remove(h1);
+            instance.fire();
+            assertThat(unit.results).containsExactly(50.0);
         });
-        assertThat(observed).containsExactly(50.0);
     }
 
     // --- multi-pattern source (and()) tests ---
@@ -1136,16 +1063,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
-            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
-            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
-            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 1));
+            unit.persons.add(new Person("Bob", 2));
+            unit.orders.add(new Order("O1", 1, 100));
+            unit.orders.add(new Order("O2", 2, 200));
+            instance.fire();
+            assertThat(unit.results).containsExactly(2L);
         });
-        assertThat(observed).containsExactly(2L);
     }
 
     @Test
@@ -1166,16 +1091,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
-            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
-            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
-            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 1));
+            unit.persons.add(new Person("Bob", 2));
+            unit.orders.add(new Order("O1", 1, 100));
+            unit.orders.add(new Order("O2", 2, 200));
+            instance.fire();
+            assertThat(unit.results).containsExactly(300.0);
         });
-        assertThat(observed).containsExactly(300.0);
     }
 
     @Test
@@ -1196,16 +1119,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
-            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
-            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
-            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 1));
+            unit.persons.add(new Person("Bob", 2));
+            unit.orders.add(new Order("O1", 1, 100));
+            unit.orders.add(new Order("O2", 2, 200));
+            instance.fire();
+            assertThat(unit.results).containsExactly(500.0);
         });
-        assertThat(observed).containsExactly(500.0);
     }
 
     @Test
@@ -1228,16 +1149,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
-            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
-            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
-            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 1));
+            unit.persons.add(new Person("Bob", 2));
+            unit.orders.add(new Order("O1", 1, 100));
+            unit.orders.add(new Order("O2", 2, 200));
+            instance.fire();
+            assertThat(unit.results).containsExactly(300);
         });
-        assertThat(observed).containsExactly(300);
     }
 
     @Test
@@ -1261,16 +1180,14 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("Alice", 1));
-            kieSession.getEntryPoint("persons").insert(new Person("Bob", 2));
-            kieSession.getEntryPoint("orders").insert(new Order("O1", 1, 100));
-            kieSession.getEntryPoint("orders").insert(new Order("O2", 2, 200));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("Alice", 1));
+            unit.persons.add(new Person("Bob", 2));
+            unit.orders.add(new Order("O1", 1, 100));
+            unit.orders.add(new Order("O2", 2, 200));
+            instance.fire();
+            assertThat(unit.results).containsExactly(300);
         });
-        assertThat(observed).containsExactly(300);
     }
 
     @Test
@@ -1290,14 +1207,12 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        final List<Object> observed = new ArrayList<>();
-        withSession(rule, (kieSession, listener) -> {
-            kieSession.setGlobal("results", observed);
-            kieSession.getEntryPoint("persons").insert(new Person("A", 20));
-            kieSession.getEntryPoint("persons").insert(new Person("B", 40));
-            kieSession.getEntryPoint("persons").insert(new Person("C", 60));
-            kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("A", 20));
+            unit.persons.add(new Person("B", 40));
+            unit.persons.add(new Person("C", 60));
+            instance.fire();
+            assertThat(unit.results).containsExactly(40.0);
         });
-        assertThat(observed).containsExactly(40.0);
     }
 }

@@ -9,7 +9,6 @@ import org.drools.drlx.ruleunit.DrlxRuleUnitInstance;
 import org.drools.drlx.ruleunit.MyUnit;
 import org.junit.jupiter.api.Test;
 import org.kie.api.KieBase;
-import org.kie.api.runtime.rule.EntryPoint;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -33,15 +32,12 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
-            entryPoint.insert(new Location("paris", "Belleville"));
-            entryPoint.insert(new Location("paris", "Montmartre"));
-            entryPoint.insert(new Location("london", "Soho"));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.locations.add(new Location("paris", "Belleville"));
+            unit.locations.add(new Location("paris", "Montmartre"));
+            unit.locations.add(new Location("london", "Soho"));
 
-            final int fired = kieSession.fireAllRules();
-
-            assertThat(fired).isEqualTo(2);
+            assertThat(instance.fire()).isEqualTo(2);
         });
     }
 
@@ -62,15 +58,12 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
-            entryPoint.insert(new Location("paris", "Belleville"));
-            entryPoint.insert(new Location("paris", "Montmartre"));
-            entryPoint.insert(new Location("london", "Soho"));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.locations.add(new Location("paris", "Belleville"));
+            unit.locations.add(new Location("paris", "Montmartre"));
+            unit.locations.add(new Location("london", "Soho"));
 
-            final int fired = kieSession.fireAllRules();
-
-            assertThat(fired).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -91,15 +84,12 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint entryPoint = kieSession.getEntryPoint("locations");
-            entryPoint.insert(new Location("paris", "Belleville"));
-            entryPoint.insert(new Location("paris", "Montmartre"));
-            entryPoint.insert(new Location("london", "Soho"));
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.locations.add(new Location("paris", "Belleville"));
+            unit.locations.add(new Location("paris", "Montmartre"));
+            unit.locations.add(new Location("london", "Soho"));
 
-            final int fired = kieSession.fireAllRules();
-
-            assertThat(fired).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
@@ -147,17 +137,13 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withSession(rule, (kieSession, listener) -> {
-            final EntryPoint persons = kieSession.getEntryPoint("persons");
-            final EntryPoint locations = kieSession.getEntryPoint("locations");
-            persons.insert(new Person("paris", 30));
-            locations.insert(new Location("paris", "Belleville"));
-            locations.insert(new Location("london", "Soho"));
-
-            final int fired = kieSession.fireAllRules();
+        withInstance(rule, (instance, unit, listener) -> {
+            unit.persons.add(new Person("paris", 30));
+            unit.locations.add(new Location("paris", "Belleville"));
+            unit.locations.add(new Location("london", "Soho"));
 
             // Person p with name="paris" exists; Location with city == p.name fires once for "paris" Location.
-            assertThat(fired).isEqualTo(1);
+            assertThat(instance.fire()).isEqualTo(1);
         });
     }
 
