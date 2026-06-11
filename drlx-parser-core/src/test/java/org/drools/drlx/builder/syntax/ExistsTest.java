@@ -27,7 +27,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // No facts → EXISTS unsatisfied, rule does not fire.
             assertThat(instance.fire()).isZero();
             assertThat(listener.getAfterMatchFired()).isEmpty();
@@ -69,7 +69,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Person but no order → EXISTS unsatisfied, no firing.
             unit.persons.add(new Person("Alice", 30));
             assertThat(instance.fire()).isZero();
@@ -103,7 +103,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Neither side → EXISTS unsatisfied, no firing.
             assertThat(instance.fire()).isZero();
 
@@ -138,7 +138,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error")
                 .hasMessageContaining("var");
     }
@@ -161,7 +161,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

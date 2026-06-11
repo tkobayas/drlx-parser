@@ -53,7 +53,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -81,7 +81,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -107,7 +107,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             instance.fire();
@@ -132,7 +132,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 10));
             unit.persons.add(new Person("B", 30));
             unit.persons.add(new Person("C", 60));
@@ -160,7 +160,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 3));
             unit.persons.add(new Person("B", 4));
             instance.fire();
@@ -187,7 +187,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 3));
             unit.persons.add(new Person("B", 4));
             unit.persons.add(new Person("C", 5));
@@ -215,7 +215,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 3));
             unit.persons.add(new Person("B", 4));
             instance.fire();
@@ -355,7 +355,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 10));
             unit.persons.add(new Person("B", 30));
             unit.persons.add(new Person("C", 60));
@@ -383,7 +383,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("AA", 10));    // length 2
             unit.persons.add(new Person("BBB", 20));   // length 3
             unit.persons.add(new Person("CCCC", 30));  // length 4
@@ -409,7 +409,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 2));
             unit.persons.add(new Person("B", 3));
             unit.persons.add(new Person("C", 4));
@@ -436,7 +436,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -485,7 +485,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -510,7 +510,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             instance.fire();
@@ -536,7 +536,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -561,7 +561,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -587,7 +587,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 20));
             unit.persons.add(new Person("Bob", 40));
             instance.fire();
@@ -828,7 +828,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 10));
             unit.persons.add(new Person("B", 20));
             unit.persons.add(new Person("C", 30));
@@ -855,7 +855,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 10));
             unit.persons.add(new Person("B", 20));
             unit.persons.add(new Person("C", 30));
@@ -887,7 +887,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -913,7 +913,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -940,7 +940,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -968,7 +968,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             DataHandle h1 = unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -1001,7 +1001,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -1030,7 +1030,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             DataHandle h1 = unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));
@@ -1063,7 +1063,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 1));
             unit.persons.add(new Person("Bob", 2));
             unit.orders.add(new Order("O1", 1, 100));
@@ -1091,7 +1091,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 1));
             unit.persons.add(new Person("Bob", 2));
             unit.orders.add(new Order("O1", 1, 100));
@@ -1119,7 +1119,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 1));
             unit.persons.add(new Person("Bob", 2));
             unit.orders.add(new Order("O1", 1, 100));
@@ -1149,7 +1149,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 1));
             unit.persons.add(new Person("Bob", 2));
             unit.orders.add(new Order("O1", 1, 100));
@@ -1180,7 +1180,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 1));
             unit.persons.add(new Person("Bob", 2));
             unit.orders.add(new Order("O1", 1, 100));
@@ -1207,7 +1207,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("A", 20));
             unit.persons.add(new Person("B", 40));
             unit.persons.add(new Person("C", 60));

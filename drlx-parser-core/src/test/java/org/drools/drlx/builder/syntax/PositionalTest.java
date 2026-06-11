@@ -32,7 +32,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.locations.add(new Location("paris", "Belleville"));
             unit.locations.add(new Location("paris", "Montmartre"));
             unit.locations.add(new Location("london", "Soho"));
@@ -58,7 +58,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.locations.add(new Location("paris", "Belleville"));
             unit.locations.add(new Location("paris", "Montmartre"));
             unit.locations.add(new Location("london", "Soho"));
@@ -84,7 +84,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.locations.add(new Location("paris", "Belleville"));
             unit.locations.add(new Location("paris", "Montmartre"));
             unit.locations.add(new Location("london", "Soho"));
@@ -137,7 +137,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("paris", 30));
             unit.locations.add(new Location("paris", "Belleville"));
             unit.locations.add(new Location("london", "Soho"));

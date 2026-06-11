@@ -31,7 +31,7 @@ abstract class DrlxBuilderTestSupport {
         }
     }
 
-    protected static void withInstance(String rule,
+    protected static void withMyUnitInstance(String rule,
             TriConsumer<DrlxRuleUnitInstance<MyUnit>, MyUnit, TrackingAgendaEventListener> test) {
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
         MyUnit unit = new MyUnit();
@@ -42,7 +42,7 @@ abstract class DrlxBuilderTestSupport {
         }
     }
 
-    protected static void withCreditInstance(String rule,
+    protected static void withCreditUnitInstance(String rule,
             TriConsumer<DrlxRuleUnitInstance<CreditUnit>, CreditUnit, TrackingAgendaEventListener> test) {
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
         CreditUnit unit = new CreditUnit();

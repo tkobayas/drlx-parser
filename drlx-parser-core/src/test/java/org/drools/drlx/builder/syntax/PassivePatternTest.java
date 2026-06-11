@@ -40,7 +40,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // 1. Reactive-side data first. No person yet — no match.
             unit.locations.add(new Location("paris", "centre"));
             assertThat(instance.fire()).isEqualTo(0);
@@ -75,7 +75,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Insert passive-side first — match is pending in memory
             // but rule does not wake.
             unit.persons.add(new Person("Alice", 30));
@@ -107,7 +107,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.locations.add(new Location("paris", "centre"));
             assertThat(instance.fire()).isEqualTo(0);
 

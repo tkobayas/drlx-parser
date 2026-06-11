@@ -204,7 +204,7 @@ class QueryTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(source, (instance, unit, listener) -> {
+        withMyUnitInstance(source, (instance, unit, listener) -> {
             // 1. Reactive side first — no query match yet, no fire
             unit.locations.add(new Location("paris", "centre"));
             assertThat(instance.fire()).isEqualTo(0);
@@ -240,7 +240,7 @@ class QueryTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(source, (instance, unit, listener) -> {
+        withMyUnitInstance(source, (instance, unit, listener) -> {
             // Passive side first — no fire
             unit.persons.add(new Person("Alice", 30));
             assertThat(instance.fire()).isEqualTo(0);

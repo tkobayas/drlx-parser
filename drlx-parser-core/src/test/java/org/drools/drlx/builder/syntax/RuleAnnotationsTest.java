@@ -51,7 +51,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 30));
 
             final int firedCount = instance.fire();

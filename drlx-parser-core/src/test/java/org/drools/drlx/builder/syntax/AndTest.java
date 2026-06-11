@@ -27,7 +27,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             assertThat(instance.fire()).isZero();
 
             // Adult only → AND unsatisfied (no Bob yet).
@@ -61,7 +61,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             assertThat(instance.fire()).isZero();
 
             unit.persons.add(new Person("Alice", 30));
@@ -87,7 +87,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 
@@ -109,7 +109,7 @@ class AndTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

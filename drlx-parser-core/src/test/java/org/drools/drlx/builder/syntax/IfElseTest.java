@@ -31,7 +31,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("budget", Rates.LOW));
@@ -44,7 +44,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
     void sameNameBindingFlowsToBranchSpecificProduct_lowOnlyHigh() {
         // LOW customer + only HIGH product → matches the LOW branch only.
         String rule = sameNameBindingRule();
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("luxury", Rates.HIGH));
             assertThat(instance.fire()).isEqualTo(1);
@@ -55,7 +55,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
     void sameNameBindingFlowsToBranchSpecificProduct_lowOnlyLow_doesNotFire() {
         // LOW customer + only LOW product → LOW branch needs HIGH product, no match.
         String rule = sameNameBindingRule();
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("budget", Rates.LOW));
             assertThat(instance.fire()).isZero();
@@ -105,7 +105,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p1 + " " + p2); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("standard", Rates.MEDIUM));
@@ -134,7 +134,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("standard", Rates.MEDIUM));
             assertThat(instance.fire()).isEqualTo(1);
@@ -165,7 +165,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.LOW));
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("standard", Rates.MEDIUM));
@@ -199,7 +199,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             Customer alice = new Customer("Alice", Rating.HIGH);   // initial: else branch
             DataHandle handle = unit.customers.add(alice);
             unit.products.add(new Product("luxury", Rates.HIGH));
@@ -234,7 +234,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Carol", Rating.HIGH));    // matches no branch
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("standard", Rates.MEDIUM));
@@ -265,7 +265,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Alice", Rating.MEDIUM));
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("standard", Rates.MEDIUM));
@@ -295,7 +295,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     do { System.out.println(c + " " + p); }
                 }
                 """;
-        withCreditInstance(rule, (instance, unit, listener) -> {
+        withCreditUnitInstance(rule, (instance, unit, listener) -> {
             unit.customers.add(new Customer("Bob", Rating.HIGH));
             unit.products.add(new Product("luxury", Rates.HIGH));
             unit.products.add(new Product("budget", Rates.LOW));

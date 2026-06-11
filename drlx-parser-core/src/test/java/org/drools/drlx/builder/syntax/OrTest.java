@@ -26,7 +26,7 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             assertThat(instance.fire()).isZero();
 
             unit.seniors.add(new Person("Grandpa", 75));
@@ -54,7 +54,7 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.seniors.add(new Person("Grandpa", 75));
             unit.juniors.add(new Person("Kid", 10));
 
@@ -83,7 +83,7 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Middle-aged → neither branch.
             unit.seniors.add(new Person("Middle1", 40));
             unit.juniors.add(new Person("Middle2", 40));
@@ -110,7 +110,7 @@ class OrTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("parse error");
     }
 }

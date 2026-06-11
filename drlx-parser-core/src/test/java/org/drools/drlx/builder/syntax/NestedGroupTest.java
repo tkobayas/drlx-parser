@@ -28,7 +28,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // First branch satisfied: adult in persons1, young adult in persons2.
             unit.persons1.add(new Person("Alice", 25));
             unit.persons2.add(new Person("Bob", 22));
@@ -59,7 +59,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Adult with no Bob → fires.
             unit.persons.add(new Person("Alice", 30));
             assertThat(instance.fire()).isEqualTo(1);
@@ -92,7 +92,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Empty — NOT satisfied (vacuously), rule fires once.
             assertThat(instance.fire()).isEqualTo(1);
 
@@ -130,7 +130,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Alice and Bob in persons1; only Alice in persons2.
             // → For Bob, no match in persons2 → fires.
             // → For Alice, match in persons2 → does not fire.

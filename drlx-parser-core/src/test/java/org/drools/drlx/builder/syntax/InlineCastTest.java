@@ -27,7 +27,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Insert a plain Person — should NOT match
             unit.persons.add(new Person("Alice", 30));
             // Insert an Employee with matching department — should match
@@ -59,7 +59,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 30));
             unit.persons.add(new Employee("Bob", 25, "Engineering"));
             unit.persons.add(new Employee("Carol", 28, "Marketing"));

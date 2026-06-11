@@ -25,7 +25,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 30));
             unit.persons.add(new Person("Charlie", 10));
             assertThat(instance.fire()).isEqualTo(1);
@@ -48,7 +48,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 30));
             assertThat(instance.fire()).isEqualTo(1);
         });
@@ -71,7 +71,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.objects.add(new Car("ABC", 120));
             unit.objects.add(new Car("XYZ", 40));
             assertThat(instance.fire()).isEqualTo(1);
@@ -91,7 +91,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("'unit'");
     }
 
@@ -110,7 +110,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("Unit class 'MyUnit' not found")
                 .hasMessageContaining("import");
     }
@@ -131,7 +131,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("not on classpath");
     }
 
@@ -151,7 +151,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("raw DataSource")
                 .hasMessageContaining("persons");
     }
@@ -172,7 +172,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("entry point 'strangers' is not declared")
                 .hasMessageContaining("MyUnit");
     }
@@ -194,7 +194,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* unreachable */ }))
                 .hasMessageContaining("does not match unit-class declaration");
     }
 }

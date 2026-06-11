@@ -21,7 +21,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 40));
             unit.persons.add(new Person("Bob", 25));
             assertThat(instance.fire()).isEqualTo(1);
@@ -43,7 +43,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p + " > " + q); }
                 }
                 """;
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 40));
             unit.persons.add(new Person("Bob", 25));
             // Pairs: (Alice,Alice) eq, (Alice,Bob) Alice>Bob ✓, (Bob,Alice) Bob<Alice ✗, (Bob,Bob) eq
@@ -73,7 +73,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             Person alice = new Person("Alice", 25);
             DataHandle handle = unit.persons.add(alice);
             assertThat(instance.fire()).isZero();
@@ -97,7 +97,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     do { System.out.println(p); }
                 }
                 """;
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons.add(new Person("Alice", 40));
             assertThat(instance.fire()).isZero();
         });

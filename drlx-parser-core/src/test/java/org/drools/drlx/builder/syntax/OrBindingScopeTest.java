@@ -30,7 +30,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // First branch satisfied: Alice in persons1 and persons2.
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Alice", 25));
@@ -63,7 +63,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Bob", 40));
 
@@ -97,7 +97,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        assertThatThrownBy(() -> withInstance(rule, (instance, unit, listener) -> { /* never runs */ }))
+        assertThatThrownBy(() -> withMyUnitInstance(rule, (instance, unit, listener) -> { /* never runs */ }))
                 .isInstanceOf(RuntimeException.class);
     }
 }

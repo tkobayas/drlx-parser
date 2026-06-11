@@ -26,7 +26,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons1.add(new Person("Alice", 30));
             unit.persons1.add(new Person("Bob", 40));
             unit.persons2.add(new Person("Alice", 25));
@@ -57,7 +57,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Alice", 25));
 
@@ -85,7 +85,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Alice", 25));
             unit.persons2.add(new Person("Bob", 40));
@@ -114,7 +114,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Bob", 40));
 

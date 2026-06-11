@@ -26,7 +26,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.containers.add(new Container("match", List.of("apple", "banana"), Map.of()));
             unit.containers.add(new Container("noMatch", List.of("cherry", "banana"), Map.of()));
             assertThat(instance.fire()).isEqualTo(1);
@@ -49,7 +49,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.containers.add(new Container("match", List.of(), Map.of("color", "red")));
             unit.containers.add(new Container("noMatch", List.of(), Map.of("color", "blue")));
             assertThat(instance.fire()).isEqualTo(1);
@@ -72,7 +72,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             unit.containers.add(new Container("match", List.of("apple", "banana"), Map.of()));
             unit.containers.add(new Container("noMatch", List.of("apple", "cherry"), Map.of()));
             assertThat(instance.fire()).isEqualTo(1);

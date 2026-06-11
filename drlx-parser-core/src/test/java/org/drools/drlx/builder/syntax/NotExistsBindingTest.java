@@ -26,7 +26,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Alice in persons1, no Alice in persons2 → no join exists → fires.
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Bob", 40));
@@ -54,7 +54,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
                 }
                 """;
 
-        withInstance(rule, (instance, unit, listener) -> {
+        withMyUnitInstance(rule, (instance, unit, listener) -> {
             // Alice in both → join exists → fires.
             unit.persons1.add(new Person("Alice", 30));
             unit.persons2.add(new Person("Alice", 25));
