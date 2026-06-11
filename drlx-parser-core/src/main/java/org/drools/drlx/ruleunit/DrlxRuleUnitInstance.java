@@ -13,6 +13,7 @@ import org.drools.ruleunits.api.RuleUnitInstance;
 import org.drools.ruleunits.impl.EntryPointDataProcessor;
 import org.drools.ruleunits.impl.sessions.RuleUnitExecutorImpl;
 import org.kie.api.KieBase;
+import org.kie.api.event.rule.AgendaEventListener;
 import org.kie.api.runtime.rule.AgendaFilter;
 import org.kie.api.runtime.rule.QueryResults;
 import org.kie.api.time.SessionClock;
@@ -88,6 +89,10 @@ public final class DrlxRuleUnitInstance<T extends RuleUnitData> implements RuleU
                 // Global not declared in this rule unit — same convention as upstream bind.
             }
         }
+    }
+
+    public void addEventListener(AgendaEventListener listener) {
+        reteEvaluator.getAgendaEventSupport().addEventListener(listener);
     }
 
     @Override
