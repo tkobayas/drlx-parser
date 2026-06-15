@@ -104,7 +104,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
         List<RuleIR> rules = new ArrayList<>();
         if (ctx.ruleDeclaration() != null) {
-            ctx.ruleDeclaration().forEach(ruleCtx -> rules.add(buildRule(ruleCtx, annotationImports)));
+            ctx.ruleDeclaration().forEach(ruleCtx -> rules.addAll(buildRule(ruleCtx, annotationImports)));
         }
 
         String unitName = "";
@@ -115,8 +115,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return new CompilationUnitIR(packageName, unitName, List.copyOf(imports), List.copyOf(rules));
     }
 
-    private RuleIR buildRule(DrlxParser.RuleDeclarationContext ctx,
-                             Map<String, String> annotationImports) {
+    private List<RuleIR> buildRule(DrlxParser.RuleDeclarationContext ctx,
+                                   Map<String, String> annotationImports) {
         String name = ctx.identifier().getText();
         List<RuleParameterIR> parameters = List.of();
         if (ctx.ruleParameterList() != null) {
@@ -134,7 +134,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<AccumulatorIR> pendingAccs = new ArrayList<>();
         int inlineCounter = 0;
         if (ctx.ruleBody() != null) {
-            for (DrlxParser.RuleItemContext itemCtx : ctx.ruleBody().ruleItem()) {
+            List<DrlxParser.RuleItemContext> ruleItems = ctx.ruleBody().ruleItem();
+            for (int idx = 0; idx < ruleItems.size(); idx++) {
+                DrlxParser.RuleItemContext itemCtx = ruleItems.get(idx);
                 if (itemCtx.accumulateItem() != null) {
                     DrlxParser.AccumulateCallContext call = itemCtx.accumulateItem().accumulateCall();
                     if (call.inlineFromOopath() != null) {
@@ -215,6 +217,24 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                 } else if (itemCtx.testElement() != null) {
                     lhs.add(buildTestElement(itemCtx.testElement()));
                 } else if (itemCtx.conditionalBranch() != null) {
+                    if (isFormB(itemCtx.conditionalBranch())) {
+                        flushPending(lhs, pendingPattern, pendingAccs);
+                        if (rhs != null) {
+                            throw new RuntimeException(
+                                    "Rule with per-branch consequences cannot also have a trailing `do` consequence");
+                        }
+                        if (idx < ruleItems.size() - 1) {
+                            if (ruleItems.get(idx + 1).ruleConsequence() != null) {
+                                throw new RuntimeException(
+                                        "Rule with per-branch consequences cannot also have a trailing `do` consequence");
+                            }
+                            throw new RuntimeException(
+                                    "Items after a per-branch if/else are not supported");
+                        }
+                        return buildConditionalBranchFormB(
+                                itemCtx.conditionalBranch(),
+                                List.copyOf(lhs), annotations, parameters, name);
+                    }
                     lhs.add(buildConditionalBranch(itemCtx.conditionalBranch()));
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
@@ -222,7 +242,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
             flushPending(lhs, pendingPattern, pendingAccs);
         }
-        return new RuleIR(name, annotations, parameters, List.copyOf(lhs), rhs);
+        return List.of(new RuleIR(name, annotations, parameters, List.copyOf(lhs), rhs));
     }
 
     private List<RuleAnnotationIR> buildRuleAnnotations(DrlxParser.RuleDeclarationContext ctx,
@@ -868,14 +888,39 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return new GroupElementIR(GroupElementIR.Kind.OR, List.copyOf(orChildren));
     }
 
+    private boolean isFormB(DrlxParser.ConditionalBranchContext ctx) {
+        for (DrlxParser.BranchBodyContext body : ctx.branchBody()) {
+            for (DrlxParser.BranchItemContext item : body.branchItem()) {
+                if (item.branchConsequence() != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private List<RuleIR> buildConditionalBranchFormB(
+            DrlxParser.ConditionalBranchContext ctx,
+            List<LhsItemIR> commonPrefix,
+            List<RuleAnnotationIR> annotations,
+            List<RuleParameterIR> parameters,
+            String ruleName) {
+        throw new UnsupportedOperationException("Form B not implemented yet");
+    }
+
     private LhsItemIR buildBranchItem(DrlxParser.BranchItemContext ctx) {
         if (ctx.boundOopath() != null)        return buildPatternFromBoundOopath(ctx.boundOopath());
+        if (ctx.oopathExpression() != null)   return buildPatternFromOopath(ctx.oopathExpression());
         if (ctx.notElement() != null)         return buildNotElement(ctx.notElement());
         if (ctx.existsElement() != null)      return buildExistsElement(ctx.existsElement());
         if (ctx.andElement() != null)         return buildAndElement(ctx.andElement());
         if (ctx.orElement() != null)          return buildOrElement(ctx.orElement());
         if (ctx.testElement() != null)        return buildTestElement(ctx.testElement());
         if (ctx.conditionalBranch() != null)  return buildConditionalBranch(ctx.conditionalBranch());
+        if (ctx.branchConsequence() != null) {
+            throw new IllegalArgumentException(
+                    "branchConsequence in buildBranchItem — should be handled by buildConditionalBranchFormB");
+        }
         throw new IllegalArgumentException("Unsupported branch item: " + ctx.getText());
     }
 
