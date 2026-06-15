@@ -905,7 +905,85 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             List<RuleAnnotationIR> annotations,
             List<RuleParameterIR> parameters,
             String ruleName) {
-        throw new UnsupportedOperationException("Form B not implemented yet");
+
+        int conditionCount = ctx.expression().size();
+        int bodyCount = ctx.branchBody().size();
+        boolean hasFinalElse = bodyCount > conditionCount;
+
+        List<RuleIR> syntheticRules = new ArrayList<>();
+        List<String> priorConditions = new ArrayList<>();
+
+        for (int i = 0; i < bodyCount; i++) {
+            boolean isElse = (i == bodyCount - 1 && hasFinalElse);
+            String condition = isElse ? null : getText(ctx.expression(i));
+            DrlxParser.BranchBodyContext body = ctx.branchBody(i);
+
+            if (body.branchItem().isEmpty()) {
+                throw new RuntimeException("empty branch body");
+            }
+
+            List<LhsItemIR> branchLhs = new ArrayList<>();
+            List<String> consequenceTexts = new ArrayList<>();
+            boolean seenConsequence = false;
+
+            for (DrlxParser.BranchItemContext bi : body.branchItem()) {
+                if (bi.branchConsequence() != null) {
+                    seenConsequence = true;
+                    consequenceTexts.add(extractBranchConsequence(bi.branchConsequence()));
+                } else {
+                    if (seenConsequence) {
+                        throw new RuntimeException(
+                                "Action statements must follow all patterns and group elements in a branch body");
+                    }
+                    if (bi.conditionalBranch() != null && isFormB(bi.conditionalBranch())) {
+                        throw new RuntimeException(
+                                "Nested per-branch consequences are not supported; "
+                                + "extract the inner if/else into a separate rule");
+                    }
+                    branchLhs.add(buildBranchItem(bi));
+                }
+            }
+
+            if (consequenceTexts.isEmpty()) {
+                throw new RuntimeException(
+                        "Form B branch must contain at least one action statement; "
+                        + "use Form A with a trailing `do` for pattern-only branches");
+            }
+
+            List<LhsItemIR> fullLhs = new ArrayList<>(commonPrefix);
+            for (String prior : priorConditions) {
+                String negated = "!(" + prior + ")";
+                fullLhs.add(new EvalIR(negated, extractIdentifiers(negated)));
+            }
+            if (condition != null) {
+                fullLhs.add(new EvalIR(condition, extractIdentifiers(condition)));
+            }
+            fullLhs.addAll(branchLhs);
+
+            StringBuilder combined = new StringBuilder();
+            for (String text : consequenceTexts) {
+                String trimmed = text.trim();
+                if (!trimmed.endsWith(";")) {
+                    trimmed += ";";
+                }
+                if (combined.length() > 0) {
+                    combined.append(" ");
+                }
+                combined.append(trimmed);
+            }
+
+            syntheticRules.add(new RuleIR(
+                    ruleName + "$" + i,
+                    annotations, parameters,
+                    List.copyOf(fullLhs),
+                    new ConsequenceIR(combined.toString())));
+
+            if (condition != null) {
+                priorConditions.add(condition);
+            }
+        }
+
+        return syntheticRules;
     }
 
     private LhsItemIR buildBranchItem(DrlxParser.BranchItemContext ctx) {
@@ -1013,6 +1091,13 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {
         String statementText = getText(ctx.statement());
         return trimBraces(statementText);
+    }
+
+    private String extractBranchConsequence(DrlxParser.BranchConsequenceContext ctx) {
+        if (ctx.DO() != null) {
+            return trimBraces(getText(ctx.statement()));
+        }
+        return getText(ctx.expression());
     }
 
     private static String extractEntryPointFromOopathCtx(DrlxParser.OopathExpressionContext ctx) {
