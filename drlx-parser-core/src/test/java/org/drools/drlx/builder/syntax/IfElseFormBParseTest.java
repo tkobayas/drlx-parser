@@ -260,6 +260,143 @@ class IfElseFormBParseTest {
         assertThat(rules.get(0).name()).isEqualTo("R");
     }
 
+    @Test
+    void error_formBBranchWithNoConsequence() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p : /products[ rate == Rates.HIGH ],
+                        do { System.out.println(c); }
+                    } else {
+                        var p : /products[ rate == Rates.LOW ]
+                    }
+                }
+                """;
+        assertThatThrownBy(() -> parseRules(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("at least one action statement");
+    }
+
+    @Test
+    void error_formBPlusTrailingDo() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p : /products[ rate == Rates.HIGH ],
+                        do { System.out.println(c); }
+                    } else {
+                        var p : /products[ rate == Rates.LOW ],
+                        do { System.out.println(c); }
+                    },
+                    do { System.out.println("trailing"); }
+                }
+                """;
+        assertThatThrownBy(() -> parseRules(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("trailing");
+    }
+
+    @Test
+    void error_consequenceBeforePattern() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        do { System.out.println("before pattern"); },
+                        var p : /products[ rate == Rates.HIGH ]
+                    } else {
+                        var p : /products[ rate == Rates.LOW ],
+                        do { System.out.println(c); }
+                    }
+                }
+                """;
+        assertThatThrownBy(() -> parseRules(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("must follow all patterns");
+    }
+
+    @Test
+    void error_itemsAfterFormBConditionalBranch() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        var p : /products[ rate == Rates.HIGH ],
+                        do { System.out.println(c); }
+                    } else {
+                        var p : /products[ rate == Rates.LOW ],
+                        do { System.out.println(c); }
+                    },
+                    var extra : /products[ rate == Rates.MEDIUM ],
+                }
+                """;
+        assertThatThrownBy(() -> parseRules(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("not supported");
+    }
+
+    @Test
+    void error_nestedFormBInsideFormB() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Customer;
+                import org.drools.drlx.domain.Product;
+                import org.drools.drlx.domain.Rating;
+                import org.drools.drlx.domain.Rates;
+                import org.drools.drlx.ruleunit.CreditUnit;
+                unit CreditUnit;
+                rule R {
+                    var c : /customers,
+                    if (c.creditRating == Rating.LOW) {
+                        if (c.name == "Alice") {
+                            var p : /products[ rate == Rates.HIGH ],
+                            do { System.out.println("nested"); }
+                        } else {
+                            var p : /products[ rate == Rates.MEDIUM ],
+                            do { System.out.println("nested else"); }
+                        },
+                        do { System.out.println("outer"); }
+                    } else {
+                        var p : /products[ rate == Rates.LOW ],
+                        do { System.out.println("else"); }
+                    }
+                }
+                """;
+        assertThatThrownBy(() -> parseRules(rule))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("Nested per-branch consequences are not supported");
+    }
+
     private static List<RuleIR> parseRules(String source) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(source));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
