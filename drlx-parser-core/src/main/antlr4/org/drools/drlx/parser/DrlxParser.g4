@@ -71,7 +71,7 @@ ruleItem
     | andElement ','
     | orElement ','
     | testElement ','
-    | conditionalBranch ','
+    | conditionalBranch ','?
     | ruleConsequence
     ;
 
@@ -122,9 +122,10 @@ testElement
     : TEST expression
     ;
 
-// 'if' / 'else if' / 'else' branching, Form A — DRLXXXX §"if/else".
-// Single trailing `do` consequence owned by the enclosing rule. CE
-// terminator `,` (after the whole construct) owned by ruleItem.
+// 'if' / 'else if' / 'else' branching — DRLXXXX §"if/else".
+// Form A: pattern-only branches with a single trailing `do` at rule level.
+// Form B: per-branch consequences — each branch contains `do`/bare actions.
+// CE terminator `,` (after the whole construct) owned by ruleItem.
 conditionalBranch
     : IF '(' expression ')' branchBody
       ( ELSE IF '(' expression ')' branchBody )*
@@ -140,17 +141,28 @@ branchBody
     ;
 
 // Branch items mirror `ruleItem` minus the trailing `,` and minus
-// `ruleConsequence` (single trailing `do` lives at the rule level for
-// Form A). `boundOopath` stands in for `rulePattern` (which would carry
-// a comma).
+// `ruleConsequence` (Form A). Form B consequences use `branchConsequence`.
+// `boundOopath` MUST come before `branchConsequence` / `oopathExpression`:
+// ANTLR picks first match, and bound form has a strictly more constrained
+// prefix than a bare expression or oopath.
 branchItem
     : boundOopath
+    | oopathExpression
     | notElement
     | existsElement
     | andElement
     | orElement
     | testElement
     | conditionalBranch
+    | branchConsequence
+    ;
+
+// Per-branch consequence (Form B). `DO statement` for explicit form
+// (typically a block: `do { stmt; stmt; }`). Bare `expression` for
+// single-expression actions without semicolons.
+branchConsequence
+    : DO statement
+    | expression
     ;
 
 // Bound pattern body without trailing `,`. Reused by `rulePattern`
