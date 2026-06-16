@@ -95,4 +95,73 @@ class WindowAccumulateTest {
             assertThat(unit.results).containsExactly(400.0);
         }
     }
+
+    @Test
+    void accKeywordTimeWindowAvg() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | time[5s],
+                        var avgAmount = avg(w.amount)),
+                    do { results.add(avgAmount); }
+                }
+                """;
+        KieBase kieBase = buildWithStreamMode(drlx);
+
+        SessionConfiguration sessionConfig = RuleBaseFactory.newKnowledgeSessionConfiguration()
+                .as(SessionConfiguration.KEY);
+        sessionConfig.setClockType(ClockType.PSEUDO_CLOCK);
+
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
+                     DrlxRuleUnitInstance.create(kieBase, unit, sessionConfig)) {
+            SessionPseudoClock clock = instance.getClock();
+
+            unit.withdrawals.append(new Withdrawal("A1", 100.0));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0));
+
+            clock.advanceTime(6, TimeUnit.SECONDS);
+
+            unit.withdrawals.append(new Withdrawal("A4", 400.0));
+            instance.fire();
+
+            assertThat(unit.results).containsExactly(400.0);
+        }
+    }
+
+    @Test
+    void accKeywordLengthWindowAvg() {
+        String drlx = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Withdrawal;
+                import org.drools.drlx.ruleunit.WithdrawalUnit;
+                unit WithdrawalUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | length[3],
+                        var avgAmount = avg(w.amount)),
+                    do { results.add(avgAmount); }
+                }
+                """;
+        KieBase kieBase = buildWithStreamMode(drlx);
+
+        WithdrawalUnit unit = new WithdrawalUnit();
+
+        try (DrlxRuleUnitInstance<WithdrawalUnit> instance =
+                     DrlxRuleUnitInstance.create(kieBase, unit)) {
+            unit.withdrawals.append(new Withdrawal("A1", 100.0));
+            unit.withdrawals.append(new Withdrawal("A2", 200.0));
+            unit.withdrawals.append(new Withdrawal("A3", 300.0));
+            unit.withdrawals.append(new Withdrawal("A4", 400.0));
+            unit.withdrawals.append(new Withdrawal("A5", 500.0));
+            instance.fire();
+
+            // length[3] keeps only last 3 events: 300, 400, 500 → avg = 400.0
+            assertThat(unit.results).containsExactly(400.0);
+        }
+    }
 }
