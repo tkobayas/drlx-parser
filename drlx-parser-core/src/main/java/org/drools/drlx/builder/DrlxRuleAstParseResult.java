@@ -25,6 +25,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.WindowDeclarationIR;
 import org.drools.drlx.builder.proto.DrlxRuleAstProto;
 
 /**
@@ -51,6 +52,12 @@ public final class DrlxRuleAstParseResult {
                         .setUnitName(data.unitName() == null ? "" : data.unitName());
 
         data.imports().forEach(builder::addImports);
+        for (WindowDeclarationIR windowDecl : data.windowDeclarations()) {
+            builder.addWindowDeclarations(DrlxRuleAstProto.WindowDeclarationParseResult.newBuilder()
+                    .setName(windowDecl.name())
+                    .setPattern(patternToProto(windowDecl.pattern()))
+                    .build());
+        }
         data.rules().forEach(rule -> builder.addRules(toProtoRule(rule)));
 
         Files.createDirectories(outputDir);
@@ -101,10 +108,15 @@ public final class DrlxRuleAstParseResult {
                     rhs));
         }
 
+        List<WindowDeclarationIR> windowDeclarations = new ArrayList<>(parseResult.getWindowDeclarationsCount());
+        for (DrlxRuleAstProto.WindowDeclarationParseResult wdPR : parseResult.getWindowDeclarationsList()) {
+            windowDeclarations.add(new WindowDeclarationIR(wdPR.getName(), patternFromProto(wdPR.getPattern())));
+        }
+
         return new CompilationUnitIR(parseResult.getPackageName(),
                 parseResult.getUnitName(),
                 List.copyOf(parseResult.getImportsList()),
-                List.of(),
+                List.copyOf(windowDeclarations),
                 List.copyOf(rules));
     }
 

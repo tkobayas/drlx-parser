@@ -11,6 +11,12 @@ message CompilationUnitParseResult {
   repeated string imports = 3;
   repeated RuleParseResult rules = 4;
   string unit_name = 5;
+  repeated WindowDeclarationParseResult window_declarations = 6;
+}
+
+message WindowDeclarationParseResult {
+  string name = 1;
+  PatternParseResult pattern = 2;
 }
 
 message RuleParseResult {
