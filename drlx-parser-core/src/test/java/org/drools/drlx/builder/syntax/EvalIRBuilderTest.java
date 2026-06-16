@@ -57,6 +57,7 @@ class EvalIRBuilderTest {
                 "org.drools.drlx.parser",
                 "MyUnit",
                 List.of("org.drools.drlx.domain.Person", "org.drools.drlx.ruleunit.MyUnit"),
+                List.of(),
                 List.of(rule));
 
         KieBase kieBase = buildFromIr(unit);

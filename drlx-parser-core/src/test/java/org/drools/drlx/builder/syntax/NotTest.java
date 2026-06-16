@@ -94,6 +94,7 @@ class NotTest extends DrlxBuilderTestSupport {
                 "org.drools.drlx.parser",
                 "MyUnit",
                 List.of("org.drools.drlx.domain.Person", "org.drools.drlx.ruleunit.MyUnit"),
+                List.of(),
                 List.of(ruleIR));
 
         Path tmpDir = Files.createTempDirectory("drlx-proto-roundtrip");

@@ -25,6 +25,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR.Kind;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.TemporalConditionIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.WindowDeclarationIR;
 import org.drools.drlx.parser.DrlxParser;
 import org.drools.drlx.parser.DrlxParserBaseVisitor;
 
@@ -102,6 +103,11 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             }
         }
 
+        List<WindowDeclarationIR> windowDeclarations = new ArrayList<>();
+        if (ctx.windowDeclaration() != null) {
+            ctx.windowDeclaration().forEach(wCtx -> windowDeclarations.add(buildWindowDeclaration(wCtx)));
+        }
+
         List<RuleIR> rules = new ArrayList<>();
         if (ctx.ruleDeclaration() != null) {
             ctx.ruleDeclaration().forEach(ruleCtx -> rules.addAll(buildRule(ruleCtx, annotationImports)));
@@ -112,7 +118,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             unitName = ctx.unitDeclaration().qualifiedName().getText();
         }
 
-        return new CompilationUnitIR(packageName, unitName, List.copyOf(imports), List.of(), List.copyOf(rules));
+        return new CompilationUnitIR(packageName, unitName, List.copyOf(imports),
+                                      List.copyOf(windowDeclarations), List.copyOf(rules));
     }
 
     private List<RuleIR> buildRule(DrlxParser.RuleDeclarationContext ctx,
@@ -1185,6 +1192,28 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         if (c.andElement() != null)       return buildAndElement(c.andElement());
         if (c.orElement() != null)        return buildOrElement(c.orElement());
         throw new IllegalArgumentException("Unsupported group child: " + c.getText());
+    }
+
+    private WindowDeclarationIR buildWindowDeclaration(DrlxParser.WindowDeclarationContext ctx) {
+        String name = ctx.identifier().getText();
+        DrlxParser.OopathExpressionContext oopathCtx = ctx.oopathExpression();
+        String entryPoint = extractEntryPointFromOopathCtx(oopathCtx);
+        String castTypeName = extractCastType(oopathCtx);
+        List<String> conditions = extractConditions(oopathCtx);
+        List<TemporalConditionIR> temporalConditions = extractTemporalConditions(oopathCtx);
+        List<String> positionalArgs = extractPositionalArgs(oopathCtx);
+        boolean passive = oopathCtx.QUESTION() != null;
+        List<String> watchedProperties = extractWatchedProperties(oopathCtx);
+        String windowType = ctx.windowFilter().identifier().getText();
+        if (!"length".equals(windowType) && !"time".equals(windowType)) {
+            throw new IllegalArgumentException("Unknown window type: " + windowType
+                    + ". Expected 'length' or 'time'.");
+        }
+        String windowParameter = ctx.windowFilter().windowParam().getText();
+        PatternIR pattern = new PatternIR("", "", entryPoint, conditions, temporalConditions,
+                                           castTypeName, positionalArgs, passive, watchedProperties,
+                                           windowType, windowParameter);
+        return new WindowDeclarationIR(name, pattern);
     }
 
     private PatternIR buildPatternFromBoundOopath(DrlxParser.BoundOopathContext ctx) {

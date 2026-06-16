@@ -184,12 +184,78 @@ class WindowVisitorTest {
         assertThat(window.getSize()).isEqualTo(expected);
     }
 
+    @Test
+    void parsesNamedWindowDeclaration() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                window WithdrawalWindow {
+                    /withdrawals | time[10s]
+                }
+                rule R1 {
+                    var w : /withdrawals,
+                    do {}
+                }
+                """;
+        var unit = parseUnit(drlx);
+        assertThat(unit.windowDeclarations()).hasSize(1);
+        var windowDecl = unit.windowDeclarations().get(0);
+        assertThat(windowDecl.name()).isEqualTo("WithdrawalWindow");
+        assertThat(windowDecl.pattern().entryPoint()).isEqualTo("withdrawals");
+        assertThat(windowDecl.pattern().windowType()).isEqualTo("time");
+        assertThat(windowDecl.pattern().windowParameter()).isEqualTo("10s");
+    }
+
+    @Test
+    void parsesNamedWindowWithConstraints() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                window GoldWithdrawalWindow {
+                    /withdrawals[customer == "GOLD"] | time[5s]
+                }
+                rule R1 {
+                    var w : /withdrawals,
+                    do {}
+                }
+                """;
+        var unit = parseUnit(drlx);
+        var windowDecl = unit.windowDeclarations().get(0);
+        assertThat(windowDecl.name()).isEqualTo("GoldWithdrawalWindow");
+        assertThat(windowDecl.pattern().conditions()).containsExactly("customer == \"GOLD\"");
+        assertThat(windowDecl.pattern().windowType()).isEqualTo("time");
+        assertThat(windowDecl.pattern().windowParameter()).isEqualTo("5s");
+    }
+
+    @Test
+    void parsesNamedLengthWindowDeclaration() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                window RecentWithdrawals {
+                    /withdrawals | length[5]
+                }
+                rule R1 {
+                    var w : /withdrawals,
+                    do {}
+                }
+                """;
+        var unit = parseUnit(drlx);
+        var windowDecl = unit.windowDeclarations().get(0);
+        assertThat(windowDecl.name()).isEqualTo("RecentWithdrawals");
+        assertThat(windowDecl.pattern().windowType()).isEqualTo("length");
+        assertThat(windowDecl.pattern().windowParameter()).isEqualTo("5");
+    }
+
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {
+        return parseUnit(drlx).rules().get(0);
+    }
+
+    private static DrlxRuleAstModel.CompilationUnitIR parseUnit(String drlx) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(drlx));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         DrlxParser parser = new DrlxParser(tokens);
         DrlxParser.DrlxCompilationUnitContext ctx = parser.drlxStart().drlxCompilationUnit();
-        var unit = new DrlxToRuleAstVisitor(tokens).visitDrlxCompilationUnit(ctx);
-        return unit.rules().get(0);
+        return new DrlxToRuleAstVisitor(tokens).visitDrlxCompilationUnit(ctx);
     }
 }
