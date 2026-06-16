@@ -236,6 +236,23 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                                 List.copyOf(lhs), annotations, parameters, name);
                     }
                     lhs.add(buildConditionalBranch(itemCtx.conditionalBranch()));
+                } else if (itemCtx.matchBranch() != null) {
+                    flushPending(lhs, pendingPattern, pendingAccs);
+                    if (rhs != null) {
+                        throw new RuntimeException(
+                                "Rule with per-case consequences cannot also have a trailing `do` consequence");
+                    }
+                    if (idx < ruleItems.size() - 1) {
+                        if (ruleItems.get(idx + 1).ruleConsequence() != null) {
+                            throw new RuntimeException(
+                                    "Rule with per-case consequences cannot also have a trailing `do` consequence");
+                        }
+                        throw new RuntimeException(
+                                "Items after a match element are not supported");
+                    }
+                    return buildMatchBranch(
+                            itemCtx.matchBranch(),
+                            List.copyOf(lhs), annotations, parameters, name);
                 } else {
                     throw new IllegalArgumentException("Unsupported rule item: " + itemCtx.getText());
                 }
@@ -986,6 +1003,135 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return syntheticRules;
     }
 
+    private List<RuleIR> buildMatchBranch(
+            DrlxParser.MatchBranchContext ctx,
+            List<LhsItemIR> commonPrefix,
+            List<RuleAnnotationIR> annotations,
+            List<RuleParameterIR> parameters,
+            String ruleName) {
+
+        String subjectText = getText(ctx.expression());
+
+        List<RuleIR> syntheticRules = new ArrayList<>();
+        List<String> priorConditions = new ArrayList<>();
+
+        for (int i = 0; i < ctx.matchCase().size(); i++) {
+            DrlxParser.MatchCaseContext caseCtx = ctx.matchCase(i);
+            String condition = buildMatchCondition(caseCtx.matchPattern(), subjectText);
+            DrlxParser.MatchCaseBodyContext body = caseCtx.matchCaseBody();
+
+            List<LhsItemIR> branchLhs = new ArrayList<>();
+            List<String> consequenceTexts = new ArrayList<>();
+
+            processCaseBody(body, branchLhs, consequenceTexts);
+
+            List<LhsItemIR> fullLhs = new ArrayList<>(commonPrefix);
+            for (String prior : priorConditions) {
+                String negated = "!(" + prior + ")";
+                fullLhs.add(new EvalIR(negated, extractIdentifiers(negated)));
+            }
+            fullLhs.add(new EvalIR(condition, extractIdentifiers(condition)));
+            fullLhs.addAll(branchLhs);
+
+            syntheticRules.add(new RuleIR(
+                    ruleName + "$" + syntheticRules.size(),
+                    annotations, parameters,
+                    List.copyOf(fullLhs),
+                    new ConsequenceIR(combineConsequences(consequenceTexts))));
+
+            priorConditions.add(condition);
+        }
+
+        if (ctx.matchDefault() != null) {
+            DrlxParser.MatchCaseBodyContext body = ctx.matchDefault().matchCaseBody();
+
+            List<LhsItemIR> branchLhs = new ArrayList<>();
+            List<String> consequenceTexts = new ArrayList<>();
+
+            processCaseBody(body, branchLhs, consequenceTexts);
+
+            List<LhsItemIR> fullLhs = new ArrayList<>(commonPrefix);
+            for (String prior : priorConditions) {
+                String negated = "!(" + prior + ")";
+                fullLhs.add(new EvalIR(negated, extractIdentifiers(negated)));
+            }
+            fullLhs.addAll(branchLhs);
+
+            syntheticRules.add(new RuleIR(
+                    ruleName + "$" + syntheticRules.size(),
+                    annotations, parameters,
+                    List.copyOf(fullLhs),
+                    new ConsequenceIR(combineConsequences(consequenceTexts))));
+        }
+
+        return syntheticRules;
+    }
+
+    private String buildMatchCondition(DrlxParser.MatchPatternContext patternCtx,
+                                        String subjectText) {
+        if (patternCtx.HASH() != null) {
+            String typeName = patternCtx.identifier().getText();
+            StringBuilder sb = new StringBuilder();
+            sb.append(subjectText).append(" instanceof ").append(typeName);
+            if (patternCtx.drlxExpression() != null && !patternCtx.drlxExpression().isEmpty()) {
+                for (DrlxParser.DrlxExpressionContext drlxExpr : patternCtx.drlxExpression()) {
+                    String constraintText = getText(drlxExpr);
+                    sb.append(" && ((").append(typeName).append(")").append(subjectText)
+                      .append(").").append(constraintText);
+                }
+            }
+            return sb.toString();
+        }
+        return subjectText + " == " + getText(patternCtx.expression());
+    }
+
+    private void processCaseBody(DrlxParser.MatchCaseBodyContext body,
+                                  List<LhsItemIR> branchLhs,
+                                  List<String> consequenceTexts) {
+        if (body.branchItem() != null && !body.branchItem().isEmpty()) {
+            boolean seenConsequence = false;
+            for (DrlxParser.BranchItemContext bi : body.branchItem()) {
+                if (bi.branchConsequence() != null) {
+                    seenConsequence = true;
+                    consequenceTexts.add(extractBranchConsequence(bi.branchConsequence()));
+                } else {
+                    if (seenConsequence) {
+                        throw new RuntimeException(
+                                "Action statements must follow all patterns and group elements in a match case body");
+                    }
+                    branchLhs.add(buildBranchItem(bi));
+                }
+            }
+            if (consequenceTexts.isEmpty()) {
+                throw new RuntimeException(
+                        "Match case must contain at least one action statement");
+            }
+        } else if (body.DO() != null) {
+            consequenceTexts.add(trimBraces(getText(body.statement())));
+        } else if (body.expression() != null) {
+            consequenceTexts.add(getText(body.expression()));
+        }
+        if (consequenceTexts.isEmpty()) {
+            throw new RuntimeException(
+                    "Match case must contain at least one action statement");
+        }
+    }
+
+    private static String combineConsequences(List<String> consequenceTexts) {
+        StringBuilder combined = new StringBuilder();
+        for (String text : consequenceTexts) {
+            String trimmed = text.trim();
+            if (!trimmed.endsWith(";")) {
+                trimmed += ";";
+            }
+            if (combined.length() > 0) {
+                combined.append(" ");
+            }
+            combined.append(trimmed);
+        }
+        return combined.toString();
+    }
+
     private LhsItemIR buildBranchItem(DrlxParser.BranchItemContext ctx) {
         if (ctx.boundOopath() != null)        return buildPatternFromBoundOopath(ctx.boundOopath());
         if (ctx.oopathExpression() != null)   return buildPatternFromOopath(ctx.oopathExpression());
@@ -995,6 +1141,11 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         if (ctx.orElement() != null)          return buildOrElement(ctx.orElement());
         if (ctx.testElement() != null)        return buildTestElement(ctx.testElement());
         if (ctx.conditionalBranch() != null)  return buildConditionalBranch(ctx.conditionalBranch());
+        if (ctx.matchBranch() != null) {
+            throw new IllegalArgumentException(
+                    "matchBranch in buildBranchItem — match with per-case consequences cannot be nested; "
+                    + "extract the match into a separate rule");
+        }
         if (ctx.branchConsequence() != null) {
             throw new IllegalArgumentException(
                     "branchConsequence in buildBranchItem — should be handled by buildConditionalBranchFormB");
