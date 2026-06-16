@@ -14,3 +14,4 @@ DRLX_OR  : 'or';
 TEST     : 'test';
 IF       : 'if';
 ELSE     : 'else';
+MATCH    : 'match';

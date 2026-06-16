@@ -72,6 +72,7 @@ ruleItem
     | orElement ','
     | testElement ','
     | conditionalBranch ','?
+    | matchBranch ','?
     | ruleConsequence
     ;
 
@@ -154,6 +155,7 @@ branchItem
     | orElement
     | testElement
     | conditionalBranch
+    | matchBranch
     | branchConsequence
     ;
 
@@ -162,6 +164,35 @@ branchItem
 // single-expression actions without semicolons.
 branchConsequence
     : DO statement
+    | expression
+    ;
+
+// 'match' conditional element — DRLXXXX §"match".
+// Form B only (per-case consequences). Desugars to one synthetic rule per case.
+// CE terminator `,` (after the whole construct) owned by ruleItem.
+matchBranch
+    : MATCH '(' expression ')' matchCase+ matchDefault?
+    ;
+
+matchCase
+    : CASE matchPattern matchCaseBody
+    ;
+
+matchDefault
+    : DEFAULT matchCaseBody
+    ;
+
+// Match pattern: type match `#Type` with optional constraints `[expr, ...]`,
+// or value match (any expression).
+matchPattern
+    : HASH identifier ('[' drlxExpression (',' drlxExpression)* ']')?
+    | expression
+    ;
+
+// Match case body: block form, `do statement` form, or bare expression form.
+matchCaseBody
+    : '{' (branchItem (',' branchItem)*)? '}'
+    | DO statement
     | expression
     ;
 
