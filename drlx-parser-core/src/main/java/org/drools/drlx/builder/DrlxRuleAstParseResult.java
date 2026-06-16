@@ -104,6 +104,7 @@ public final class DrlxRuleAstParseResult {
         return new CompilationUnitIR(parseResult.getPackageName(),
                 parseResult.getUnitName(),
                 List.copyOf(parseResult.getImportsList()),
+                List.of(),
                 List.copyOf(rules));
     }
 

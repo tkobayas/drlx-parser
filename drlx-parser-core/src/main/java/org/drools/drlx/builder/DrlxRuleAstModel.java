@@ -15,8 +15,11 @@ public final class DrlxRuleAstModel {
     public record CompilationUnitIR(String packageName,
                                     String unitName,
                                     List<String> imports,
+                                    List<WindowDeclarationIR> windowDeclarations,
                                     List<RuleIR> rules) {
     }
+
+    public record WindowDeclarationIR(String name, PatternIR pattern) { }
 
     public record RuleParameterIR(String typeName, String paramName) { }
 
