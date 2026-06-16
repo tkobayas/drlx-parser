@@ -52,6 +52,8 @@ import org.drools.core.rule.SlidingTimeWindow;
 import org.drools.base.rule.accessor.ReadAccessor;
 import org.drools.base.rule.QueryArgument;
 import org.drools.base.rule.QueryElement;
+import org.drools.base.rule.WindowDeclaration;
+import org.drools.base.rule.WindowReference;
 import org.drools.base.rule.constraint.Constraint;
 import org.drools.base.rule.constraint.QueryNameConstraint;
 import org.drools.base.util.PropertyReactivityUtil;
@@ -75,6 +77,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleAnnotationIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.RuleParameterIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.WindowDeclarationIR;
 import org.drools.ruleunits.api.DataSource;
 import org.drools.ruleunits.api.DataStore;
 import org.drools.util.TypeResolver;
@@ -123,8 +126,46 @@ public class DrlxRuleAstRuntimeBuilder {
                 .collect(Collectors.toSet());
         DataStoreUpdateRewriter updateRewriter = new DataStoreUpdateRewriter(new Antlr4MvelParser());
 
+        Map<String, WindowDeclaration> windowRegistry = new LinkedHashMap<>();
+        for (WindowDeclarationIR windowIr : parseResult.windowDeclarations()) {
+            WindowDeclaration windowDecl = new WindowDeclaration(windowIr.name(), parseResult.packageName());
+
+            Class<?> windowType = entryPointTypes.get(windowIr.pattern().entryPoint());
+            if (windowType == null) {
+                throw new RuntimeException(
+                        "window '" + windowIr.name() + "' references unknown entry point '"
+                        + windowIr.pattern().entryPoint() + "'");
+            }
+
+            Role roleAnnotation = windowType.getAnnotation(Role.class);
+            boolean isEvent = roleAnnotation != null && roleAnnotation.value() == Role.Type.EVENT;
+            ObjectType objectType = new ClassObjectType(windowType, isEvent);
+            Pattern windowPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, null, false);
+            windowPattern.setSource(new EntryPointId(windowIr.pattern().entryPoint()));
+
+            org.mvel3.transpiler.context.Declaration<?>[] declarations =
+                    DrlxLambdaCompiler.extractDeclarations(windowType);
+            for (String expression : windowIr.pattern().conditions()) {
+                Constraint constraint = lambdaCompiler.createLambdaConstraint(expression, windowType, declarations);
+                windowPattern.addConstraint(constraint);
+            }
+
+            switch (windowIr.pattern().windowType()) {
+                case "time" -> windowPattern.addBehavior(
+                        new SlidingTimeWindow(TimeUtils.parseTimeString(windowIr.pattern().windowParameter())));
+                case "length" -> windowPattern.addBehavior(
+                        new SlidingLengthWindow(Integer.parseInt(windowIr.pattern().windowParameter())));
+            }
+
+            windowDecl.setPattern(windowPattern);
+            pkg.addWindowDeclaration(windowDecl);
+
+            String refName = Character.toLowerCase(windowIr.name().charAt(0)) + windowIr.name().substring(1);
+            windowRegistry.put(refName, windowDecl);
+        }
+
         Map<String, KnowledgePackageImpl> typeDeclPackages = new LinkedHashMap<>();
-        registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass);
+        registerTypeDeclarations(typeDeclPackages, parseResult, pkg.getTypeResolver(), entryPointTypes, unitClass, windowRegistry);
 
         Map<String, QueryImpl> queryRegistry = new LinkedHashMap<>();
 
@@ -141,7 +182,7 @@ public class DrlxRuleAstRuntimeBuilder {
                 if (!entryPointName.equals(defaultName)) {
                     queryRegistry.put(defaultName, query);
                 }
-                buildQuery(query, rule, pkg.getTypeResolver(), entryPointTypes, unitClass, queryRegistry);
+                buildQuery(query, rule, pkg.getTypeResolver(), entryPointTypes, unitClass, queryRegistry, windowRegistry);
                 pkg.addRule(query);
             }
         }
@@ -154,7 +195,7 @@ public class DrlxRuleAstRuntimeBuilder {
                             + " — rule '" + rule.name() + "' has no parameters");
                 }
                 pkg.addRule(buildRule(rule, pkg.getTypeResolver(), entryPointTypes, unitClass,
-                                     globalTypes, dataStoreGlobalNames, updateRewriter, queryRegistry));
+                                     globalTypes, dataStoreGlobalNames, updateRewriter, queryRegistry, windowRegistry));
             }
         }
 
@@ -172,10 +213,11 @@ public class DrlxRuleAstRuntimeBuilder {
                                                  CompilationUnitIR parseResult,
                                                  TypeResolver typeResolver,
                                                  Map<String, Class<?>> entryPointTypes,
-                                                 Class<?> unitClass) {
+                                                 Class<?> unitClass,
+                                                 Map<String, WindowDeclaration> windowRegistry) {
         Set<Class<?>> patternClasses = new HashSet<>();
         for (RuleIR rule : parseResult.rules()) {
-            collectPatternClasses(rule.lhs(), patternClasses, typeResolver, entryPointTypes, unitClass);
+            collectPatternClasses(rule.lhs(), patternClasses, typeResolver, entryPointTypes, unitClass, windowRegistry);
         }
         for (Class<?> cls : patternClasses) {
             if (cls.getPackage() == null) {
@@ -200,41 +242,44 @@ public class DrlxRuleAstRuntimeBuilder {
                                               Set<Class<?>> classes,
                                               TypeResolver typeResolver,
                                               Map<String, Class<?>> entryPointTypes,
-                                              Class<?> unitClass) {
+                                              Class<?> unitClass,
+                                              Map<String, WindowDeclaration> windowRegistry) {
         for (LhsItemIR item : items) {
             if (item instanceof PatternIR p) {
-                // Skip patterns that look like query invocations (have positional args
-                // and their entry point is not a known data source). Type declarations
-                // for query results are not needed since QueryElement produces Object[].
                 if (!p.positionalArgs().isEmpty() && !entryPointTypes.containsKey(p.entryPoint())) {
                     continue;
                 }
-                classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                WindowDeclaration windowDecl = windowRegistry.get(p.entryPoint());
+                if (windowDecl != null) {
+                    classes.add(((ClassObjectType) windowDecl.getPattern().getObjectType()).getClassType());
+                } else {
+                    classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                }
             } else if (item instanceof GroupElementIR g) {
-                collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
             } else if (item instanceof AccumulatePatternIR accPat) {
                 if (accPat.source() instanceof PatternIR p) {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
                 } else if (accPat.source() instanceof GroupElementIR g) {
-                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
                 }
             } else if (item instanceof CustomAccumulateIR customAcc) {
                 if (customAcc.source() instanceof PatternIR p) {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
                 } else if (customAcc.source() instanceof GroupElementIR g) {
-                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
                 }
             } else if (item instanceof GroupByAccumulateIR gbAcc) {
                 if (gbAcc.source() instanceof PatternIR p) {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
                 } else if (gbAcc.source() instanceof GroupElementIR g) {
-                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
                 }
             } else if (item instanceof GroupByCustomAccumulateIR gbCustom) {
                 if (gbCustom.source() instanceof PatternIR p) {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
                 } else if (gbCustom.source() instanceof GroupElementIR g) {
-                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass);
+                    collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
                 }
             }
         }
@@ -401,7 +446,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                Map<String, java.lang.reflect.Type> globalTypes,
                                Set<String> dataStoreGlobalNames,
                                DataStoreUpdateRewriter updateRewriter,
-                               Map<String, QueryImpl> queryRegistry) {
+                               Map<String, QueryImpl> queryRegistry,
+                               Map<String, WindowDeclaration> windowRegistry) {
         lambdaCompiler.beginRule(parseResult.name());
 
         RuleImpl rule = new RuleImpl(parseResult.name());
@@ -411,7 +457,7 @@ public class DrlxRuleAstRuntimeBuilder {
         GroupElement root = GroupElementFactory.newAndInstance();
         Map<String, BoundVariable> boundVariables = new LinkedHashMap<>();
 
-        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, null);
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, null, windowRegistry);
 
         if (parseResult.rhs() != null) {
             Map<String, Type<?>> types = lambdaCompiler.getTypeMap(root);
@@ -438,7 +484,8 @@ public class DrlxRuleAstRuntimeBuilder {
                             TypeResolver typeResolver,
                             Map<String, Class<?>> entryPointTypes,
                             Class<?> unitClass,
-                            Map<String, QueryImpl> queryRegistry) {
+                            Map<String, QueryImpl> queryRegistry,
+                            Map<String, WindowDeclaration> windowRegistry) {
         lambdaCompiler.beginRule(parseResult.name());
 
         Pattern prefixPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0,
@@ -471,7 +518,7 @@ public class DrlxRuleAstRuntimeBuilder {
                     new BoundVariable(param.paramName(), paramType, prefixPattern, paramDecls[i]));
         }
 
-        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, query);
+        buildLhs(parseResult.lhs(), root, typeResolver, entryPointTypes, unitClass, boundVariables, queryRegistry, query, windowRegistry);
 
         query.setLhs(root);
     }
@@ -483,7 +530,8 @@ public class DrlxRuleAstRuntimeBuilder {
                           Class<?> unitClass,
                           Map<String, BoundVariable> boundVariables,
                           Map<String, QueryImpl> queryRegistry,
-                          QueryImpl currentQuery) {
+                          QueryImpl currentQuery,
+                          Map<String, WindowDeclaration> windowRegistry) {
         for (LhsItemIR item : items) {
             if (item instanceof PatternIR patternIr) {
                 QueryImpl targetQuery = queryRegistry.get(patternIr.entryPoint());
@@ -607,6 +655,35 @@ public class DrlxRuleAstRuntimeBuilder {
                     }
                     continue;
                 }
+                WindowDeclaration windowDecl = windowRegistry.get(patternIr.entryPoint());
+                if (windowDecl != null) {
+                    Pattern windowSrcPattern = windowDecl.getPattern();
+                    Class<?> windowPatternClass = ((ClassObjectType) windowSrcPattern.getObjectType()).getClassType();
+                    Role roleAnnotation = windowPatternClass.getAnnotation(Role.class);
+                    boolean isEvent = roleAnnotation != null && roleAnnotation.value() == Role.Type.EVENT;
+                    ObjectType objectType = new ClassObjectType(windowPatternClass, isEvent);
+
+                    Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType, patternIr.bindName(), false);
+                    pattern.setSource(new WindowReference(windowDecl.getName()));
+
+                    org.mvel3.transpiler.context.Declaration<?>[] declarations =
+                            DrlxLambdaCompiler.extractDeclarations(windowPatternClass);
+                    for (String expression : patternIr.conditions()) {
+                        List<BoundVariable> referencedBindings = lambdaCompiler.findReferencedBindings(expression, boundVariables);
+                        Constraint constraint = referencedBindings.isEmpty()
+                                ? lambdaCompiler.createLambdaConstraint(expression, windowPatternClass, declarations)
+                                : lambdaCompiler.createBetaLambdaConstraint(expression, windowPatternClass, declarations, referencedBindings);
+                        pattern.addConstraint(constraint);
+                    }
+
+                    parent.addChild(pattern);
+                    Declaration declaration = pattern.getDeclaration();
+                    if (declaration != null) {
+                        boundVariables.put(declaration.getIdentifier(),
+                                new BoundVariable(declaration.getIdentifier(), windowPatternClass, pattern, declaration));
+                    }
+                    continue;
+                }
                 Pattern pattern = buildPattern(patternIr, typeResolver, entryPointTypes, unitClass, boundVariables);
                 parent.addChild(pattern);
                 Declaration declaration = pattern.getDeclaration();
@@ -635,26 +712,26 @@ public class DrlxRuleAstRuntimeBuilder {
                         || group.kind() == GroupElementIR.Kind.EXISTS)
                         && group.children().size() > 1) {
                     GroupElement andInstance = GroupElementFactory.newAndInstance();
-                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery);
+                    buildLhs(group.children(), andInstance, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
                     ge.addChild(andInstance);
                 } else {
-                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery);
+                    buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
                 }
                 parent.addChild(ge);
             } else if (item instanceof EvalIR evalIr) {
                 buildEvalCondition(evalIr, parent, boundVariables);
             } else if (item instanceof AccumulatePatternIR accPat) {
                 buildAccumulatePattern(accPat, parent, typeResolver, entryPointTypes,
-                                       unitClass, boundVariables, queryRegistry, currentQuery);
+                                       unitClass, boundVariables, queryRegistry, currentQuery, windowRegistry);
             } else if (item instanceof CustomAccumulateIR customAcc) {
                 buildCustomAccumulatePattern(customAcc, parent, typeResolver, entryPointTypes,
-                                              unitClass, boundVariables, queryRegistry, currentQuery);
+                                              unitClass, boundVariables, queryRegistry, currentQuery, windowRegistry);
             } else if (item instanceof GroupByAccumulateIR gbAcc) {
                 buildGroupByAccumulatePattern(gbAcc, parent, typeResolver, entryPointTypes,
-                                              unitClass, boundVariables, queryRegistry, currentQuery);
+                                              unitClass, boundVariables, queryRegistry, currentQuery, windowRegistry);
             } else if (item instanceof GroupByCustomAccumulateIR gbCustom) {
                 buildGroupByCustomAccumulatePattern(gbCustom, parent, typeResolver, entryPointTypes,
-                                                    unitClass, boundVariables, queryRegistry, currentQuery);
+                                                    unitClass, boundVariables, queryRegistry, currentQuery, windowRegistry);
             } else {
                 throw new IllegalArgumentException("Unsupported LHS item: " + item.getClass().getName());
             }
@@ -679,7 +756,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                         Class<?> unitClass,
                                         Map<String, BoundVariable> outerScope,
                                         Map<String, QueryImpl> queryRegistry,
-                                        QueryImpl currentQuery) {
+                                        QueryImpl currentQuery,
+                                        Map<String, WindowDeclaration> windowRegistry) {
         LhsItemIR srcIr = accPat.source();
 
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
@@ -705,7 +783,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope, queryRegistry, currentQuery);
+                     unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
             srcElement = andGroup;
             multiSource = true;
         } else {
@@ -768,7 +846,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                                Class<?> unitClass,
                                                Map<String, BoundVariable> outerScope,
                                                Map<String, QueryImpl> queryRegistry,
-                                               QueryImpl currentQuery) {
+                                               QueryImpl currentQuery,
+                                               Map<String, WindowDeclaration> windowRegistry) {
         LhsItemIR srcIr = customAcc.source();
 
         if (srcIr instanceof GroupElementIR groupIr
@@ -794,7 +873,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope, queryRegistry, currentQuery);
+                     unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
             srcElement = andGroup;
             multiSource = true;
         } else {
@@ -884,7 +963,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                                 Class<?> unitClass,
                                                 Map<String, BoundVariable> outerScope,
                                                 Map<String, QueryImpl> queryRegistry,
-                                                QueryImpl currentQuery) {
+                                                QueryImpl currentQuery,
+                                                Map<String, WindowDeclaration> windowRegistry) {
         LhsItemIR srcIr = gbAcc.source();
         Map<String, BoundVariable> innerScope = new java.util.LinkedHashMap<>(outerScope);
         org.drools.base.rule.RuleConditionElement srcElement;
@@ -909,7 +989,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope, queryRegistry, currentQuery);
+                     unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
             srcElement = andGroup;
             multiSource = true;
         } else {
@@ -1016,7 +1096,8 @@ public class DrlxRuleAstRuntimeBuilder {
                                                        Class<?> unitClass,
                                                        Map<String, BoundVariable> outerScope,
                                                        Map<String, QueryImpl> queryRegistry,
-                                                       QueryImpl currentQuery) {
+                                                       QueryImpl currentQuery,
+                                                       Map<String, WindowDeclaration> windowRegistry) {
         LhsItemIR srcIr = gbCustom.source();
 
         if (srcIr instanceof GroupElementIR groupIr
@@ -1042,7 +1123,7 @@ public class DrlxRuleAstRuntimeBuilder {
         } else if (srcIr instanceof GroupElementIR groupIr) {
             GroupElement andGroup = GroupElementFactory.newAndInstance();
             buildLhs(groupIr.children(), andGroup, typeResolver, entryPointTypes,
-                     unitClass, innerScope, queryRegistry, currentQuery);
+                     unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
             srcElement = andGroup;
             multiSource = true;
         } else {
