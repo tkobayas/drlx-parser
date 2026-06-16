@@ -649,6 +649,97 @@ class AccumulateVisitorTest {
         assertThat(back.accumulators().get(0).functionName()).isEqualTo("sum");
     }
 
+    // --- window + accumulate tests ---
+
+    @Test
+    void inlineTimeWindowWithSingleAccumulate() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var w : /withdrawals | time[5s],
+                    var a = avg(w.amount),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(1);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.bindName()).isEqualTo("w");
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+        assertThat(accPat.accumulators().get(0).resultBindName()).isEqualTo("a");
+        assertThat(accPat.accumulators().get(0).argExpressions()).containsExactly("w.amount");
+    }
+
+    @Test
+    void inlineLengthWindowWithSingleAccumulate() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var w : /withdrawals | length[3],
+                    var a = avg(w.amount),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.windowType()).isEqualTo("length");
+        assertThat(src.windowParameter()).isEqualTo("3");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+    }
+
+    @Test
+    void inlineTimeWindowWithMultipleAccumulators() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var w : /withdrawals | time[5s],
+                    var a = avg(w.amount),
+                    long n = count(),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(accPat.accumulators()).hasSize(2);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+        assertThat(accPat.accumulators().get(1).functionName()).isEqualTo("count");
+    }
+
+    @Test
+    void accKeywordTimeWindowSingleFunction() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | time[5s],
+                        var a = avg(w.amount)),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(1);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.bindName()).isEqualTo("w");
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+        assertThat(accPat.accumulators().get(0).resultBindName()).isEqualTo("a");
+    }
+
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(drlx));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
