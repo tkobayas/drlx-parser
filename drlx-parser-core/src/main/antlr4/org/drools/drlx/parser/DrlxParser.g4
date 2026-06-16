@@ -29,11 +29,18 @@ memberDeclaration
     ;
 
 drlxCompilationUnit
-    : packageDeclaration? importDeclaration* unitDeclaration ruleDeclaration*
+    : packageDeclaration? importDeclaration* unitDeclaration windowDeclaration* ruleDeclaration*
     ;
 
 unitDeclaration
     : UNIT qualifiedName ';'
+    ;
+
+// Named window declaration — DRLXXXX §Windows.
+// Declares a reusable windowed pattern at the package level.
+// Body is an OOPath expression with a mandatory window filter.
+windowDeclaration
+    : WINDOW identifier '{' oopathExpression windowFilter '}'
     ;
 
 // Rule declaration — annotations may prefix the RULE keyword (e.g. @Salience(10))
