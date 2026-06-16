@@ -740,6 +740,95 @@ class AccumulateVisitorTest {
         assertThat(accPat.accumulators().get(0).resultBindName()).isEqualTo("a");
     }
 
+    @Test
+    void accKeywordLengthWindowSingleFunction() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | length[3],
+                        var a = avg(w.amount)),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.windowType()).isEqualTo("length");
+        assertThat(src.windowParameter()).isEqualTo("3");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+    }
+
+    @Test
+    void accKeywordTimeWindowGroupedFunctions() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | time[5s],
+                        (var a = avg(w.amount),
+                         long n = count())),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(accPat.accumulators()).hasSize(2);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+        assertThat(accPat.accumulators().get(1).functionName()).isEqualTo("count");
+    }
+
+    @Test
+    void accKeywordCustom3ParamWithTimeWindow() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    acc(var w : /withdrawals | time[5s],
+                        int s = 0;,
+                        s = (int)(s + w.amount),
+                        int sum = s),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        assertThat(rule.lhs()).hasSize(1);
+        var custom = (DrlxRuleAstModel.CustomAccumulateIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) custom.source();
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(custom.initVars()).hasSize(1);
+        assertThat(custom.initVars().get(0).typeName()).isEqualTo("int");
+        assertThat(custom.initVars().get(0).name()).isEqualTo("s");
+        assertThat(custom.resultBindName()).isEqualTo("sum");
+        assertThat(custom.resultExpression()).isEqualTo("s");
+    }
+
+    @Test
+    void inlineConstraintBeforeWindowWithAccumulate() {
+        String drlx = """
+                package p;
+                unit MyUnit;
+                rule R1 {
+                    var w : /withdrawals[amount > 100] | time[5s],
+                    var a = avg(w.amount),
+                    do {}
+                }
+                """;
+        var rule = parseRule(drlx);
+        var accPat = (DrlxRuleAstModel.AccumulatePatternIR) rule.lhs().get(0);
+        var src = (DrlxRuleAstModel.PatternIR) accPat.source();
+        assertThat(src.conditions()).containsExactly("amount > 100");
+        assertThat(src.windowType()).isEqualTo("time");
+        assertThat(src.windowParameter()).isEqualTo("5s");
+        assertThat(accPat.accumulators()).hasSize(1);
+        assertThat(accPat.accumulators().get(0).functionName()).isEqualTo("avg");
+    }
+
     private static DrlxRuleAstModel.RuleIR parseRule(String drlx) {
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(drlx));
         CommonTokenStream tokens = new CommonTokenStream(lexer);
