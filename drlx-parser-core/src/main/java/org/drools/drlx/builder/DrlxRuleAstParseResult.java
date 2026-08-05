@@ -180,6 +180,13 @@ public final class DrlxRuleAstParseResult {
                                 List.copyOf(tc.getParametersList()),
                                 tc.getRightBinding()))
                         .toList();
+        List<DrlxRuleAstModel.OopathSegmentIR> oopathSegments =
+                pattern.getOopathSegmentsList().stream()
+                        .map(seg -> new DrlxRuleAstModel.OopathSegmentIR(
+                                seg.getField(),
+                                List.copyOf(seg.getConditionsList()),
+                                seg.getInlineCast().isEmpty() ? null : seg.getInlineCast()))
+                        .toList();
         return new PatternIR(
                 pattern.getTypeName(),
                 pattern.getBindName(),
@@ -192,7 +199,7 @@ public final class DrlxRuleAstParseResult {
                 List.copyOf(pattern.getWatchedPropertiesList()),
                 windowType,
                 windowParameter,
-                List.of());
+                oopathSegments);
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {
@@ -293,6 +300,16 @@ public final class DrlxRuleAstParseResult {
         if (p.windowType() != null) {
             pb.setWindowType(p.windowType());
             pb.setWindowParameter(p.windowParameter());
+        }
+        for (DrlxRuleAstModel.OopathSegmentIR seg : p.oopathSegments()) {
+            DrlxRuleAstProto.OopathSegmentParseResult.Builder sb =
+                    DrlxRuleAstProto.OopathSegmentParseResult.newBuilder()
+                            .setField(seg.field());
+            seg.conditions().forEach(sb::addConditions);
+            if (seg.inlineCast() != null) {
+                sb.setInlineCast(seg.inlineCast());
+            }
+            pb.addOopathSegments(sb);
         }
         return pb.build();
     }

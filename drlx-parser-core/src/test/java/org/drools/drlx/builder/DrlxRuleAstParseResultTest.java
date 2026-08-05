@@ -193,4 +193,38 @@ class DrlxRuleAstParseResultTest {
         assertThat(back.windowType()).isNull();
         assertThat(back.windowParameter()).isNull();
     }
+
+    @Test
+    void oopathSegmentsRoundTripThroughProto() {
+        PatternIR ir = new PatternIR(
+                "var", "addr", "persons",
+                List.of("age > 18"),
+                List.of(),
+                null,
+                List.of(),
+                false,
+                List.of(),
+                null, null,
+                List.of(
+                    new DrlxRuleAstModel.OopathSegmentIR("addresses",
+                            List.of("city == \"London\""), null),
+                    new DrlxRuleAstModel.OopathSegmentIR("streets",
+                            List.of(), "MainStreet")
+                ));
+
+        DrlxRuleAstProto.LhsItemParseResult lhsItem = DrlxRuleAstParseResult.toProtoLhs(ir);
+        PatternIR back = (PatternIR) DrlxRuleAstParseResult.fromProtoLhs(
+                lhsItem, Path.of("test.drlx"));
+
+        assertThat(back.entryPoint()).isEqualTo("persons");
+        assertThat(back.conditions()).containsExactly("age > 18");
+        assertThat(back.oopathSegments()).hasSize(2);
+        assertThat(back.oopathSegments().get(0).field()).isEqualTo("addresses");
+        assertThat(back.oopathSegments().get(0).conditions())
+                .containsExactly("city == \"London\"");
+        assertThat(back.oopathSegments().get(0).inlineCast()).isNull();
+        assertThat(back.oopathSegments().get(1).field()).isEqualTo("streets");
+        assertThat(back.oopathSegments().get(1).conditions()).isEmpty();
+        assertThat(back.oopathSegments().get(1).inlineCast()).isEqualTo("MainStreet");
+    }
 }

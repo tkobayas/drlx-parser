@@ -65,6 +65,13 @@ message PatternParseResult {
   string window_type = 9;
   string window_parameter = 10;
   repeated TemporalConditionParseResult temporal_conditions = 11;
+  repeated OopathSegmentParseResult oopath_segments = 12;
+}
+
+message OopathSegmentParseResult {
+  string field = 1;
+  repeated string conditions = 2;
+  string inline_cast = 3;
 }
 
 message TemporalConditionParseResult {
