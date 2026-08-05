@@ -191,7 +191,8 @@ public final class DrlxRuleAstParseResult {
                 pattern.getPassive(),
                 List.copyOf(pattern.getWatchedPropertiesList()),
                 windowType,
-                windowParameter);
+                windowParameter,
+                List.of());
     }
 
     private static DrlxRuleAstProto.RuleParseResult toProtoRule(RuleIR rule) {

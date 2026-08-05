@@ -64,7 +64,8 @@ public final class DrlxRuleAstModel {
                             boolean passive,
                             List<String> watchedProperties,
                             String windowType,
-                            String windowParameter) implements LhsItemIR {
+                            String windowParameter,
+                            List<OopathSegmentIR> oopathSegments) implements LhsItemIR {
     }
 
     public record TemporalConditionIR(
@@ -75,6 +76,14 @@ public final class DrlxRuleAstModel {
     ) {
         public TemporalConditionIR {
             parameters = List.copyOf(parameters);
+        }
+    }
+
+    public record OopathSegmentIR(String field,
+                                   List<String> conditions,
+                                   String inlineCast) {
+        public OopathSegmentIR {
+            conditions = List.copyOf(conditions);
         }
     }
 

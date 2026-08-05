@@ -1212,7 +1212,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         String windowParameter = ctx.windowFilter().windowParam().getText();
         PatternIR pattern = new PatternIR("", "", entryPoint, conditions, temporalConditions,
                                            castTypeName, positionalArgs, passive, watchedProperties,
-                                           windowType, windowParameter);
+                                           windowType, windowParameter, List.of());
         return new WindowDeclarationIR(name, pattern);
     }
 
@@ -1239,7 +1239,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         }
         return new PatternIR(typeName, bindName, entryPoint, conditions, temporalConditions,
                               castTypeName, positionalArgs, passive, watchedProperties,
-                              windowType, windowParameter);
+                              windowType, windowParameter, List.of());
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
@@ -1249,7 +1249,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
-        return new PatternIR("", "", entryPoint, conditions, List.of(), castTypeName, positionalArgs, passive, watchedProperties, null, null);
+        return new PatternIR("", "", entryPoint, conditions, List.of(), castTypeName, positionalArgs, passive, watchedProperties, null, null, List.of());
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx,
@@ -1261,7 +1261,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
         return new PatternIR("", syntheticBindName, entryPoint, conditions, List.of(), castTypeName,
-                              positionalArgs, passive, watchedProperties, null, null);
+                              positionalArgs, passive, watchedProperties, null, null, List.of());
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {

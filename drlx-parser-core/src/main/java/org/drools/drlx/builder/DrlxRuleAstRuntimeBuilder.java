@@ -617,7 +617,7 @@ public class DrlxRuleAstRuntimeBuilder {
                             patternIr.typeName(), patternIr.bindName(), patternIr.entryPoint(),
                             List.of(), patternIr.temporalConditions(), patternIr.castTypeName(),
                             orderedArgs, patternIr.passive(), patternIr.watchedProperties(),
-                            patternIr.windowType(), patternIr.windowParameter());
+                            patternIr.windowType(), patternIr.windowParameter(), List.of());
                     QueryElement queryElement = buildQueryElement(positionalIr, targetQuery, boundVariables);
                     parent.addChild(queryElement);
                     Declaration[] queryParams = targetQuery.getParameters();

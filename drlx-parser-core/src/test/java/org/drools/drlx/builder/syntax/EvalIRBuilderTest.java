@@ -42,7 +42,7 @@ class EvalIRBuilderTest {
         PatternIR pattern = new PatternIR(
                 "Person", "p", "persons",
                 List.of(), List.of(),
-                null, List.of(), false, List.of(), null, null);
+                null, List.of(), false, List.of(), null, null, List.of());
         EvalIR eval = new EvalIR("p.age > 30", List.of("p"));
         ConsequenceIR rhs = new ConsequenceIR("System.out.println(p);");
 
