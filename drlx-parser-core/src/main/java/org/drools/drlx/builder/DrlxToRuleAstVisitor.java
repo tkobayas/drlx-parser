@@ -1227,6 +1227,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = ctx.oopathExpression().QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(ctx.oopathExpression());
+        List<DrlxRuleAstModel.OopathSegmentIR> segments = extractOopathSegments(oopathCtx);
         String windowType = null;
         String windowParameter = null;
         if (ctx.windowFilter() != null) {
@@ -1239,7 +1240,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         }
         return new PatternIR(typeName, bindName, entryPoint, conditions, temporalConditions,
                               castTypeName, positionalArgs, passive, watchedProperties,
-                              windowType, windowParameter, List.of());
+                              windowType, windowParameter, segments);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx) {
@@ -1249,7 +1250,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
-        return new PatternIR("", "", entryPoint, conditions, List.of(), castTypeName, positionalArgs, passive, watchedProperties, null, null, List.of());
+        List<DrlxRuleAstModel.OopathSegmentIR> segments = extractOopathSegments(oopathCtx);
+        return new PatternIR("", "", entryPoint, conditions, List.of(), castTypeName, positionalArgs, passive, watchedProperties, null, null, segments);
     }
 
     private PatternIR buildPatternFromOopath(DrlxParser.OopathExpressionContext oopathCtx,
@@ -1260,8 +1262,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         List<String> positionalArgs = extractPositionalArgs(oopathCtx);
         boolean passive = oopathCtx.QUESTION() != null;
         List<String> watchedProperties = extractWatchedProperties(oopathCtx);
+        List<DrlxRuleAstModel.OopathSegmentIR> segments = extractOopathSegments(oopathCtx);
         return new PatternIR("", syntheticBindName, entryPoint, conditions, List.of(), castTypeName,
-                              positionalArgs, passive, watchedProperties, null, null, List.of());
+                              positionalArgs, passive, watchedProperties, null, null, segments);
     }
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
@@ -1329,7 +1332,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private List<String> extractConditions(DrlxParser.OopathExpressionContext ctx) {
-        return collectDrlxExpressions(ctx).stream()
+        return collectRootDrlxExpressions(ctx).stream()
                 .filter(de -> de.customConstraint() == null)
                 .map(this::getText)
                 .toList();
@@ -1337,7 +1340,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
     private List<TemporalConditionIR> extractTemporalConditions(DrlxParser.OopathExpressionContext ctx) {
         List<TemporalConditionIR> result = new ArrayList<>();
-        for (var de : collectDrlxExpressions(ctx)) {
+        for (var de : collectRootDrlxExpressions(ctx)) {
             if (de.customConstraint() != null) {
                 result.add(buildTemporalCondition(de.customConstraint()));
             }
@@ -1345,17 +1348,31 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
         return List.copyOf(result);
     }
 
-    private List<DrlxParser.DrlxExpressionContext> collectDrlxExpressions(
+    private List<DrlxParser.DrlxExpressionContext> collectRootDrlxExpressions(
             DrlxParser.OopathExpressionContext ctx) {
-        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
-        if (!chunks.isEmpty()) {
-            return chunks.get(chunks.size() - 1).drlxExpression();
-        }
         DrlxParser.OopathRootContext root = ctx.oopathRoot();
         if (root == null) {
             return List.of();
         }
         return root.drlxExpression();
+    }
+
+    private List<DrlxRuleAstModel.OopathSegmentIR> extractOopathSegments(
+            DrlxParser.OopathExpressionContext ctx) {
+        List<DrlxParser.OopathChunkContext> chunks = ctx.oopathChunk();
+        if (chunks.isEmpty()) {
+            return List.of();
+        }
+        return chunks.stream().map(c -> {
+            String field = c.identifier(0).getText();
+            String cast = c.identifier().size() > 1
+                    ? c.identifier(1).getText() : null;
+            List<String> conds = c.drlxExpression().stream()
+                    .filter(de -> de.customConstraint() == null)
+                    .map(this::getText)
+                    .toList();
+            return new DrlxRuleAstModel.OopathSegmentIR(field, conds, cast);
+        }).toList();
     }
 
     private TemporalConditionIR buildTemporalCondition(DrlxParser.CustomConstraintContext ctx) {
