@@ -33,6 +33,7 @@ import org.drools.base.definitions.rule.impl.QueryImpl;
 import org.drools.base.definitions.rule.impl.RuleImpl;
 import org.drools.base.rule.Declaration;
 import org.drools.base.rule.EntryPointId;
+import org.drools.base.rule.From;
 import org.drools.base.rule.GroupElement;
 import org.drools.base.rule.GroupElementFactory;
 import org.drools.base.rule.ImportDeclaration;
@@ -254,6 +255,27 @@ public class DrlxRuleAstRuntimeBuilder {
                     classes.add(((ClassObjectType) windowDecl.getPattern().getObjectType()).getClassType());
                 } else {
                     classes.add(resolvePatternType(p, typeResolver, entryPointTypes, unitClass));
+                    if (!p.oopathSegments().isEmpty()) {
+                        Class<?> prevClass = resolvePatternType(p, typeResolver, entryPointTypes, unitClass);
+                        for (DrlxRuleAstModel.OopathSegmentIR seg : p.oopathSegments()) {
+                            java.lang.reflect.Method getter = findGetterForField(prevClass, seg.field());
+                            Class<?> segClass = getter.getReturnType();
+                            if (Iterable.class.isAssignableFrom(segClass)) {
+                                java.lang.reflect.Type genericType = getter.getGenericReturnType();
+                                if (genericType instanceof java.lang.reflect.ParameterizedType pt) {
+                                    java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments();
+                                    if (typeArgs.length > 0 && typeArgs[0] instanceof Class<?> c) {
+                                        segClass = c;
+                                    }
+                                }
+                            }
+                            if (seg.inlineCast() != null) {
+                                segClass = resolveOrThrow(seg.inlineCast(), typeResolver);
+                            }
+                            classes.add(segClass);
+                            prevClass = segClass;
+                        }
+                    }
                 }
             } else if (item instanceof GroupElementIR g) {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
@@ -684,14 +706,7 @@ public class DrlxRuleAstRuntimeBuilder {
                     }
                     continue;
                 }
-                Pattern pattern = buildPattern(patternIr, typeResolver, entryPointTypes, unitClass, boundVariables);
-                parent.addChild(pattern);
-                Declaration declaration = pattern.getDeclaration();
-                if (declaration != null) {
-                    Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
-                    boundVariables.put(declaration.getIdentifier(),
-                            new BoundVariable(declaration.getIdentifier(), patternClass, pattern, declaration));
-                }
+                buildPatternChain(patternIr, typeResolver, entryPointTypes, unitClass, boundVariables, parent);
             } else if (item instanceof GroupElementIR group) {
                 GroupElement ge = switch (group.kind()) {
                     case NOT    -> GroupElementFactory.newNotInstance();
@@ -1723,6 +1738,100 @@ public class DrlxRuleAstRuntimeBuilder {
         }
 
         return pattern;
+    }
+
+    private void buildPatternChain(PatternIR parseResult,
+                                   TypeResolver typeResolver,
+                                   Map<String, Class<?>> entryPointTypes,
+                                   Class<?> unitClass,
+                                   Map<String, BoundVariable> boundVariables,
+                                   GroupElement parent) {
+        if (parseResult.oopathSegments().isEmpty()) {
+            Pattern pattern = buildPattern(parseResult, typeResolver, entryPointTypes,
+                                           unitClass, boundVariables);
+            parent.addChild(pattern);
+            Declaration declaration = pattern.getDeclaration();
+            if (declaration != null) {
+                Class<?> patternClass = ((ClassObjectType) pattern.getObjectType()).getClassType();
+                boundVariables.put(declaration.getIdentifier(),
+                        new BoundVariable(declaration.getIdentifier(), patternClass,
+                                          pattern, declaration));
+            }
+            return;
+        }
+
+        String originalBind = parseResult.bindName();
+        String rootBind = "_oopath$" + lambdaCompiler.nextPatternId();
+        PatternIR rootIr = new PatternIR(
+                parseResult.typeName(), rootBind, parseResult.entryPoint(),
+                parseResult.conditions(), parseResult.temporalConditions(),
+                parseResult.castTypeName(), parseResult.positionalArgs(),
+                parseResult.passive(), parseResult.watchedProperties(),
+                parseResult.windowType(), parseResult.windowParameter(),
+                List.of());
+        Pattern rootPattern = buildPattern(rootIr, typeResolver, entryPointTypes,
+                                           unitClass, boundVariables);
+        parent.addChild(rootPattern);
+
+        Declaration rootDecl = rootPattern.addDeclaration(rootBind);
+        Class<?> rootClass = ((ClassObjectType) rootPattern.getObjectType()).getClassType();
+        rootDecl.setReadAccessor(new SelfReferenceClassFieldReader(rootClass));
+        boundVariables.put(rootBind, new BoundVariable(rootBind, rootClass,
+                                                        rootPattern, rootDecl));
+
+        Class<?> previousClass = rootClass;
+        Declaration previousDecl = rootDecl;
+
+        for (int i = 0; i < parseResult.oopathSegments().size(); i++) {
+            DrlxRuleAstModel.OopathSegmentIR segment = parseResult.oopathSegments().get(i);
+            boolean isLast = (i == parseResult.oopathSegments().size() - 1);
+
+            java.lang.reflect.Method getter = findGetterForField(previousClass, segment.field());
+            Class<?> fieldType = getter.getReturnType();
+
+            if (Iterable.class.isAssignableFrom(fieldType)) {
+                java.lang.reflect.Type genericType = getter.getGenericReturnType();
+                if (genericType instanceof java.lang.reflect.ParameterizedType pt) {
+                    java.lang.reflect.Type[] typeArgs = pt.getActualTypeArguments();
+                    if (typeArgs.length > 0 && typeArgs[0] instanceof Class<?> c) {
+                        fieldType = c;
+                    }
+                }
+            }
+
+            if (segment.inlineCast() != null) {
+                fieldType = resolveOrThrow(segment.inlineCast(), typeResolver);
+            }
+
+            ObjectType objectType = new ClassObjectType(fieldType, false);
+            String segBind = isLast ? originalBind : "_oopath$" + lambdaCompiler.nextPatternId();
+            Pattern segPattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0,
+                                             objectType, segBind, false);
+            From from = new From(new OopathFieldDataProvider(previousDecl, getter));
+            from.setResultPattern(segPattern);
+            segPattern.setSource(from);
+
+            org.mvel3.transpiler.context.Declaration<?>[] declarations =
+                    DrlxLambdaCompiler.extractDeclarations(fieldType);
+            for (String expression : segment.conditions()) {
+                List<BoundVariable> referencedBindings =
+                        lambdaCompiler.findReferencedBindings(expression, boundVariables);
+                Constraint constraint = referencedBindings.isEmpty()
+                        ? lambdaCompiler.createLambdaConstraint(expression, fieldType, declarations)
+                        : lambdaCompiler.createBetaLambdaConstraint(expression, fieldType,
+                                                                     declarations, referencedBindings);
+                segPattern.addConstraint(constraint);
+            }
+
+            parent.addChild(segPattern);
+
+            Declaration segDecl = segPattern.addDeclaration(segBind);
+            segDecl.setReadAccessor(new SelfReferenceClassFieldReader(fieldType));
+            boundVariables.put(segBind, new BoundVariable(segBind, fieldType,
+                                                           segPattern, segDecl));
+            previousClass = fieldType;
+            previousDecl = segDecl;
+        }
     }
 
     private Pattern buildPattern(PatternIR parseResult,

@@ -1,5 +1,8 @@
 package org.drools.drlx.domain;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Person {
 
     private String name;
@@ -8,6 +11,7 @@ public class Person {
     private String value1;
     private String value2;
     private String value3;
+    private final List<Address> addresses = new ArrayList<>();
 
     public Person() {
     }
@@ -69,6 +73,14 @@ public class Person {
 
     public void setValue3(String value3) {
         this.value3 = value3;
+    }
+
+    public List<Address> getAddresses() {
+        return addresses;
+    }
+
+    public void addAddress(Address address) {
+        addresses.add(address);
     }
 
     @Override
