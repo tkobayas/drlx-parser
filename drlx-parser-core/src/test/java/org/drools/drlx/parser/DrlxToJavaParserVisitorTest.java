@@ -292,6 +292,41 @@ class DrlxToJavaParserVisitorTest {
     }
 
     @Test
+    void testParseMultiSegmentOOPath() {
+        String rule = """
+                unit MyUnit;
+
+                rule R1 {
+                    var addr : /persons/addresses[ city == "London" ],
+                    do { System.out.println(addr); }
+                }
+                """;
+
+        com.github.javaparser.ast.CompilationUnit compilationUnit = parseDrlxCompilationUnitAsJavaParserAST(rule);
+
+        RuleDeclaration ruleDeclaration = (RuleDeclaration) compilationUnit.getTypes().get(0);
+        RuleBody ruleBody = ruleDeclaration.getRuleBody();
+        RulePattern pattern = (RulePattern) ruleBody.getItems().get(0);
+        assertThat(pattern.getBind().asString()).isEqualTo("addr");
+
+        OOPathExpr ooPathExpr = pattern.getExpr();
+        assertThat(ooPathExpr.getChunks()).hasSize(2);
+
+        OOPathChunk firstChunk = ooPathExpr.getChunks().get(0);
+        assertThat(firstChunk.getField().asString()).isEqualTo("persons");
+        assertThat(firstChunk.getConditions()).isEmpty();
+
+        OOPathChunk secondChunk = ooPathExpr.getChunks().get(1);
+        assertThat(secondChunk.getField().asString()).isEqualTo("addresses");
+        assertThat(secondChunk.getConditions()).hasSize(1);
+
+        DrlxExpression condition = secondChunk.getConditions().get(0);
+        BinaryExpr binaryExpr = (BinaryExpr) condition.getExpr();
+        assertThat(((NameExpr) binaryExpr.getLeft()).getNameAsString()).isEqualTo("city");
+        assertThat(binaryExpr.getRight().toString()).contains("London");
+    }
+
+    @Test
     void javaParserVisitor_throwsOnNot() {
         String cu = """
                 unit MyUnit;
