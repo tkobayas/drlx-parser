@@ -69,6 +69,7 @@ ruleBody
 // top level (DRLXXXX §Queries): `/queryName(arg, var out),`
 ruleItem
     : rulePattern
+    | boundFromExpression ','
     | oopathExpression ','
     | accumulateItem ','
     | accKeywordItem ','
@@ -91,6 +92,7 @@ ruleItem
 // more constrained prefix than a bare oopath (which starts with '/').
 groupChild
     : boundOopath
+    | boundFromExpression
     | oopathExpression
     | notElement
     | existsElement
@@ -155,6 +157,7 @@ branchBody
 // prefix than a bare expression or oopath.
 branchItem
     : boundOopath
+    | boundFromExpression
     | oopathExpression
     | notElement
     | existsElement
@@ -209,6 +212,17 @@ matchCaseBody
 // Optional `windowFilter` suffix for CEP windows (DRLXXXX §Windows).
 boundOopath
     : identifier identifier (':' | '=') oopathExpression windowFilter?
+    ;
+
+// From-expression: /expression for iterate-and-assign (DRLXXXX §"from" lines 286-290, 624-630).
+// Supports constructor and method-call expressions. No constraint filters, no child segments.
+// MUST appear after boundOopath in all alternative lists (first-match-wins).
+boundFromExpression
+    : identifier identifier (':' | '=') fromExpression
+    ;
+
+fromExpression
+    : '/' expression
     ;
 
 // Window filter — CEP sliding window applied to a pattern.
