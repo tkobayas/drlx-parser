@@ -227,6 +227,49 @@ public class DrlxLambdaCompiler {
         return deferred;
     }
 
+    public FromExpressionDataProvider createFromExpressionLambda(String expression,
+                                                                  List<BoundVariable> referencedBindings) {
+        int counter = lambdaCounter++;
+
+        org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations =
+                referencedBindings.stream()
+                        .map(bv -> org.mvel3.transpiler.context.Declaration.of(bv.name(), bv.type()))
+                        .toArray(org.mvel3.transpiler.context.Declaration[]::new);
+
+        Declaration[] requiredDeclarations = referencedBindings.stream()
+                .map(BoundVariable::declaration)
+                .toArray(Declaration[]::new);
+
+        @SuppressWarnings("unchecked")
+        Evaluator<Map<String, Object>, Void, Object> preCompiled =
+                (Evaluator<Map<String, Object>, Void, Object>) tryLoadPreCompiled(counter, expression, "from expression");
+        if (preCompiled != null) {
+            return new FromExpressionDataProvider(expression, preCompiled, requiredDeclarations);
+        }
+
+        FromExpressionDataProvider deferred = createBatchFromExpression(expression, mvelDeclarations, requiredDeclarations);
+        onLambdaCreated(counter, expression);
+        return deferred;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private FromExpressionDataProvider createBatchFromExpression(String expression,
+                                                                  org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations,
+                                                                  Declaration[] requiredDeclarations) {
+        CompilerParameters<Map<String, Object>, Void, Object> evalInfo =
+                (CompilerParameters) MVEL.<Object>map(mvelDeclarations)
+                        .<Object>out(Object.class)
+                        .expression(expression)
+                        .imports(new HashSet<>(imports))
+                        .classManager(batchCompiler.getClassManager())
+                        .generatedClassName("GeneratorEvaluator__")
+                        .build();
+        MVELBatchCompiler.LambdaHandle handle = batchCompiler.add(evalInfo);
+        FromExpressionDataProvider provider = new FromExpressionDataProvider(expression, null, requiredDeclarations);
+        pendingLambdas.add(new PendingLambda(handle, provider));
+        return provider;
+    }
+
     @SuppressWarnings({"unchecked", "rawtypes"})
     private DrlxEvalExpression createBatchEvalExpression(String expression,
                                                          org.mvel3.transpiler.context.Declaration<?>[] mvelDeclarations) {
