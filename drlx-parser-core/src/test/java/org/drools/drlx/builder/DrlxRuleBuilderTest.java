@@ -362,4 +362,109 @@ class DrlxRuleBuilderTest {
             throw new RuntimeException(e);
         }
     }
+
+    @Test
+    void fromExpressionIteratesArray() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule FromArray {
+                    var i : /new int[] {1, 2, 3},
+                    do { results.add(i); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(3);
+            assertThat(unit.results).containsExactlyInAnyOrder(1, 2, 3);
+        }
+    }
+
+    @Test
+    void fromExpressionIteratesCollection() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule FromList {
+                    var s : /java.util.List.of("a", "b", "c"),
+                    do { results.add(s); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(3);
+            assertThat(unit.results).containsExactlyInAnyOrder("a", "b", "c");
+        }
+    }
+
+    @Test
+    void fromExpressionWithEarlierBinding() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.domain.Person;
+                import org.drools.drlx.domain.Address;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule FromBinding {
+                    var p : /persons,
+                    var addr : /p.getAddresses(),
+                    do { results.add(addr); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            Person john = new Person("John", 30);
+            john.addAddress(new Address("London"));
+            john.addAddress(new Address("Paris"));
+            unit.persons.add(john);
+
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(2);
+            assertThat(unit.results).extracting("city")
+                    .containsExactlyInAnyOrder("London", "Paris");
+        }
+    }
+
+    @Test
+    void fromExpressionSingleObject() {
+        String rule = """
+                package org.drools.drlx.parser;
+                import org.drools.drlx.ruleunit.MyUnit;
+                unit MyUnit;
+
+                rule FromSingle {
+                    var s : /String.valueOf(42),
+                    do { results.add(s); }
+                }
+                """;
+
+        DrlxRuleBuilder builder = new DrlxRuleBuilder();
+        KieBase kieBase = builder.build(rule);
+
+        MyUnit unit = new MyUnit();
+        try (DrlxRuleUnitInstance<MyUnit> instance = DrlxRuleUnitInstance.create(kieBase, unit)) {
+            int fired = instance.fire();
+            assertThat(fired).isEqualTo(1);
+            assertThat(unit.results).containsExactly("42");
+        }
+    }
 }

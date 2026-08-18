@@ -72,6 +72,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.GroupByCustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.FromExpressionIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
@@ -277,6 +278,8 @@ public class DrlxRuleAstRuntimeBuilder {
                         }
                     }
                 }
+            } else if (item instanceof FromExpressionIR) {
+                // From-expressions don't reference entry points — no class collection needed.
             } else if (item instanceof GroupElementIR g) {
                 collectPatternClasses(g.children(), classes, typeResolver, entryPointTypes, unitClass, windowRegistry);
             } else if (item instanceof AccumulatePatternIR accPat) {
@@ -733,6 +736,8 @@ public class DrlxRuleAstRuntimeBuilder {
                     buildLhs(group.children(), ge, typeResolver, entryPointTypes, unitClass, innerScope, queryRegistry, currentQuery, windowRegistry);
                 }
                 parent.addChild(ge);
+            } else if (item instanceof FromExpressionIR fromIr) {
+                buildFromExpressionPattern(fromIr, typeResolver, parent, boundVariables);
             } else if (item instanceof EvalIR evalIr) {
                 buildEvalCondition(evalIr, parent, boundVariables);
             } else if (item instanceof AccumulatePatternIR accPat) {
@@ -1628,6 +1633,48 @@ public class DrlxRuleAstRuntimeBuilder {
                         evalExpression,
                         declarations.toArray(new Declaration[0]));
         parent.addChild(evalCondition);
+    }
+
+    private void buildFromExpressionPattern(FromExpressionIR fromIr,
+                                               TypeResolver typeResolver,
+                                               GroupElement parent,
+                                               Map<String, BoundVariable> boundVariables) {
+        Class<?> type;
+        if ("var".equals(fromIr.typeName())) {
+            type = Object.class;
+        } else {
+            try {
+                type = typeResolver.resolveType(fromIr.typeName());
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("Cannot resolve type: " + fromIr.typeName(), e);
+            }
+        }
+
+        ObjectType objectType = new ClassObjectType(type, false);
+        Pattern pattern = new Pattern(lambdaCompiler.nextPatternId(), 0, 0, objectType,
+                                       fromIr.bindName(), false);
+
+        List<BoundVariable> referenced = new ArrayList<>();
+        for (String name : fromIr.referencedBindings()) {
+            BoundVariable bv = boundVariables.get(name);
+            if (bv != null) {
+                referenced.add(bv);
+            }
+        }
+
+        FromExpressionDataProvider dataProvider =
+                lambdaCompiler.createFromExpressionLambda(fromIr.fromExpression(), referenced);
+
+        From from = new From(dataProvider);
+        from.setResultPattern(pattern);
+        pattern.setSource(from);
+        parent.addChild(pattern);
+
+        Declaration declaration = pattern.getDeclaration();
+        if (declaration != null) {
+            boundVariables.put(declaration.getIdentifier(),
+                    new BoundVariable(declaration.getIdentifier(), type, pattern, declaration));
+        }
     }
 
     /**

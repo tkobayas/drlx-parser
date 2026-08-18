@@ -1,5 +1,7 @@
 package org.drools.drlx.builder;
 
+import java.lang.reflect.Array;
+import java.util.AbstractList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,6 +48,13 @@ public class FromExpressionDataProvider implements DataProvider, EvaluatorSink {
         }
         if (result instanceof Object[] arr) {
             return Arrays.asList(arr).iterator();
+        }
+        if (result.getClass().isArray()) {
+            int len = Array.getLength(result);
+            return new AbstractList<Object>() {
+                @Override public Object get(int index) { return Array.get(result, index); }
+                @Override public int size() { return len; }
+            }.iterator();
         }
         if (result instanceof Iterator iter) {
             return iter;
