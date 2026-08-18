@@ -14,6 +14,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.FromExpressionIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupByAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupByCustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
@@ -211,6 +212,8 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     rhs = new ConsequenceIR(extractConsequence(itemCtx.ruleConsequence()));
                 } else if (itemCtx.rulePattern() != null) {
                     pendingPattern = buildPattern(itemCtx.rulePattern());
+                } else if (itemCtx.boundFromExpression() != null) {
+                    lhs.add(buildFromExpression(itemCtx.boundFromExpression()));
                 } else if (itemCtx.oopathExpression() != null) {
                     lhs.add(buildPatternFromOopath(itemCtx.oopathExpression()));
                 } else if (itemCtx.notElement() != null) {
@@ -1140,8 +1143,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private LhsItemIR buildBranchItem(DrlxParser.BranchItemContext ctx) {
-        if (ctx.boundOopath() != null)        return buildPatternFromBoundOopath(ctx.boundOopath());
-        if (ctx.oopathExpression() != null)   return buildPatternFromOopath(ctx.oopathExpression());
+        if (ctx.boundOopath() != null)          return buildPatternFromBoundOopath(ctx.boundOopath());
+        if (ctx.boundFromExpression() != null) return buildFromExpression(ctx.boundFromExpression());
+        if (ctx.oopathExpression() != null)    return buildPatternFromOopath(ctx.oopathExpression());
         if (ctx.notElement() != null)         return buildNotElement(ctx.notElement());
         if (ctx.existsElement() != null)      return buildExistsElement(ctx.existsElement());
         if (ctx.andElement() != null)         return buildAndElement(ctx.andElement());
@@ -1185,8 +1189,9 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private LhsItemIR buildGroupChild(DrlxParser.GroupChildContext c) {
-        if (c.boundOopath() != null)      return buildPatternFromBoundOopath(c.boundOopath());
-        if (c.oopathExpression() != null) return buildPatternFromOopath(c.oopathExpression());
+        if (c.boundOopath() != null)          return buildPatternFromBoundOopath(c.boundOopath());
+        if (c.boundFromExpression() != null)  return buildFromExpression(c.boundFromExpression());
+        if (c.oopathExpression() != null)     return buildPatternFromOopath(c.oopathExpression());
         if (c.notElement() != null)       return buildNotElement(c.notElement());
         if (c.existsElement() != null)    return buildExistsElement(c.existsElement());
         if (c.andElement() != null)       return buildAndElement(c.andElement());
@@ -1269,6 +1274,14 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
 
     private PatternIR buildPattern(DrlxParser.RulePatternContext ctx) {
         return buildPatternFromBoundOopath(ctx.boundOopath());
+    }
+
+    private FromExpressionIR buildFromExpression(DrlxParser.BoundFromExpressionContext ctx) {
+        String typeName = ctx.identifier(0).getText();
+        String bindName = ctx.identifier(1).getText();
+        String fromExpr = getText(ctx.fromExpression().expression());
+        List<String> referencedBindings = extractIdentifiers(fromExpr);
+        return new FromExpressionIR(typeName, bindName, fromExpr, referencedBindings);
     }
 
     private String extractConsequence(DrlxParser.RuleConsequenceContext ctx) {
