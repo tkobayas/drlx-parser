@@ -18,6 +18,7 @@ import org.drools.drlx.builder.DrlxRuleAstModel.CompilationUnitIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.ConsequenceIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.CustomAccumulateIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.FromExpressionIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.InitVarIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
@@ -165,6 +166,14 @@ public final class DrlxRuleAstParseResult {
                         cap.getResultExpression(),
                         List.copyOf(cap.getReferencedBindingsList()));
             }
+            case FROM_EXPRESSION -> {
+                DrlxRuleAstProto.FromExpressionParseResult fe = item.getFromExpression();
+                yield new FromExpressionIR(
+                        fe.getTypeName(),
+                        fe.getBindName(),
+                        fe.getFromExpression(),
+                        List.copyOf(fe.getReferencedBindingsList()));
+            }
             case KIND_NOT_SET -> throw new IllegalStateException("LHS item without payload in " + file);
         };
     }
@@ -271,6 +280,14 @@ public final class DrlxRuleAstParseResult {
             }
             customAcc.referencedBindings().forEach(cab::addReferencedBindings);
             builder.setCustomAccumulate(cab);
+        } else if (item instanceof FromExpressionIR fe) {
+            DrlxRuleAstProto.FromExpressionParseResult.Builder feb =
+                    DrlxRuleAstProto.FromExpressionParseResult.newBuilder()
+                            .setTypeName(fe.typeName())
+                            .setBindName(fe.bindName())
+                            .setFromExpression(fe.fromExpression());
+            fe.referencedBindings().forEach(feb::addReferencedBindings);
+            builder.setFromExpression(feb);
         } else {
             throw new IllegalArgumentException("Unsupported LHS item: " + item);
         }

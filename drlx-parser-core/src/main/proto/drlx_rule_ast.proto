@@ -40,6 +40,7 @@ message LhsItemParseResult {
     EvalParseResult eval = 3;
     AccumulatePatternParseResult accumulate_pattern = 4;
     CustomAccumulateParseResult custom_accumulate = 5;
+    FromExpressionParseResult from_expression = 6;
   }
 }
 
@@ -72,6 +73,13 @@ message OopathSegmentParseResult {
   string field = 1;
   repeated string conditions = 2;
   string inline_cast = 3;
+}
+
+message FromExpressionParseResult {
+  string type_name = 1;
+  string bind_name = 2;
+  string from_expression = 3;
+  repeated string referenced_bindings = 4;
 }
 
 message TemporalConditionParseResult {

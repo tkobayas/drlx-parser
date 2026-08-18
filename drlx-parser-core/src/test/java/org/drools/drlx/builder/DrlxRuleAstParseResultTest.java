@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.drools.drlx.builder.DrlxRuleAstModel.EvalIR;
+import org.drools.drlx.builder.DrlxRuleAstModel.FromExpressionIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.GroupElementIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.LhsItemIR;
 import org.drools.drlx.builder.DrlxRuleAstModel.PatternIR;
@@ -226,5 +227,31 @@ class DrlxRuleAstParseResultTest {
         assertThat(back.oopathSegments().get(1).field()).isEqualTo("streets");
         assertThat(back.oopathSegments().get(1).conditions()).isEmpty();
         assertThat(back.oopathSegments().get(1).inlineCast()).isEqualTo("MainStreet");
+    }
+
+    @Test
+    void fromExpressionIrRoundTripsThroughProto() {
+        FromExpressionIR original = new FromExpressionIR(
+                "var", "i", "new int[] {1, 2, 3}", List.of());
+        DrlxRuleAstProto.LhsItemParseResult proto = DrlxRuleAstParseResult.toProtoLhs(original);
+        LhsItemIR roundTripped = DrlxRuleAstParseResult.fromProtoLhs(proto, Path.of("test.drlx"));
+
+        assertThat(roundTripped).isInstanceOf(FromExpressionIR.class);
+        FromExpressionIR fe = (FromExpressionIR) roundTripped;
+        assertThat(fe.typeName()).isEqualTo("var");
+        assertThat(fe.bindName()).isEqualTo("i");
+        assertThat(fe.fromExpression()).isEqualTo("new int[] {1, 2, 3}");
+        assertThat(fe.referencedBindings()).isEmpty();
+    }
+
+    @Test
+    void fromExpressionIrWithBindingsRoundTrips() {
+        FromExpressionIR original = new FromExpressionIR(
+                "var", "addrs", "p.getAddresses()", List.of("p"));
+        DrlxRuleAstProto.LhsItemParseResult proto = DrlxRuleAstParseResult.toProtoLhs(original);
+        FromExpressionIR fe = (FromExpressionIR) DrlxRuleAstParseResult.fromProtoLhs(
+                proto, Path.of("test.drlx"));
+        assertThat(fe.fromExpression()).isEqualTo("p.getAddresses()");
+        assertThat(fe.referencedBindings()).containsExactly("p");
     }
 }

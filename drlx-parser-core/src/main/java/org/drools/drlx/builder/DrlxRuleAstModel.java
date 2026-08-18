@@ -51,7 +51,7 @@ public final class DrlxRuleAstModel {
     }
 
     /** LHS tree node — pattern leaf, nested group element, eval-style guard, or accumulate. */
-    public sealed interface LhsItemIR permits PatternIR, GroupElementIR, EvalIR, AccumulatePatternIR, CustomAccumulateIR, GroupByAccumulateIR, GroupByCustomAccumulateIR {
+    public sealed interface LhsItemIR permits PatternIR, FromExpressionIR, GroupElementIR, EvalIR, AccumulatePatternIR, CustomAccumulateIR, GroupByAccumulateIR, GroupByCustomAccumulateIR {
     }
 
     public record PatternIR(String typeName,
@@ -66,6 +66,15 @@ public final class DrlxRuleAstModel {
                             String windowType,
                             String windowParameter,
                             List<OopathSegmentIR> oopathSegments) implements LhsItemIR {
+    }
+
+    public record FromExpressionIR(String typeName,
+                                    String bindName,
+                                    String fromExpression,
+                                    List<String> referencedBindings) implements LhsItemIR {
+        public FromExpressionIR {
+            referencedBindings = List.copyOf(referencedBindings);
+        }
     }
 
     public record TemporalConditionIR(
