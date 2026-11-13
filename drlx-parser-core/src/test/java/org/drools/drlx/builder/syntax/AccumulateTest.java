@@ -49,7 +49,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule AvgRule {
                     var p : /persons,
                     var avgAge = avg(p.age),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -77,7 +77,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var minAge = min(p.age),
                     var maxAge = max(p.age),
                     var avgAge = avg(p.age),
-                    do { results.add(minAge); results.add(maxAge); results.add(avgAge); }
+                    fn { results.add(minAge); results.add(maxAge); results.add(avgAge); }
                 }
                 """;
 
@@ -103,7 +103,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     long n = count(),
-                    do { results.add(n); }
+                    fn { results.add(n); }
                 }
                 """;
 
@@ -128,7 +128,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.age),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -156,7 +156,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var ss = TestAccFuncs.sumSquares(p.age),
-                    do { results.add(ss); }
+                    fn { results.add(ss); }
                 }
                 """;
 
@@ -183,7 +183,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var p : /persons,
                     var ss = TestAccFuncs.sumSquares(p.age),
                     var dc = TestAccFuncs.doubleCount(p.age),
-                    do { results.add(ss); results.add(dc); }
+                    fn { results.add(ss); results.add(dc); }
                 }
                 """;
 
@@ -211,7 +211,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var p : /persons,
                     var avgAge = avg(p.age),
                     var ss = TestAccFuncs.sumSquares(p.age),
-                    do { results.add(avgAge); results.add(ss); }
+                    fn { results.add(avgAge); results.add(ss); }
                 }
                 """;
 
@@ -236,7 +236,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var ss = NoSuchClass.sumSquares(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -259,7 +259,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var ss = TestAccFuncs.noSuchField(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -282,7 +282,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var ss = BadContainer.notAFunction(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -303,7 +303,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var x = bogus(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -328,7 +328,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var avgAge = avg(p.age),
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -351,7 +351,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.age + 1),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -379,7 +379,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.name.length()),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -405,7 +405,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.age * p.age),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -432,7 +432,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var avgPlus = avg(p.age + 1),
-                    do { results.add(avgPlus); }
+                    fn { results.add(avgPlus); }
                 }
                 """;
 
@@ -462,7 +462,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var total = sum(p.notAField),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -481,7 +481,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     var avgAge = avg(/persons.age),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -506,7 +506,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     long n = count(/persons),
-                    do { results.add(n); }
+                    fn { results.add(n); }
                 }
                 """;
 
@@ -532,7 +532,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var minAge = min(/persons.age),
                     var maxAge = max(/persons.age),
                     var avgAge = avg(/persons.age),
-                    do { results.add(minAge); results.add(maxAge); results.add(avgAge); }
+                    fn { results.add(minAge); results.add(maxAge); results.add(avgAge); }
                 }
                 """;
 
@@ -557,7 +557,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     var totalSenior = sum(/persons[age >= 40].age),
-                    do { results.add(totalSenior); }
+                    fn { results.add(totalSenior); }
                 }
                 """;
 
@@ -583,7 +583,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons[age >= 18],
                     long n = count(/persons),
-                    do { results.add(p.getName()); results.add(n); }
+                    fn { results.add(p.getName()); results.add(n); }
                 }
                 """;
 
@@ -607,7 +607,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     var avgAge = avg(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         final KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -633,7 +633,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var minAge = min(/persons.age),
                     var maxAge = max(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         final KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -671,7 +671,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     long n = count(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -691,7 +691,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     var avgAge = avg(/persons),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -711,7 +711,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
 
                 rule R {
                     var avgAge = avg(/persons.nope),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> new DrlxRuleBuilder().build(rule))
@@ -746,7 +746,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     var minAge = min(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         final KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -778,7 +778,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var minAge = min(p.age),
                     var maxAge = max(p.age),
                     var avgAge = avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         final KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -824,7 +824,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var p : /persons,
                     long n = count(),
                     var total = sum(p.age),
-                    do { results.add(n); results.add(total); }
+                    fn { results.add(n); results.add(total); }
                 }
                 """;
 
@@ -851,7 +851,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     var p : /persons,
                     var s1 = sum(p.age + 1),
                     var s2 = sum(p.age * 2),
-                    do { results.add(s1); results.add(s2); }
+                    fn { results.add(s1); results.add(s2); }
                 }
                 """;
 
@@ -883,7 +883,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         int s = 0;,
                         s = s + p.age,
                         int sum = s),
-                    do { results.add(sum); }
+                    fn { results.add(sum); }
                 }
                 """;
 
@@ -909,7 +909,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule R {
                     acc(var p : /persons,
                         var avgAge = avg(p.age)),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -936,7 +936,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                     acc(var p : /persons,
                         (var maxAge = max(p.age),
                          var minAge = min(p.age))),
-                    do { results.add(maxAge); results.add(minAge); }
+                    fn { results.add(maxAge); results.add(minAge); }
                 }
                 """;
 
@@ -964,7 +964,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         int s = 0;,
                         (s = s + p.age, s = s - p.age),
                         int sum = s),
-                    do { results.add(sum); }
+                    fn { results.add(sum); }
                 }
                 """;
 
@@ -997,7 +997,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         { total = total + p.age; count = count + 1; },
                         { total = total - p.age; count = count - 1; },
                         double avgAge = (double) total / count),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -1026,7 +1026,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         { total = total + p.age; count = count + 1; },
                         { total = total - p.age; count = count - 1; },
                         double avgAge = (double) total / count),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -1059,7 +1059,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule CountJoined {
                     acc(and(var p : /persons, var o : /orders[customerId == p.age]),
                         var count = count()),
-                    do { results.add(count); }
+                    fn { results.add(count); }
                 }
                 """;
 
@@ -1087,7 +1087,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule SumAmount {
                     acc(and(var p : /persons, var o : /orders[customerId == p.age]),
                         var total = sum(o.amount)),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -1115,7 +1115,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule WeightedSum {
                     acc(and(var p : /persons, var o : /orders[customerId == p.age]),
                         var weighted = sum(p.age * o.amount)),
-                    do { results.add(weighted); }
+                    fn { results.add(weighted); }
                 }
                 """;
 
@@ -1145,7 +1145,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         int s = 0;,
                         s = s + o.amount,
                         int total = s),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -1176,7 +1176,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                         { s = s + o.amount; },
                         { s = s - o.amount; },
                         int total = s),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -1203,7 +1203,7 @@ class AccumulateTest extends DrlxBuilderTestSupport {
                 rule SingleChildAnd {
                     acc(and(var p : /persons),
                         var avgAge = avg(p.age)),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 

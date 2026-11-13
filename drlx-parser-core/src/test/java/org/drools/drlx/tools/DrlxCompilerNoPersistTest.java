@@ -39,7 +39,7 @@ class DrlxCompilerNoPersistTest {
 
             rule CheckAge {
                 Person p : /persons[ age > 18 ],
-                do { System.out.println(p); }
+                fn { System.out.println(p); }
             }
             """;
 
@@ -54,12 +54,12 @@ class DrlxCompilerNoPersistTest {
 
             rule CheckAge {
                 Person p : /persons[ age > 18 ],
-                do { System.out.println(p); }
+                fn { System.out.println(p); }
             }
 
             rule CheckCity {
                 Address a : /addresses[ city == "Tokyo" ],
-                do { System.out.println(a); }
+                fn { System.out.println(a); }
             }
             """;
 

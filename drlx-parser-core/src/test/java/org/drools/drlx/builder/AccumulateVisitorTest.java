@@ -36,7 +36,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var p : /persons,
                     var avgAge = avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -64,7 +64,7 @@ class AccumulateVisitorTest {
                     var avgAge = avg(p.age),
                     var minAge = min(p.age),
                     var maxAge = max(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -87,7 +87,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var p : /persons,
                     long n = count(),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -107,7 +107,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var p : /persons,
                     var avgAge = Func.avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -122,7 +122,7 @@ class AccumulateVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     long n = count(/persons),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -145,7 +145,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var minAge = min(/persons.age),
                     var maxAge = max(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -169,7 +169,7 @@ class AccumulateVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     long n = count(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -184,7 +184,7 @@ class AccumulateVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var avgAge = avg(/persons.age),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -266,7 +266,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         s = s + p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -293,7 +293,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     acc(var p : /persons,
                         var avgAge = avg(p.age)),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -314,7 +314,7 @@ class AccumulateVisitorTest {
                     acc(var p : /persons,
                         (var maxAge = max(p.age),
                          var minAge = min(p.age))),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -335,7 +335,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         (s = s + p.age, s = s - p.age),
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -355,7 +355,7 @@ class AccumulateVisitorTest {
                         { total += p.age; count++; },
                         { total -= p.age; count--; },
                         double avgAge = total / count),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -379,7 +379,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         s = s + p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -396,7 +396,7 @@ class AccumulateVisitorTest {
                         var s = 0;,
                         s = s + p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -414,7 +414,7 @@ class AccumulateVisitorTest {
                         int p = 0;,
                         p = p + 1,
                         int sum = p),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -432,7 +432,7 @@ class AccumulateVisitorTest {
                         { int x = 0; int x = 1; },
                         x = x + p.age,
                         int sum = x),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -450,7 +450,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         s = s + p.age,
                         int sum = p),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -469,7 +469,7 @@ class AccumulateVisitorTest {
                         (s = s + p.age, s = s - p.age),
                         s = s - p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -487,7 +487,7 @@ class AccumulateVisitorTest {
                         int s = null;,
                         s = s + p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -505,7 +505,7 @@ class AccumulateVisitorTest {
                         int s = 0L;,
                         s = s + p.age,
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -523,7 +523,7 @@ class AccumulateVisitorTest {
                         String s = new String();,
                         s = p.name,
                         String result = s),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -541,7 +541,7 @@ class AccumulateVisitorTest {
                         int a = 0, b = 1;,
                         a = a + p.age,
                         int sum = a),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -563,7 +563,7 @@ class AccumulateVisitorTest {
                         int a;,
                         a = a + p.age,
                         int sum = a),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -583,7 +583,7 @@ class AccumulateVisitorTest {
                 rule R {
                     acc(and(var p : /persons, var o : /orders[customerId == p.age]),
                         var total = sum(o.amount)),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """);
         assertThat(rule.lhs()).hasSize(1);
@@ -613,7 +613,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         s = s + o.amount,
                         int total = s),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """);
         assertThat(rule.lhs()).hasSize(1);
@@ -659,7 +659,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var w : /withdrawals | time[5s],
                     var a = avg(w.amount),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -683,7 +683,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var w : /withdrawals | length[3],
                     var a = avg(w.amount),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -704,7 +704,7 @@ class AccumulateVisitorTest {
                     var w : /withdrawals | time[5s],
                     var a = avg(w.amount),
                     long n = count(),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -725,7 +725,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     acc(var w : /withdrawals | time[5s],
                         var a = avg(w.amount)),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -748,7 +748,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     acc(var w : /withdrawals | length[3],
                         var a = avg(w.amount)),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -769,7 +769,7 @@ class AccumulateVisitorTest {
                     acc(var w : /withdrawals | time[5s],
                         (var a = avg(w.amount),
                          long n = count())),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -792,7 +792,7 @@ class AccumulateVisitorTest {
                         int s = 0;,
                         s = (int)(s + w.amount),
                         int sum = s),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -816,7 +816,7 @@ class AccumulateVisitorTest {
                 rule R1 {
                     var w : /withdrawals[amount > 100] | time[5s],
                     var a = avg(w.amount),
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);

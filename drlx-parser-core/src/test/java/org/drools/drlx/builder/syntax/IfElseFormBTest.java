@@ -26,10 +26,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     }
                 }
                 """;
@@ -56,10 +56,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     }
                 }
                 """;
@@ -86,13 +86,13 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("low"); }
+                        fn { System.out.println("low"); }
                     } else if (c.creditRating == Rating.MEDIUM) {
                         var p : /products[ rate == Rates.MEDIUM ],
-                        do { System.out.println("medium"); }
+                        fn { System.out.println("medium"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("other"); }
+                        fn { System.out.println("other"); }
                     }
                 }
                 """;
@@ -120,10 +120,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("low"); }
+                        fn { System.out.println("low"); }
                     } else if (c.creditRating == Rating.MEDIUM) {
                         var p : /products[ rate == Rates.MEDIUM ],
-                        do { System.out.println("medium"); }
+                        fn { System.out.println("medium"); }
                     }
                 }
                 """;
@@ -150,10 +150,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c.name + " gets " + p.name); }
+                        fn { System.out.println(c.name + " gets " + p.name); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c.name + " gets " + p.name); }
+                        fn { System.out.println(c.name + " gets " + p.name); }
                     }
                 }
                 """;
@@ -180,11 +180,11 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("first: " + c.name); },
-                        do { System.out.println("second: " + p.name); }
+                        fn { System.out.println("first: " + c.name); },
+                        fn { System.out.println("second: " + p.name); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("else"); }
+                        fn { System.out.println("else"); }
                     }
                 }
                 """;
@@ -241,10 +241,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("low"); }
+                        fn { System.out.println("low"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("other"); }
+                        fn { System.out.println("other"); }
                     }
                 }
                 """;
@@ -282,10 +282,10 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                         } else {
                             var p : /products[ rate == Rates.MEDIUM ]
                         },
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     }
                 }
                 """;
@@ -315,16 +315,16 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("R1 low"); }
+                        fn { System.out.println("R1 low"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("R1 other"); }
+                        fn { System.out.println("R1 other"); }
                     }
                 }
                 rule R2 {
                     var c : /customers,
                     var p : /products,
-                    do { System.out.println("R2"); }
+                    fn { System.out.println("R2"); }
                 }
                 """;
         withCreditUnitInstance(ruleHigh, (instance, unit, listener) -> {
@@ -350,15 +350,15 @@ class IfElseFormBTest extends DrlxBuilderTestSupport {
                     if (c.creditRating == Rating.LOW) {
                         if (c.name == "Alice") {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("nested"); }
+                            fn { System.out.println("nested"); }
                         } else {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("nested else"); }
+                            fn { System.out.println("nested else"); }
                         },
-                        do { System.out.println("outer"); }
+                        fn { System.out.println("outer"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("else"); }
+                        fn { System.out.println("else"); }
                     }
                 }
                 """;

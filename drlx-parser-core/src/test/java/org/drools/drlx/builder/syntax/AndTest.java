@@ -23,7 +23,7 @@ class AndTest extends DrlxBuilderTestSupport {
 
                 rule AdultAndBob {
                     and(/persons[ age > 18 ], /persons[ name == "Bob" ]),
-                    do { System.out.println("adult and bob both exist"); }
+                    fn { System.out.println("adult and bob both exist"); }
                 }
                 """;
 
@@ -57,7 +57,7 @@ class AndTest extends DrlxBuilderTestSupport {
 
                 rule SingleChildAnd {
                     and(/persons[ age > 18 ]),
-                    do { System.out.println("adult"); }
+                    fn { System.out.println("adult"); }
                 }
                 """;
 
@@ -83,7 +83,7 @@ class AndTest extends DrlxBuilderTestSupport {
 
                 rule EmptyAnd {
                     and(),
-                    do { System.out.println("unreachable"); }
+                    fn { System.out.println("unreachable"); }
                 }
                 """;
 
@@ -105,7 +105,7 @@ class AndTest extends DrlxBuilderTestSupport {
 
                 rule BareAnd {
                     and /persons[ age > 18 ],
-                    do { System.out.println("unreachable"); }
+                    fn { System.out.println("unreachable"); }
                 }
                 """;
 

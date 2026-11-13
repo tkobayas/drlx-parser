@@ -133,8 +133,8 @@ testElement
     ;
 
 // 'if' / 'else if' / 'else' branching — DRLXXXX §"if/else".
-// Form A: pattern-only branches with a single trailing `do` at rule level.
-// Form B: per-branch consequences — each branch contains `do`/bare actions.
+// Form A: pattern-only branches with a single trailing `fn` at rule level.
+// Form B: per-branch consequences — each branch contains `fn`/bare actions.
 // CE terminator `,` (after the whole construct) owned by ruleItem.
 conditionalBranch
     : IF '(' expression ')' branchBody
@@ -169,11 +169,11 @@ branchItem
     | branchConsequence
     ;
 
-// Per-branch consequence (Form B). `DO statement` for explicit form
-// (typically a block: `do { stmt; stmt; }`). Bare `expression` for
+// Per-branch consequence (Form B). `FN statement` for explicit form
+// (typically a block: `fn { stmt; stmt; }`). Bare `expression` for
 // single-expression actions without semicolons.
 branchConsequence
-    : DO statement
+    : FN statement
     | expression
     ;
 
@@ -199,10 +199,10 @@ matchPattern
     | expression
     ;
 
-// Match case body: block form, `do statement` form, or bare expression form.
+// Match case body: block form, `fn statement` form, or bare expression form.
 matchCaseBody
     : '{' (branchItem (',' branchItem)*)? '}'
-    | DO statement
+    | FN statement
     | expression
     ;
 
@@ -245,10 +245,10 @@ rulePattern
     : boundOopath ','
     ;
 
-// Consequence: do statement
+// Consequence: fn statement
 // Aligns with: RuleConsequence(Statement statement)
 ruleConsequence
-    : DO statement
+    : FN statement
     ;
 
 // OOPath expression - starts with / followed by a root chunk that may carry

@@ -66,7 +66,7 @@
 
 [**‘from’ versus ‘/’	18**](#‘from’-versus-‘/’)
 
-[**‘do’ :  Immediate vs Agenda Executions	19**](#‘do’-:-immediate-vs-agenda-executions)
+[**'fn' :  Immediate vs Agenda Executions	19**](#'ifn'-and-'fn'-:-immediate-vs-agenda-executions)
 
 [**Rising/Falling the three edges of firings	21**](#rising/falling-the-three-edges-of-firings)
 
@@ -108,7 +108,7 @@
 
 [**Needs and opportunistic backward chaining	39**](#needs-and-opportunistic-backward-chaining)
 
-[**Anonymous rules inside of ‘do’	39**](#anonymous-rules-inside-of-‘do’)
+[**Anonymous rules inside of 'fn'	39**](#anonymous-rules-inside-of-'fn')
 
 [**Left, Right and Inner Joins	39**](#left,-right-and-inner-joins)
 
@@ -156,7 +156,7 @@ Rules and Queries now have a unified with consistent syntax, meaning a separate 
 
 I have also managed to get a version of queries that are consistent, regular, and nice looking syntax \- especially for transitive queries, which were ugly in v7 DRL.
 
-This version does not have named consequences, as there can be nested ‘do’. I could see labelled blocks  as something useful to aid readability, but not speccing this now.
+This version does not have named consequences, as there can be nested 'fn'. I could see labelled blocks  as something useful to aid readability, but not speccing this now.
 
 Note \-\> 
 
@@ -169,18 +169,18 @@ Note \-\>
 
 * ~~Property specific.~~  
 * ~~Document ? passive (no reactive) iteration ?/persons~~  
-* ~~‘do’ actions can actually be supported at any position in the CE tree. Their executions can be immediate or scheduled by the agenda. Yes it would allow further non ‘do’ elements after the ‘do’~~.  
+* ~~'fn' actions can actually be supported at any position in the CE tree. Their executions can be immediate or scheduled by the agenda. Yes it would allow further non 'fn' elements after the 'fn'~~.  
 * ~~Support a special ‘set’ that supports optional functions for the rising and falling edges of propagation.~~  
-* Logical object support at any place a ‘do’ is, sugar syntax may be added to avoid the ‘do’ if there is only a single logical action.  
-* Support for taking advantage of life cycles, especially the set (@All) life cycle (see [https://developer.jboss.org/docs/DOC-47925](https://developer.jboss.org/docs/DOC-47925))  
+* Logical object support at any place a 'fn' is, sugar syntax may be added to avoid the 'fn' if there is only a single logical action.  
+* Support for taking advantage of life cycles, especially the set (@All) life cycle (see [https\://developer.jboss.org/docs/DOC-47925](https://developer.jboss.org/docs/DOC-47925))  
 * Efficiently expose the match elements for acc and groupBy, i.e. give access to Collection that wraps the TupleSet.  
 * Returning a single value from a subnetwork.  
-* ‘‘take’ing on Stream datasources, and potentially ‘yield’ing and . Because of the way we do ‘set’ propagations, controls can be placed to n objects from the datasource before propagating further. This means it will give a chance for further matches and ‘do’ executions in child nodes, before getting more from the stream.  
+* ‘‘take’ing on Stream datasources, and potentially ‘yield’ing and . Because of the way we do ‘set’ propagations, controls can be placed to n objects from the datasource before propagating further. This means it will give a chance for further matches and 'fn' executions in child nodes, before getting more from the stream.  
 * Prologisms  
   * ‘neg’ operator, for strong negation. This includes how a user negates data.  
   * ‘cut’, especially when combined with ‘or’ use cases.  
   * Data structure unification, with Lists and Maps.  
-  * Head | Tail syntax and use cases.  
+  * Head \| Tail syntax and use cases.  
 * Special operators for imperfect reasoning.   
   * For example this is a fuzzy constraint /rooms\[temperature is HOT\].  
   * If the above syntax can be made flexible and non ambiguous it may need  
@@ -249,9 +249,9 @@ Group CE’s with only one element look the same in 7.x as DRLXXXX, as the () is
 
 ## Rules and Consequences {#rules-and-consequences}
 
-The overall rule structure is now technical, using {} instead of ‘begin’ and ‘end’. All rule names must follow valid java class naming conventions \- no spaces and upper first character. Annotations can be applied to rules to provide more metadata, for things like @Description. The ‘then’, for the consequence executed by the agenda, is now a ‘do’. Putting it all together, you can see a full example:
+The overall rule structure is now technical, using {} instead of ‘begin’ and ‘end’. All rule names must follow valid java class naming conventions \- no spaces and upper first character. Annotations can be applied to rules to provide more metadata, for things like @Description. The ‘then’, for the consequence executed by the agenda, is now a 'fn'. Putting it all together, you can see a full example:
 
-| rule EmailPeopleInParis {     var  l : /locations\[city \== ”paris”\],      var  p : /persons\[locationId \== l.id\],     {Email email \= new Email();      email.to(p.emailAddress).body(“my message”).send();} } |
+| rule EmailPeopleInParis {     var  l : /locations\[city \== ”paris”\],      var  p : /persons\[locationId \== l.id\],     fn {Email email \= new Email();      email.to(p.emailAddress).body(“my message”).send();} } |
 | :---- |
 
 A more readable version could be:
@@ -264,14 +264,14 @@ The reason to maintains the when / then keyword is  twofold:
 * Improve readability for newcomers but even for seasoned developers, it makes more immediate the separation between LHS and RHS  
 * Clarify the distinction between the declaratives clauses and the imperative ones
 
-If the ‘do’ is a single statement the ‘{}’ can be omitted, such as if we used a fluent builder of a static method.
+If the 'fn' is a single statement the ‘{}’ can be omitted, such as if we used a fluent builder of a static method.
 
-| rule EmailPeopleInParis {     var  l : /locations\[city \== ”paris”\],      var  p : /persons\[locationId \== i.id=\],     Email.to(p.emailAddress).body(“my message”).send() } |
+| rule EmailPeopleInParis {     var  l : /locations\[city \== ”paris”\],      var  p : /persons\[locationId \== i.id=\],     fn Email.to(p.emailAddress).body(“my message”).send() } |
 | :---- |
 
 Named consequences are no longer supported, but you can have multiple action statements at various points in the tree.
 
-| rule EmailPeople {     var  l : /locations,      if (l.location \== “paris”) {         var  p : /persons\[locationId \== i.id=\],         Email.to(p.emailAddress).body(“paris message”).send()     } else if (l.location \== “london”) {         var  p : /persons\[locationId \== i.id=\],         Email.to(p.emailAddress).body(“paris message”).send()     }  } |
+| rule EmailPeople {     var  l : /locations,      if (l.location \== “paris”) {         var  p : /persons\[locationId \== i.id=\],         fn Email.to(p.emailAddress).body(“paris message”).send()     } else if (l.location \== “london”) {         var  p : /persons\[locationId \== i.id=\],         fn Email.to(p.emailAddress).body(“paris message”).send()     }  } |
 | :---- |
 
 ## Positional and Object Named syntax (POSL). {#positional-and-object-named-syntax-(posl).}
@@ -306,12 +306,12 @@ The query and rule show how the two were used together in DRLOLD. Notice in the 
 
 In DRLXXXX there is now a single ‘rule’ keyword, for rules and queries. A query is a rule with parameters. As before, rules follow the java class naming convention, but now there is an additional step to implicitly map the name rule to a named data source. Using the same conventions as before, the rule Trusts maps to the trusts data source. This unifies how queries are accessed, and ensures a consistent looking example for transitive closures.
 
-| rule Trusts(Thing a, Thing b) {   or(/trusts(a, b),     (/trusts(a, z), /trusts(z, b)) } rule R1 {    a : /things\[name \== “a”\],    /trusts(a, b), // transitively finds all the things a trusts    do ... } |
+| rule Trusts(Thing a, Thing b) {   or(/trusts(a, b),     (/trusts(a, z), /trusts(z, b)) } rule R1 {    a : /things\[name \== “a”\],    /trusts(a, b), // transitively finds all the things a trusts    fn ... } |
 | :---- |
 
 While the query name is declared via caps, querying it must be via the unit’s DataSource field. This keeps things very regular.  As mentioned a query is just a rule with parameters now. 
 
-| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(var z, b), // indicates z is an out var            /trusts(x, z)       )   ) } rule R1 {    var a : /objectAs,    /trusts(a, var b) // transitively finds all the things A trusts    do {...} } |
+| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(var z, b), // indicates z is an out var            /trusts(x, z)       )   ) } rule R1 {    var a : /objectAs,    /trusts(a, var b) // transitively finds all the things A trusts    fn {...} } |
 | :---- |
 
 ## Rule Attributes (Annotations) {#rule-attributes-(annotations)}
@@ -322,7 +322,7 @@ Rule attributes like \`salience\` are defined as annotations on \`rule\`. (Need 
     @Salience(10)  
     rule CheckAge1 {  
         Person p : /persons\[ age \> 18 \],  
-        do { System.out.println(p); }  
+        fn { System.out.println(p); }  
     }  
 \`\`\`  
 Supported attributes are to be determined.
@@ -431,7 +431,7 @@ Equivalent first segment binding on ‘this’. This can be used to bind ‘this
 
 Explicit ‘p.’ is allowed and will end up exactly the same.
 
-| rule R1 {    var l : /locations\[city \== "paris"\],    var p : /persons\[p.locationId \== l.id\],    do {...}  } |
+| rule R1 {    var l : /locations\[city \== "paris"\],    var p : /persons\[p.locationId \== l.id\],    fn {...}  } |
 | :---- |
 
 # Passive elements {#passive-elements}
@@ -445,12 +445,12 @@ The ‘?’ symbol makes a rule passive, it will only propagate when prior data 
 
 Historically drools supported pluggable operators, which allow for CEP temporal constraints.
 
-| rule R1 {    var a : /as,    var b : /bs\[this after a\],    do {...}  } |
+| rule R1 {    var a : /as,    var b : /bs\[this after a\],    fn {...}  } |
 | :---- |
 
 It is also how other interesting things can be added, such as fuzzy operators. Here the \~ indicated it was an imperfect reasoning operator. Those operators also took arguments, to control their behavior \- older drools and some academic papers cover this.
 
-| rule R1 {    var a : /rooms\[temperator \~is HOT\],    do {...}  } |
+| rule R1 {    var a : /rooms\[temperator \~is HOT\],    fn {...}  } |
 | :---- |
 
 # Add/Remove/Update {#add/remove/update}
@@ -459,22 +459,22 @@ The data source the add/remove/updater operation is on must be explicit. Where t
 
 Add example
 
-| rule R1 {    var r : /request\[timestamp before now-1m\],     do alerts.add(new Alert(r)) } |
+| rule R1 {    var r : /request\[timestamp before now-1m\],     fn alerts.add(new Alert(r)) } |
 | :---- |
 
 Remove example
 
-| rule R1 {    var t : /tasks\[status \== COMPLETED\],     do alerts.remove(t) } |
+| rule R1 {    var t : /tasks\[status \== COMPLETED\],     fn alerts.remove(t) } |
 | :---- |
 
 Update example
 
-| rule R1 {    var t : /tasks,     do { t.status \= RECEIVED; alerts.update(t);} } |
+| rule R1 {    var t : /tasks,     fn { t.status \= RECEIVED; alerts.update(t);} } |
 | :---- |
 
 Compact syntax for update. Whereas old DRL has an explicit combined ‘modify’ block, I’m instead experimenting keeping it always ‘update’ but supporting a ‘with’ keyword for block updates, that returns itself \- so it can be used inside a method.  It’s not as compact as DRL7, but it is more regular and more orthogonal.
 
-| rule R1 {    var t : /tasks,     do alerts.update(t{status \= RECEIVED,                      timestamp \= new Date()}); |
+| rule R1 {    var t : /tasks,     fn alerts.update(t{status \= RECEIVED,                      timestamp \= new Date()}); |
 | :---- |
 
 # Literal expressions are cached {#literal-expressions-are-cached}
@@ -515,17 +515,17 @@ Here the coercion is matched to a specific date formatter.
 
 \[\] and () is used to differentiate between positional and slotted syntax.
 
-| rule R1 {    var l : /locations("paris"),    var p : /persons\[locationId \== l.id\],    do {...}  } |
+| rule R1 {    var l : /locations("paris"),    var p : /persons\[locationId \== l.id\],    fn {...}  } |
 | :---- |
 
 ‘var’ is used to indicate it’s an ‘out’ parameter.  Before we inferred if a var was an in or out binding \- i.e. used before or not. However for now, I think it’s best to keep it consistent elsewhere. But what if they want to have a “typed” out var? Maybe we should not allow that
 
-| rule R1 {    var l : /locations("paris", var postCode), // postCode is the                                               // ‘out’ binding    var p : /persons\[locationId \== l.id\],    do {...}  } |
+| rule R1 {    var l : /locations("paris", var postCode), // postCode is the                                               // ‘out’ binding    var p : /persons\[locationId \== l.id\],    fn {...}  } |
 | :---- |
 
 They may be mixed, () must come first.
 
-| rule R1 {          var l : /locations("paris")\[district \== "Belleville"\],    var p : /persons\[locationId \== l.id\],    do {...}  } |
+| rule R1 {          var l : /locations("paris")\[district \== "Belleville"\],    var p : /persons\[locationId \== l.id\],    fn {...}  } |
 | :---- |
 
 # Property Specific {#property-specific}
@@ -574,45 +574,41 @@ When positional syntax is used, there will still need to be two \[\]\[\], even i
 
 Top level ‘and’ is implicit, last element in the sequence does not need ‘,’
 
-| rule R1{    var l : /locations,    var p : /persons\[locationId \= l.id\],    {...}  }  |
+| rule R1{    var l : /locations,    var p : /persons\[locationId \== l.id\],    {...}  }  |
 | :---- |
 
 Top level ‘and’ shown explicit
 
-| rule R1{    and(var l : /locations,        var p : /persons\[locationId \= l.id\]    ),   {...}  } |
+| rule R1{    and(var l : /locations,        var p : /persons\[locationId \== l.id\]    ),   {...}  } |
 | :---- |
 
 Nested ‘or’, top level ‘and’ is implicit. 
 
-| rule R1 {    or(and (var l : /locations\[city \== "paris"\],            var p : /persons\[locationId \= l.id\]       ),       and (var l : /locations\[city \== "london"\],            var p : /persons\[locationId \= l.id\]       )    ),   {...}  } |
+| rule R1 {    or(and (var l : /locations\[city \== "paris"\],            var p : /persons\[locationId \== l.id\]       ),       and (var l : /locations\[city \== "london"\],            var p : /persons\[locationId \== l.id\]       )    ),   {...}  } |
 | :---- |
-
-**Binding scope in group CEs**
-
-Bindings introduced inside `or(...)` are visible only within their own branch. DRLX does not unify same-named bindings across OR branches; use `and(...)` to make a binding visible across an OR. Bindings inside `not(...)` and `exists(...)` are visible only within the negated group.
 
 Passive ‘?’ declared. This will not propagate if more locations or person matches are made, unless there is an update on the request data.
 
-| rule R1{    r : /requests    ?and(var l : /locations\[region \== r.region\],         var p : /persons\[locationId \= l.id\]    ),    {...}  } |
+| rule R1{    r : /requests,    ?and(var l : /locations\[region \== r.region\],         var p : /persons\[locationId \== l.id\]    ),    {...}  } |
 | :---- |
 
 # ‘not’ / ‘exists’ {#‘not’-/-‘exists’}
 
 ‘not’ and ‘exists’ follow the same rules as ‘and’ ‘or’, except they also allow  for parenthesis to be omitted if there is a single child element.
 
-| rule R1 {    not /persons\[ age \< 18\]    {...}  } |
+| rule R1 {    not /persons\[ age \< 18\],    {...}  } |
 | :---- |
 
 # Implicit type with ‘var’ vs explicit type {#implicit-type-with-‘var’-vs-explicit-type}
 
-| rule R1 {    var l : /locations, // implicit    Person p :         /persons\[locationId \= l.id, var a : age\], //explicit    do {...} }  |
+| rule R1 {    var l : /locations, // implicit    Person p :         /persons\[locationId \== l.id, var a : age\], //explicit    fn {...} }  |
 | :---- |
 
 # Iterate versus assignment bindings with expressions {#iterate-versus-assignment-bindings-with-expressions}
 
 ‘:’ paired with ‘/’ means iterate and assign, i.e. ‘foreach’. ‘=’ means assign.
 
-The main difference between this single line statement and a single line “do” is that firstly this executes immediately as part of the propagation and secondly the variable is introduced into the Tuple chain and available in expressions elsewhere.
+The main difference between this single line statement and a single line “fn” is that firstly this executes immediately as part of the propagation and secondly the variable is introduced into the Tuple chain and available in expressions elsewhere.
 
 | rule R1 {    var p : /persons,       int age \= p.age \* 25, // yes expressions are allowed here    {...} }  |
 | :---- |
@@ -628,51 +624,51 @@ Expressions after the ‘/’, which are not followed by any child segments, are
 
 Assignment works too, and would not iterate.
 
-| rule R1 {    var i \= new int\[\] {1, 2, 3},    do {...} }  |
+| rule R1 {    var i \= new int\[\] {1, 2, 3},    fn {...} }  |
 | :---- |
 
-# ‘do’ :  Immediate vs Agenda Executions  {#‘do’-:-immediate-vs-agenda-executions}
+# 'ifn' and 'fn' :  Immediate vs Agenda Executions  {#'ifn'-and-'fn'-:-immediate-vs-agenda-executions}
 
-Any statement that starts with ‘do’ is scheduled and executed on the agenda, all other statements are executed immediately as part of the network propagation.
+Any statement that starts with 'fn' is scheduled and executed on the agenda, ~~all other statements~~ statement that starts with 'ifn' are executed immediately as part of the network propagation.
 
-Normal ‘do’, with a single line statement.
+Normal 'fn', with a single line statement.
 
-| rule R1 {    var a : /as,    { System.out.println(a);}  } |
+| rule R1 {    var a : /as,    fn { System.out.println(a);}  } |
 | :---- |
 
 The {} can be omitted if there is a single statement.
 
-| rule R1 {    var a : /as,    System.out.println(a)  } |
+| rule R1 {    var a : /as,    fn System.out.println(a)  } |
 | :---- |
 
-‘do’ can appear anywhere a conditional element is allowed.
+'fn' can appear anywhere a conditional element is allowed.
 
-| rule R1 {    var a : /as,    { System.out.println(a);},     var b : /bs,    { System.out.println(a \+ b);},     var c : /cs,    { System.out.println(a \+ b \+ c);}  } |
+| rule R1 {    var a : /as,    ifn { System.out.println(a);},     var b : /bs,    fn { System.out.println(a \+ b);},     var c : /cs,    fn { System.out.println(a \+ b \+ c);}  } |
 | :---- |
 
 Same as above but {} omitted.
 
-| rule R1 {    var a : /as,    System.out.println(a),     b : /bs,    do System.out.println(a \+ b),     c : /cs,    do System.out.println(a \+ b \+ c)  } |
+| rule R1 {    var a : /as,    ifn System.out.println(a),     b : /bs,    fn System.out.println(a \+ b),     c : /cs,    fn System.out.println(a \+ b \+ c)  } |
 | :---- |
 
-If the ‘do’ is omitted, those statements are executed during propagation.
+If the 'ifn' is added, those statements are executed during propagation.
 
-| rule R1 {    var a : /as,    System.out.println(a),     var b : /bs,    System.out.println(a \+ b),     var c : /cs,    System.out.println(a \+ b \+ c)  } |
+| rule R1 {    var a : /as,    ifn System.out.println(a),     var b : /bs,    ifn System.out.println(a \+ b),     var c : /cs,    ifn System.out.println(a \+ b \+ c)  } |
 | :---- |
 
-{} can be used for immediate multi statement blocks, each of these is executed immediately with the propagation.
+ifn {} can be used for immediate multi statement blocks, each of these is executed immediately with the propagation.
 
-| rule R1 {    var a : /as,    { System.out.println(a); sendMessage(a);},     var b : /bs,    { System.out.println(a \+ b); sendMessage(a, b);},     var c : /cs,    { System.out.println(a \+ b \+ c); sendMessage(a, b, c);},  } |
+| rule R1 {    var a : /as,    ifn { System.out.println(a); sendMessage(a);},     var b : /bs,    ifn { System.out.println(a \+ b); sendMessage(a, b);},     var c : /cs,    ifn { System.out.println(a \+ b \+ c); sendMessage(a, b, c);},  } |
 | :---- |
 
 First two are immediate, the last is executed by the agenda.
 
-| rule R1 {    var a : /as,    System.out.println(a),    var b : /bs,    System.out.println(a \+ b),     var c : /cs,    do System.out.println(a \+ b \+ c)  } |
+| rule R1 {    var a : /as,    ifn System.out.println(a),    var b : /bs,    ifn System.out.println(a \+ b),     var c : /cs,    fn System.out.println(a \+ b \+ c)  } |
 | :---- |
 
-The first is executed by the agenda, the later two
+The first is executed by the agenda, the later two are immediate
 
-| rule R1 {    var a : /as,    do System.out.println(a),     var b : /bs,    System.out.println(a \+ b),     var c : /cs,    System.out.println(a \+ b \+ c)  } |
+| rule R1 {    var a : /as,    fn System.out.println(a),     var b : /bs,    ifn System.out.println(a \+ b),     var c : /cs,    ifn System.out.println(a \+ b \+ c)  } |
 | :---- |
 
 ## 
@@ -712,7 +708,7 @@ The ‘drain’ keyword is used with a ‘from’ segment. It will react and res
 
 In this example persons propagate as normal, however there is no right memory for alarms. So the p is held in the left memory until a right input attempts to join with it.  There is no right memory, so once join attempts are done that right input object will not attempt any further joinis, nor can it be joined with further left inputs.
 
-| rule R1 {    var p : /persons,    drain var a : /alarms,    do System.out.println(p \+ “:” \+ a)  } |
+| rule R1 {    var p : /persons,    drain var a : /alarms,    fn System.out.println(p \+ “:” \+ a)  } |
 | :---- |
 
 ## 
@@ -721,32 +717,32 @@ In this example persons propagate as normal, however there is no right memory fo
 
 ‘test’ is equivalent to the old ‘eval’, and returns true or false. 
 
-| rule R1 {    var p : /persons,    test p.age \> 30,     do System.out.println(a)  } |
+| rule R1 {    var p : /persons,    test p.age \> 30,     fn System.out.println(a)  } |
 | :---- |
 
 # ‘if’ {#‘if’}
 
 Each branch is enclosed in a ‘{ … ‘}’, there is an implicit ‘and’ in between. For this iteration the ‘,’ at the end of the ‘if’ block is needed \- not for ambiguity reasons, but for consistency (however this may be revisited).
 
-| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW){       var p : /products\[rate \== Rates.HIGH\]    } else {       var p : /products\[rate \== Rates.LOW\] // this is needed    },    do System.out.println(c \+ “ ” \+ p); } |
+| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW){       var p : /products\[rate \== Rates.HIGH\]    } else {       var p : /products\[rate \== Rates.LOW\] // this is needed    },    fn System.out.println(c \+ “ ” \+ p); } |
 | :---- |
 
 ‘else if’ is also supported.
 
-| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) {        var p : /products\[rate \== Rates.HIGH\]    } else if (c.creditRating \== Rating.MEDIUM) {       var p : /products\[rate \== Rates.MEDIUM\]    } else {       var p : /products\[rate \== Rates.LOW\], // this is needed    },    do System.out.println(c \+ “ ” \+ p) } |
+| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) {        var p : /products\[rate \== Rates.HIGH\]    } else if (c.creditRating \== Rating.MEDIUM) {       var p : /products\[rate \== Rates.MEDIUM\]    } else {       var p : /products\[rate \== Rates.LOW\], // this is needed    },    fn System.out.println(c \+ “ ” \+ p) } |
 | :---- |
 
 If multiple elements are needed, they must be grouped by one of ‘and’/‘or’/’not’/’exists’.
 
-| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) {       var r : /requests,       var p : /products\[rate \== Rates.HIGH, type \= r.productType\]          } else {       var r : /requests,       var p : /products\[rate \== Rates.LOW, type \= r.productType\]          },    do System.out.println(c \+ “ ” \+ p) } |
+| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) {       var r : /requests,       var p : /products\[rate \== Rates.HIGH, type \== r.productType\]          } else {       var r : /requests,       var p : /products\[rate \== Rates.LOW, type \== r.productType\]          },    fn System.out.println(c \+ “ ” \+ p) } |
 | :---- |
 
 Alternative ‘if’ syntax proposals. that hat avoid’s the {} but it still needs the final terminating ‘,’. 
 
-| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW)       var p : /products\[rate \== Rates.HIGH\]    else       var p : /products\[rate \== Rates.LOW\] // this is needed    ,    do System.out.println(c \+ “ ” \+ p); } |
+| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW)       var p : /products\[rate \== Rates.HIGH\]    else       var p : /products\[rate \== Rates.LOW\] // this is needed    ,    fn System.out.println(c \+ “ ” \+ p); } |
 | :---- |
 
-| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) and (       var r : /requests,       var p : /products\[rate \== Rates.HIGH, type \= r.productType\]          ) else (       var r : /requests,       var p : /products\[rate \== Rates.LOW, type \= r.productType\]          ),    do System.out.println(c \+ “ ” \+ p) } |
+| rule R1 {    var c : /customer,    if (c.creditRating \== Rating.LOW) and (       var r : /requests,       var p : /products\[rate \== Rates.HIGH, type \== r.productType\]          ) else (       var r : /requests,       var p : /products\[rate \== Rates.LOW, type \== r.productType\]          ),    fn System.out.println(c \+ “ ” \+ p) } |
 | :---- |
 
 ## 
@@ -755,24 +751,24 @@ Alternative ‘if’ syntax proposals. that hat avoid’s the {} but it still ne
 
 Minimal version, ‘case’ is a keyword so the ‘,’ can be omitted, except for the last line if the match is not the end of a sequence.
 
-| rule R1 {    var c : /customer,    match (c.creditRating)        case Rating.LOW do System.out.println(c)       case Rating.MEDIUM do System.out.println(c)       case Rating.HIGH do System.out.println(c),    do ... } |
+| rule R1 {    var c : /customer,    match (c.creditRating)        case Rating.LOW fn System.out.println(c)       case Rating.MEDIUM fn System.out.println(c)       case Rating.HIGH fn System.out.println(c),    fn ... } |
 | :---- |
 
 Grouping can be used for more than one element.
 
-| rule R1 {    var c : /customer,    match (c.creditRating)        case Rating.LOW {          var p : /products\[rating \== c.rating\],          do System.out.println(“Low” \+ c \+ “ ” \+ p)       } case Rating.Medium {          var p : /products\[rating \== c.rating\],          do System.out.println(“Medium” \+ c \+ “ ” \+ p)       } case Rating.HIGH {          var p : /products\[rating \== c.rating\],          do System.out.println(“High” \+ c \+ “ ” \+ p)       } } |
+| rule R1 {    var c : /customer,    match (c.creditRating)        case Rating.LOW {          var p : /products\[rating \== c.rating\],          fn System.out.println(“Low” \+ c \+ “ ” \+ p)       } case Rating.Medium {          var p : /products\[rating \== c.rating\],          fn System.out.println(“Medium” \+ c \+ “ ” \+ p)       } case Rating.HIGH {          var p : /products\[rating \== c.rating\],          fn System.out.println(“High” \+ c \+ “ ” \+ p)       } } |
 | :---- |
 
 Matching can be done on types too. Same notation as ‘/’ without the ‘/’. Recall that \# is inline cast or coerce.
 
-| rule R1 {    var o : /objects,    match (o)        case \#Train do System.out.println(o)       case \#Plane do System.out.println(o)       case \#Automobile\[value \> 30\] do System.out.println(o) } |
+| rule R1 {    var o : /objects,    match (o)        case \#Train fn System.out.println(o)       case \#Plane fn System.out.println(o)       case \#Automobile\[value \> 30\] fn System.out.println(o) } |
 | :---- |
 
 ## 
 
 Support for “default” and also “else” can be added
 
-| rule R1 {    var o : /objects,    match (o)        case \#Train do System.out.println(o)       case \#Plane do System.out.println(o)       case \#Automobile\[value \> 30\] do System.out.println(o)       default do System.out.println(“do this as well”) } |
+| rule R1 {    var o : /objects,    match (o)        case \#Train fn System.out.println(o)       case \#Plane fn System.out.println(o)       case \#Automobile\[value \> 30\] fn System.out.println(o)       default fn System.out.println(“do this as well”) } |
 | :---- |
 
 # Actors and async messaging {#actors-and-async-messaging}
@@ -800,7 +796,7 @@ By default all rules are data drive, and respond to all changes in data. Rules m
 
 Each time a evaluation request is made, any matches that exist in this rule will be refreshed and fired again.
 
-| @ExistanceDriven rule StartRule {    var a /alarms,    do System.outprintln(a) } |
+| @ExistanceDriven rule StartRule {    var a /alarms,    fn System.outprintln(a) } |
 | :---- |
 
 This may be annotated on the rule itself or on the rule unit.
@@ -821,78 +817,78 @@ Once a tuple chain has fired, calling ‘refresh’ on it will submit it to the 
 
 Functions can be imported that will apply to the existing tuple chain
 
-| rule R1 {    var p : /persons\[location \== “london”\],    avgAge \= avg(p.age),    do {...}  } |
+| rule R1 {    var p : /persons\[location \== “london”\],    var avgAge \= avg(p.age),    fn {...}  } |
 | :---- |
 
 It is perfectly reasonable to do the following, and the Rete network could do this already. Although analysis may decide to “push up” the child nodes for network optimizations reasons. Parent classes, that contain the functions, can be imported and then the functions used within that class.
 
-| rule R1 {    var p : /persons\[location \== “london”\],    avgAge \= Func.avg(p.age),    minAge \= Func.min(p.age),    maxAge \= Func.max(p.age),    {...}  } |
+| rule R1 {    var p : /persons\[location \== “london”\],    var avgAge \= Func.avg(p.age),    var minAge \= Func.min(p.age),    var maxAge \= Func.max(p.age),    {...}  } |
 | :---- |
 
 As well as taking standard expressions, it can take a ‘from’ element, however for this to work the path must end in a final ‘.’ notation to make it clear it’s accessing and returning a single value.
 
-| rule R1 {    // ‘.’ means access, not iterate    int avgAge \= avg(/persons.age),     do {...}  } |
+| rule R1 {    // ‘.’ means access, not iterate    int avgAge \= avg(/persons.age),     fn {...}  } |
 | :---- |
 
 ‘and’ can still be used, notice ‘.’ is still last.
 
-| rule R1 {    var avgAge \= avg( and(          l : /locations,             /persons\[locationId \= l.id\].age    ) ),    do {...}  } |
+| rule R1 {    var avgAge \= avg( and(          l : /locations,             /persons\[locationId \== l.id\].age    ) ),    fn {...}  } |
 | :---- |
 
 ### ‘acc’ keyword 2 parameters {#‘acc’-keyword-2-parameters}
 
 Simplest 2 parameter acc, is semantically similar to previous examples, with the direct use of the function without the ‘acc’
 
-| rule R1 {    acc( p : /persons,         var avgAge \= avg(p.age)              ),    do {...}  } |
+| rule R1 {    acc( p : /persons,         var avgAge \= avg(p.age)              ),    fn {...}  } |
 | :---- |
 
 2 parameter acc when used with multiple functions must use ‘( ….).’, which is an implicit ‘and’ group. There are arguments to allow for optional (or not optional) ‘and’.
 
-| rule R1 {    acc( p : /persons,        (var maxAge \= max(p.age),                   var minAge \= min(p.age))                        ),    do {...}  } |
+| rule R1 {    acc( p : /persons,        (var maxAge \= max(p.age),                   var minAge \= min(p.age))                        ),    fn {...}  } |
 | :---- |
 
 Functions can take 1..n arguments. It’s back to a single statement so the ‘and(...)’ can be omitted.
 
-| rule R1 {    acc( and ( p1 : /persons\[location \== “london”\],               p2 : /persons\[location \== “paris”\],         var minAge \= max(p1.age, p2.age)                 ),    do {...}  } |
+| rule R1 {    acc( and ( p1 : /persons\[location \== “london”\],               p2 : /persons\[location \== “paris”\],         var minAge \= max(p1.age, p2.age)                 ),    fn {...}  } |
 | :---- |
 
 ### ‘acc’ keyword 3 parameters {#‘acc’-keyword-3-parameters}
 
 3 parameter version supports an init and action. Here the init is redundant, and is again semantically equivalent to prior examples, but it’s added to illustrate the point. There is no reverse, so it will recalculate everything each change.
 
-| rule R1 {    acc( p : /persons,         int s, // init vars are local         s \= s \+ p.age,         int sum \= s, // result vars are visible to later joins              ),    do { … }  } |
+| rule R1 {    acc( p : /persons,         int s, // init vars are local         s \= s \+ p.age,         int sum \= s, // result vars are visible to later joins              ),    fn { … }  } |
 | :---- |
 
 A 2 argument ‘(....)’ block is used, to specify a reverse and action
 
-| rule R1 {    acc( p : /persons,         int s, // init vars are local        ( s \= s \+ p.age,           S \= s \- p.age )         int sum \= s, // result vars are visible to later joins                     ),    do { … }  } |
+| rule R1 {    acc( p : /persons,         int s, // init vars are local        ( s \= s \+ p.age,           S \= s \- p.age )         int sum \= s, // result vars are visible to later joins                     ),    fn { … }  } |
 | :---- |
 
 3 parameter version with multiple functions. Again the init is redundant, added for illustration.
 
-| rule R1 {    acc( p : /persons,         {int minAge; int maxAge;},         {minAge \= min(minAge, p.age);           maxAge \= max(maxAge, p.age);}             ),    do {...}  } |
+| rule R1 {    acc( p : /persons,         {int minAge; int maxAge;},         {minAge \= min(minAge, p.age);           maxAge \= max(maxAge, p.age);}             ),    fn {...}  } |
 | :---- |
 
 If the acc wants a more complex select, to keep things at 3 parameters, it must use an explicit ‘and’.
 
-|  rule r1 {    acc( and( p : /persons,              t : /cashflows\[personId \= p.id\])         ),         int avgTx,         avgTx \= avg(t.amount)              ),    do {...}  } |
+|  rule r1 {    acc( and( p : /persons,              t : /cashflows\[personId \== p.id\])         ),         int avgTx,         avgTx \= avg(t.amount)              ),    fn {...}  } |
 | :---- |
 
 This is now more complex and shows how a Holder object can be used. The single statement init and action, do not require a {}. They can still support multiple statements, but this would require {} with ; separators.
 
-| rule R1 {    acc( and( p : /persons,              t : /cashflows\[personId \= p.id\] ),         var h \= new ResultsHolder(),         h{minAge \= min(p.age),           maxAge \= max(p.age)}                )    do {...} } |
+| rule R1 {    acc( and( p : /persons,              t : /cashflows\[personId \== p.id\] ),         var h \= new ResultsHolder(),         h{minAge \= min(p.age),           maxAge \= max(p.age)}                )    fn {...} } |
 | :---- |
 
 And inline logic, no external functions works too, this simulates avg. Notice this has 5 positions now, for the reverse and result. If 4 positions are used, the reverse is omitted and it’s recalcated when the input is updated or removed. If there is more than one statement in a position, it must have {} around it. The last line has a single statement, so the {} can be omitted.
 
-| rule R1 {    acc( and( p : /persons,              t : /cashflows\[personId \= p.id\] ),         { var count \= 0; var total \= 0;} ,         { total \+= p.age; count++},         { total \-= p.age; count--},         total / count    )    do {...} } |
+| rule R1 {    acc( and( p : /persons,              t : /cashflows\[personId \== p.id\] ),         { var count \= 0; var total \= 0;} ,         { total \+= p.age; count++},         { total \-= p.age; count--},         double avgAge \= total / count    )    fn {...} } |
 | :---- |
 
 # Group By {#group-by}
 
 Group By works exactly as per acc, but with an extra parameter for the group definition. This includes the behaviour for different numbers of parameters \- except groupby always has one more, for the equivalent acc. Note this example uses a “compact” syntax for setting multiple fields on an instance.
 
-| // top level and shown explicit rule r1 {    groupBy( and (p : /persons,                  cf : /cashflows\[personId \= p.id\]),             p.status, // the group             var r \= new ResultsHolder(),             r{ageTx \= avg(cf.amount);               maxTx \= max(cf.amount);}              )    do {...}  } |
+| // top level and shown explicit rule r1 {    groupBy( and (p : /persons,                  cf : /cashflows\[personId \== p.id\]),             p.status, // the group             var r \= new ResultsHolder(),             r{ageTx \= avg(cf.amount);               maxTx \= max(cf.amount);}              )    fn {...}  } |
 | :---- |
 
 It is optional to bind the group declaration, and it can be used like any other var at this point, including adding to the Holder class \- ideal if things need to be returned outside of subnetwork.
@@ -914,12 +910,12 @@ A query is just a rule that has parameters. The query is a form of DataSource. T
 
 While the query name is declared via caps, querying it must be via the unit’s DataSource field. This keeps things very regular.  As mentioned a query is just a rule with parameters now. 
 
-| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(var a, z), // indicates z is an out var            /trusts(z, b)       )   ) } rule R1 {    var a : /things\[name==”a”\],    /trusts(a, var b) // transitively finds all the things A trusts    do {...} } |
+| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(a, var z), // indicates z is an out var            /trusts(z, b)       )   ) } rule R1 {    var a : /things\[name==”a”\],    /trusts(a, var b) // transitively finds all the things A trusts    fn {...} } |
 | :---- |
 
 Named access is allowed too, keep it regular with all ‘from’ syntax, be careful with names though to avoid clashing. Only the rule parameters are visible within the constraint block.
 
-| rule R1 {    var subject : /things\[name==”a”\],    /trusts\[a \== subject, var object : b\]    do {...} } |
+| rule R1 {    var subject : /things\[name==”a”\],    /trusts\[a \== subject, var object : b\]    fn {...} } |
 | :---- |
 
 While the arguments follow Prolog style unification, it is also possible to bind the query itself. In such a case binding has access to all the outer variables, not just the parameters, and tuples of each query row. Every rule has a generated POJO class that has properties mapped to each variable name. That POJO also has reference to the Tuple chain. The integer position has access to each tuple chain that makes up the row, even if those tuple elements are not bound to a variable name. This example shows that that ‘t.a’ returns the same value as t.objects\[0\]. Note in both cases it coerces to the Object, and not the handle. The Handle can be accessed by the special ‘handles’ property, t.handles\[0\]. Potentially a second pojo could be generated to provide type safe accesso the Handles t.handles().a. Here ‘t’ is also iterable, but supports handles() and objects() methods, both of which return a List of the associated elements.
@@ -934,12 +930,12 @@ The example so far binds the query to a DataSource field in the Unit. If no bind
 
 As query syntax is unified with ‘from’ paths, it can also be passive of an “open” reactive query. Without the ‘?’ it is reactive. This is a passive example
 
-| rule R1 {    var a : /things\[name==”a”\],    ?/trusts(a, var b)   do {...} } |
+| rule R1 {    var a : /things\[name==”a”\],    ?/trusts(a, var b)   fn {...} } |
 | :---- |
 
-‘do’ elements can be used in queries. However an exception will be thrown if a passive query is called and an agenda ‘do’ is found. By default the leaf ‘do’ is executed on the agenda, so this query cannot be called passively.
+'fn' elements can be used in queries. However an exception will be thrown if a passive query is called and an agenda 'fn' is found. By default the leaf 'fn' is executed on the agenda, so this query cannot be called passively.
 
-| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(var z, b), // indicates z is an out var            /trusts(x, z)       )   ),   do System.out.println(a \+ “ trusts ” \+ b) } |
+| // top level and shown explicit rule Trusts(Object a, Object b) {   or (/trusts(a, b),       and (/trusts(var z, b), // indicates z is an out var            /trusts(x, z)       )   ),   fn System.out.println(a \+ “ trusts ” \+ b) } |
 | :---- |
 
 This change would allow the query to be called passively:
@@ -972,9 +968,9 @@ The void keyword can be used when there is no result binding and also no generat
 
 ## Tabling {#tabling}
 
-Any query rule annotated with @Tabled will have each request (goal) cached, this is cached recursive for every time it re-enters. Tabling avoids infinite recursion issues and also allows other queries to benefit from the pre-cached data. This is based on XBS tabling, [http://xsb.sourceforge.net/shadow\_site/manual1/node46.html](http://xsb.sourceforge.net/shadow_site/manual1/node46.html).
+Any query rule annotated with @Tabled will have each request (goal) cached, this is cached recursive for every time it re-enters. Tabling avoids infinite recursion issues and also allows other queries to benefit from the pre-cached data. This is based on XBS tabling, [http\://xsb.sourceforge.net/shadow\_site/manual1/node46.html](http://xsb.sourceforge.net/shadow_site/manual1/node46.html).
 
-I believe this meets the ART opportunistic data-drive backward chaining implementation, and described here [http://haleyai.com/pdf/BackwardChaining.pdf](http://haleyai.com/pdf/BackwardChaining.pdf)
+I believe this meets the ART opportunistic data-drive backward chaining implementation, and described here [http\://haleyai.com/pdf/BackwardChaining.pdf](http://haleyai.com/pdf/BackwardChaining.pdf)
 
 ## Abduction TODO {#abduction-todo}
 
@@ -987,7 +983,7 @@ Abduction can be simulated via queries  within the engine, and no longer needs f
 
 ## Genericised Rules  / Hilog (IGNORE TODO) {#genericised-rules-/-hilog-(ignore-todo)}
 
-Standard rules and queries are fixed to specific data sources. Genericized rules allow the data source to be passed as an argument. [https://www3.cs.stonybrook.edu/\~warren/xsbbook/node46.html](https://www3.cs.stonybrook.edu/~warren/xsbbook/node46.html)
+Standard rules and queries are fixed to specific data sources. Genericized rules allow the data source to be passed as an argument. [https\://www3.cs.stonybrook.edu/\~warren/xsbbook/node46.html](https://www3.cs.stonybrook.edu/~warren/xsbbook/node46.html)
 
 Hilog/XSB seems to only allow one argument, I’ll allow multiple arguments for now. As this parameters only takes DataSources,  no type is needed, but it will allow generics to be specified \- so the DS matches.
 
@@ -1003,7 +999,7 @@ twice(F)(X,R) :- F(X,U), F(U,R).
 
 The previous Trusts rule is hard coded to the /trusts datasource. But in theory it should be able to work with classes that have matching positional and properties, java Generics may be used to tie this down.
 
-| // top level and shown explicit rule closure(DataSource\<? extends Person\>ds)(Object a, Object b) {   or (/ds(a, b),       and (/ds(var z, b), // indicates z is an out var            /ds(x, z)       )   ) } rule R1 {    var a : /objectAs,    /trusts(a, var b) // transitively finds all the things A trusts    do {...} } |
+| // top level and shown explicit rule closure(DataSource\<? extends Person\>ds)(Object a, Object b) {   or (/ds(a, b),       and (/ds(var z, b), // indicates z is an out var            /ds(x, z)       )   ) } rule R1 {    var a : /objectAs,    /trusts(a, var b) // transitively finds all the things A trusts    fn {...} } |
 | :---- |
 
 # Needs and opportunistic backward chaining {#needs-and-opportunistic-backward-chaining}
@@ -1011,11 +1007,11 @@ The previous Trusts rule is hard coded to the /trusts datasource. But in theory 
 Doesn’t exist in Drools yet.  
 TODO
 
-# Anonymous rules inside of ‘do’ {#anonymous-rules-inside-of-‘do’}
+# Anonymous rules inside of 'fn' {#anonymous-rules-inside-of-'fn'}
 
 All outer vars of an anonymous rule are available as properties on the assigned rule instance. The rule instance is iterator and a Stream.
 
-| // top level and shown explicit rule R1 {    var a : /objectA,    do {       var r \=  new Rule {          /trusts(a, var b) // find all the bs that a trusts       }       r.stream.forEach( i \-\> System.out.println(i.b));   ) } |
+| // top level and shown explicit rule R1 {    var a : /objectA,    fn {       var r \=  new Rule {          /trusts(a, var b) // find all the bs that a trusts       }       r.stream.forEach( i \-\> System.out.println(i.b));   ) } |
 | :---- |
 
 # Left, Right and Inner Joins {#left,-right-and-inner-joins}
@@ -1030,51 +1026,51 @@ TODO.
 
 # Windows {#windows}
 
-The over keyword is now represented by the ‘|’ symbol.
+The over keyword is now represented by the ‘\|’ symbol.
 
-|  var w : /withdrawals | length\[5\]  |
+|  var w : /withdrawals \| length\[5\]  |
 | :---- |
 
-|  var w : /withdrawals | time\[5s\]  |
+|  var w : /withdrawals \| time\[5s\]  |
 | :---- |
 
-|  var w : /withdrawals | time\[4d6h5m6s\]  |
+|  var w : /withdrawals \| time\[4d6h5m6s\]  |
 | :---- |
 
 Windows over group elements
 
-| and( var p : /persons      var w : /withdrawals\[accountId \== p.accountId\] ) | time\[5s\], |
+| and( var p : /persons      var w : /withdrawals\[accountId \== p.accountId\] ) \| time\[5s\], |
 | :---- |
 
 **Applying windows before or after constraints.**    
 Here the constraint is applied before the object reaches the window. So only gold customers will reach the window.
 
-|  var w : /withdrawals\[customer \== GOLD\] | length\[5\]  |
+|  var w : /withdrawals\[customer \== GOLD\] \| length\[5\]  |
 | :---- |
 
 Here all customers reach the window, that window is then reduced in size if no customers match.
 
-| var w : /withdrawals | length\[5\], test w\[customer \== GOLD\] |
+| var w : /withdrawals \| length\[5\], test w\[customer \== GOLD\] |
 | :---- |
 
 Window with simple average accumulation function.
 
-| w : /withdrawals | time\[5s\], a \= avg(w) |
+| w : /withdrawals \| time\[5s\], a \= avg(w) |
 | :---- |
 
 Window with accumulate keyword and  average function.
 
-| acc( w : /withdrawals | time\[5s\],      a \= avg(w) ) |
+| acc( w : /withdrawals \| time\[5s\],      a \= avg(w) ) |
 | :---- |
 
 Propagation delay
 
-| /withdrawals | time\[5s\], delay.last(4s) |
+| /withdrawals \| time\[5s\], delay.last(4s) |
 | :---- |
 
 Named windows (TODO) like queries have the same body syntax as rules, however they do not take parameters like queries. They are implicit
 
-| window WithdrawalWindow {     /withdrawals | time(10s) } |
+| window WithdrawalWindow {     /withdrawals \| time(10s) } |
 | :---- |
 
 # Sequencing \[TODO, DO NOT READ YET\] {#sequencing-[todo,-do-not-read-yet]}
@@ -1137,7 +1133,7 @@ For all the cases above where multiple repetitions are supported, the result wil
    
 The default sequence conditional element that connects the repeated pattern is the followed by (-\>) conditional element, but it is possible to define a different conditional element. E.g., if the relationship between the repeated patterns is strictly followed by, it would be defined as:
 
-| \[1..10|=\>\] \\a |
+| \[1..10\|=\>\] \\a |
 | :---- |
 
 Please note that A can be an event or a tuple event. The supported sequence conditional elements are "-\>", "=\>", "\~\>" and "\\\\", as previously defined.   
@@ -1160,9 +1156,9 @@ The rule X above will match tuples of 3 values, one each for A, B and C. A possi
 | \[a, b, c\] |
 | :---- |
 
-In the previous tuple, one can address the "b" value in the tuple by its bound variable "$b".  
+In the previous tuple, one can address the "b" value in the tuple by its bound variable "\$b".  
    
-The approach above works well for situations without pattern repetitions, but how could one address individual elements on a repeated pattern? For instance, what is the value of "$b" in the example below?
+The approach above works well for situations without pattern repetitions, but how could one address individual elements on a repeated pattern? For instance, what is the value of "\$b" in the example below?
 
 | var v1 : \\a \-\>  var v2 : \+\\b \-\>  var v3 : \\c |
 | :---- |
@@ -1177,7 +1173,7 @@ In this case, v2 is a variable of the type Tuple and it is bound to \[b0, b1, b2
 ### Addressing individual elements in a multi-dimensional tuple {#addressing-individual-elements-in-a-multi-dimensional-tuple}
 
    
-To address individual elements in a multi-dimensional tuple, a few concepts are defined. The first is the type Tuple. In the previous example, $b is a variable of the type Tuple.  
+To address individual elements in a multi-dimensional tuple, a few concepts are defined. The first is the type Tuple. In the previous example, \$b is a variable of the type Tuple.  
    
 Individual elements of the type Tuple can be addressed by a numeric offset, like in an array, where the first element in a tuple has offset 0\. In the previous example, the following conditions are true:
 
@@ -1201,12 +1197,12 @@ For the previous example, the following conditions are true:
 
 Multi-dimensional tuples can be several levels deep, depending on the definition of the patterns that created that tuple. For instance:  
    
-{code}$t : ( first $ab : \[1:5\]( first $a : A() \-\> first $b : \[1:3\]B()) \-\> first $c : C() ){code}
+{code}\$t : ( first \$ab : \[1:5\]( first \$a : A() \-\> first \$b : \[1:3\]B()) \-\> first \$c : C() ){code}
 
 | vt : (first vab : \[1:5\]          (first va : \\a \-\> first vb : \[1:3\]\\b) \-\> first vc : \\c ) |
 | :---- |
 
-The example above is definiting a pattern matching sequence of between 1 and 5 groups of one A followed by 1 to 3 B's. These groups are then followed by 1 C. All occurrences are qualified as "first". The whole tuple is bound to a variable $t of the type Tuple.  
+The example above is definiting a pattern matching sequence of between 1 and 5 groups of one A followed by 1 to 3 B's. These groups are then followed by 1 C. All occurrences are qualified as "first". The whole tuple is bound to a variable \$t of the type Tuple.  
    
 A possible result tuple could be:
 
@@ -1215,7 +1211,7 @@ A possible result tuple could be:
 
 This example demonstrates that variables can be bound to nested patterns, effectivelly creating nested variables. Such variables can be addressed with the usual . navigation and can be understood as "aliases'' to the tuple indexes previously defined. The following expressions would hold true for the above example:
 
-| vt\[0\] \== \[ \[ a0, \[b0\] \], \[ a1, \[ b1, b2 \] \], \[a2, \[ b3, b4 \] \] \] vt.ab \== \[ \[ a0, \[b0\] \], \[ a1, \[ b1, b2 \] \], \[a2, \[ b3, b4 \] \] \] vt\[1\] \== c0 vt.c \== c0   vt.vab\[0\] \== \[ a0, \[b0\] \] vt.vab.first \== \[ a0, \[b0\] \] vt.vab\[0\]\[0\] \== a0 vt.vab\[0\].$a \== a0 vt.vab\[0\].first \== a0 |
+| vt\[0\] \== \[ \[ a0, \[b0\] \], \[ a1, \[ b1, b2 \] \], \[a2, \[ b3, b4 \] \] \] vt.ab \== \[ \[ a0, \[b0\] \], \[ a1, \[ b1, b2 \] \], \[a2, \[ b3, b4 \] \] \] vt\[1\] \== c0 vt.c \== c0   vt.vab\[0\] \== \[ a0, \[b0\] \] vt.vab.first \== \[ a0, \[b0\] \] vt.vab\[0\]\[0\] \== a0 vt.vab\[0\].\$a \== a0 vt.vab\[0\].first \== a0 |
 | :---- |
 
 Complex cases like the previous one will rarely occur in real use cases, but nevertheless, it is quite common to have tuples with 1 or 2 nested levels. In any case, this proposal guarantees that all elements in a multi-dimensional tuple are accessible.
@@ -1283,7 +1279,7 @@ body:
 group
 
 group:  
-‘and’ | ‘or’ ‘(‘ arg? (‘,’ arg) ‘)’
+‘and’ \| ‘or’ ‘(‘ arg? (‘,’ arg) ‘)’
 
 expr:
 

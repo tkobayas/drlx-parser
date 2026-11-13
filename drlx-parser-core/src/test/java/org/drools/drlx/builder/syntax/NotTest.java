@@ -32,7 +32,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 rule OnlyAdults {
                     not /persons[ age < 18 ],
-                    do { System.out.println("only adults"); }
+                    fn { System.out.println("only adults"); }
                 }
                 """;
 
@@ -70,7 +70,7 @@ class NotTest extends DrlxBuilderTestSupport {
                 rule OrphanedPerson {
                     Person p : /persons[ age > 0 ],
                     not /orders[ customerId == p.age ],
-                    do { System.out.println("orphan: " + p); }
+                    fn { System.out.println("orphan: " + p); }
                 }
                 """;
 
@@ -128,7 +128,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 rule IllegalInnerBinding {
                     not var p : /persons[ age < 18 ],
-                    do { System.out.println("should not compile"); }
+                    fn { System.out.println("should not compile"); }
                 }
                 """;
 
@@ -151,7 +151,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 rule OnlyAdultsParen {
                     not(/persons[ age < 18 ]),
-                    do { System.out.println("only adults"); }
+                    fn { System.out.println("only adults"); }
                 }
                 """;
 
@@ -181,7 +181,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 rule NoUnderageHighValuePair {
                     not(/persons[ age < 18 ], /orders[ amount > 1000 ]),
-                    do { System.out.println("no risky pair"); }
+                    fn { System.out.println("no risky pair"); }
                 }
                 """;
 
@@ -218,7 +218,7 @@ class NotTest extends DrlxBuilderTestSupport {
 
                 rule EmptyNot {
                     not(),
-                    do { System.out.println("unreachable"); }
+                    fn { System.out.println("unreachable"); }
                 }
                 """;
 

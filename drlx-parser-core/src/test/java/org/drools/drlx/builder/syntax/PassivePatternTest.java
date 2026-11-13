@@ -12,7 +12,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
     //   rule R1 {
     //     var l : /locations[city == "paris"],
     //     var p : ?/persons[age > 18],
-    //     do {...}
+    //     fn {...}
     //   }
     //
     // The `?` marks the persons pattern as passive: inserts on /persons
@@ -36,7 +36,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     var l : /locations[ city == "paris" ],
                     var p : ?/persons[ age > 18 ],
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 
@@ -71,7 +71,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     var l : /locations[ city == "paris" ],
                     var p : ?/persons[ age > 18 ],
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 
@@ -103,7 +103,7 @@ class PassivePatternTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     and(/locations[ city == "paris" ], ?/persons[ age > 18 ]),
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 

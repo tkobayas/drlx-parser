@@ -39,7 +39,7 @@ class NamedWindowTest {
                 }
                 rule R1 {
                     var w : /withdrawalWindow,
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -76,7 +76,7 @@ class NamedWindowTest {
                 }
                 rule R1 {
                     var w : /recentWithdrawals,
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -104,7 +104,7 @@ class NamedWindowTest {
                 }
                 rule R1 {
                     var w : /withdrawalWindow[amount > 200.0],
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -133,11 +133,11 @@ class NamedWindowTest {
                 }
                 rule R1 {
                     var w : /withdrawalWindow[amount > 200.0],
-                    do {}
+                    fn {}
                 }
                 rule R2 {
                     var w : /withdrawalWindow[amount <= 200.0],
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);

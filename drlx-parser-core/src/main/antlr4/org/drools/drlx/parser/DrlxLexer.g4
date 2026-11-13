@@ -16,3 +16,4 @@ IF       : 'if';
 ELSE     : 'else';
 MATCH    : 'match';
 WINDOW   : 'window';
+FN       : 'fn';

@@ -51,7 +51,7 @@ public final class DrlxSourceGenerator {
         for (int i = 0; i < count; i++) {
             sb.append("rule Rule_").append(i).append(" {\n");
             sb.append("    Person p : /persons[ age > ").append(i).append(" ],\n");
-            sb.append("    do { System.out.println(p); }\n");
+            sb.append("    fn { System.out.println(p); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();
@@ -83,7 +83,7 @@ public final class DrlxSourceGenerator {
             sb.append("rule Rule_").append(i).append(" {\n");
             sb.append("    Person p1 : /persons1[ age > ").append(i).append(" ],\n");
             sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
-            sb.append("    do { System.out.println(p2); }\n");
+            sb.append("    fn { System.out.println(p2); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();
@@ -117,7 +117,7 @@ public final class DrlxSourceGenerator {
             sb.append("    Person p1 : /persons1[ age > ").append(i).append(" ],\n");
             sb.append("    Person p2 : /persons2[ age < p1.age ],\n");
             sb.append("    Person p3 : /persons3[ age > p1.age - p2.age ],\n");
-            sb.append("    do { System.out.println(p3); }\n");
+            sb.append("    fn { System.out.println(p3); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();
@@ -147,7 +147,7 @@ public final class DrlxSourceGenerator {
         for (int i = 0; i < count; i++) {
             sb.append("rule Rule_").append(i).append(" {\n");
             sb.append("    Person p : /persons[ age == ").append(i).append(", value1 == \"A\", value2 == \"B\", value3 == \"C\" ],\n");
-            sb.append("    do { System.out.println(p); }\n");
+            sb.append("    fn { System.out.println(p); }\n");
             sb.append("}\n\n");
         }
         return sb.toString();

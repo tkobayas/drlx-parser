@@ -37,7 +37,7 @@ class WindowAccumulateTest {
                 rule R1 {
                     var w : /withdrawals | time[5s],
                     var avgAmount = avg(w.amount),
-                    do { results.add(avgAmount); }
+                    fn { results.add(avgAmount); }
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -75,7 +75,7 @@ class WindowAccumulateTest {
                 rule R1 {
                     var w : /withdrawals | length[3],
                     var avgAmount = avg(w.amount),
-                    do { results.add(avgAmount); }
+                    fn { results.add(avgAmount); }
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -106,7 +106,7 @@ class WindowAccumulateTest {
                 rule R1 {
                     acc(var w : /withdrawals | time[5s],
                         var avgAmount = avg(w.amount)),
-                    do { results.add(avgAmount); }
+                    fn { results.add(avgAmount); }
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -144,7 +144,7 @@ class WindowAccumulateTest {
                 rule R1 {
                     acc(var w : /withdrawals | length[3],
                         var avgAmount = avg(w.amount)),
-                    do { results.add(avgAmount); }
+                    fn { results.add(avgAmount); }
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);

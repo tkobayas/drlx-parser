@@ -22,7 +22,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
 
                 rule NoJoinExists {
                     not(var p : /persons1, /persons2[ name == p.name ]),
-                    do { System.out.println("no join"); }
+                    fn { System.out.println("no join"); }
                 }
                 """;
 
@@ -50,7 +50,7 @@ class NotExistsBindingTest extends DrlxBuilderTestSupport {
 
                 rule JoinExists {
                     exists(var p : /persons1, /persons2[ name == p.name ]),
-                    do { System.out.println("join exists"); }
+                    fn { System.out.println("join exists"); }
                 }
                 """;
 

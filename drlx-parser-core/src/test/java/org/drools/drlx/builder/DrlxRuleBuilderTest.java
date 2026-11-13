@@ -40,7 +40,7 @@ class DrlxRuleBuilderTest {
 
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -73,13 +73,13 @@ class DrlxRuleBuilderTest {
 
                 rule CheckAge1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
 
                 rule CheckAge2 {
                     Address s : /addresses[ city == "Tokyo" ],
                         Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """; // placed /persons after /addresses to avoid node sharing, because this test is about lambda sharing
 
@@ -159,13 +159,13 @@ class DrlxRuleBuilderTest {
 
                 rule CheckAge1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
 
                 rule CheckAge2 {
                     Address s : /addresses[ city == "Tokyo" ],
                         Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -204,13 +204,13 @@ class DrlxRuleBuilderTest {
 
                 rule CheckAge1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
 
                 rule CheckAge2 {
                     Address s : /addresses[ city == "Tokyo" ],
                         Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -250,7 +250,7 @@ class DrlxRuleBuilderTest {
 
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -294,7 +294,7 @@ class DrlxRuleBuilderTest {
 
                 rule SetName {
                     Person p : /persons[ age > 18 ],
-                    do { p.name = "Modified"; }
+                    fn { p.name = "Modified"; }
                 }
                 """;
 
@@ -329,7 +329,7 @@ class DrlxRuleBuilderTest {
 
                 rule SetCity {
                     Person p : /persons[ age > 18 ],
-                    do { p.address.city = "Tokyo"; }
+                    fn { p.address.city = "Tokyo"; }
                 }
                 """;
 
@@ -372,7 +372,7 @@ class DrlxRuleBuilderTest {
 
                 rule FromArray {
                     var i : /new int[] {1, 2, 3},
-                    do { results.add(i); }
+                    fn { results.add(i); }
                 }
                 """;
 
@@ -396,7 +396,7 @@ class DrlxRuleBuilderTest {
 
                 rule FromList {
                     var s : /java.util.List.of("a", "b", "c"),
-                    do { results.add(s); }
+                    fn { results.add(s); }
                 }
                 """;
 
@@ -423,7 +423,7 @@ class DrlxRuleBuilderTest {
                 rule FromBinding {
                     var p : /persons,
                     var addr : /p.getAddresses(),
-                    do { results.add(addr); }
+                    fn { results.add(addr); }
                 }
                 """;
 
@@ -453,7 +453,7 @@ class DrlxRuleBuilderTest {
 
                 rule FromSingle {
                     var s : /String.valueOf(42),
-                    do { results.add(s); }
+                    fn { results.add(s); }
                 }
                 """;
 

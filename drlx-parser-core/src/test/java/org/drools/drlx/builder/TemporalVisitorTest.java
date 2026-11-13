@@ -20,7 +20,7 @@ class TemporalVisitorTest {
                 rule R1 {
                     var a : /as,
                     var b : /bs[this after a],
-                    do {}
+                    fn {}
                 }
                 """);
         var pattern = (PatternIR) rule.lhs().get(1);
@@ -41,7 +41,7 @@ class TemporalVisitorTest {
                 rule R1 {
                     var a : /as,
                     var b : /bs[this after[3m, 4m] a],
-                    do {}
+                    fn {}
                 }
                 """);
         var pattern = (PatternIR) rule.lhs().get(1);
@@ -59,7 +59,7 @@ class TemporalVisitorTest {
                 rule R1 {
                     var a : /as,
                     var b : /bs[this not before a],
-                    do {}
+                    fn {}
                 }
                 """);
         var pattern = (PatternIR) rule.lhs().get(1);
@@ -77,7 +77,7 @@ class TemporalVisitorTest {
                 rule R1 {
                     var a : /as,
                     var b : /bs[this after a, amount > 100],
-                    do {}
+                    fn {}
                 }
                 """);
         var pattern = (PatternIR) rule.lhs().get(1);
@@ -93,7 +93,7 @@ class TemporalVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals[amount > 100],
-                    do {}
+                    fn {}
                 }
                 """);
         var pattern = (PatternIR) rule.lhs().get(0);

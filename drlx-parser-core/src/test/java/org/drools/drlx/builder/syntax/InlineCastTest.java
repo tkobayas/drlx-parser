@@ -23,7 +23,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
 
                 rule CheckEmployee {
                     Person e : /persons#Employee[ department == "Engineering" ],
-                    do { System.out.println(e); }
+                    fn { System.out.println(e); }
                 }
                 """;
 
@@ -55,7 +55,7 @@ class InlineCastTest extends DrlxBuilderTestSupport {
 
                 rule MatchAllEmployees {
                     Person e : /persons#Employee,
-                    do { System.out.println(e); }
+                    fn { System.out.println(e); }
                 }
                 """;
 

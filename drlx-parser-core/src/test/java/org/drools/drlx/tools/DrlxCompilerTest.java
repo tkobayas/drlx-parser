@@ -39,7 +39,7 @@ class DrlxCompilerTest {
                     rule JoinRule {
                         Person p1 : /seniors[ age > 30 ],
                         Person p2 : /juniors[ age < p1.age ],
-                        do { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
+                        fn { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
                     }
                     """;
 
@@ -89,13 +89,13 @@ class DrlxCompilerTest {
 
                 rule CheckAge1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
 
                 rule CheckAge2 {
                     Address s : /addresses[ city == "Tokyo" ],
                         Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -139,7 +139,7 @@ class DrlxCompilerTest {
                 rule JoinRule {
                     Person p1 : /seniors[ age > 30 ],
                     Person p2 : /juniors[ age < p1.age ],
-                    do { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
+                    fn { System.out.println(p2.getName() + " is younger than " + p1.getName()); }
                 }
                 """;
 
@@ -180,7 +180,7 @@ class DrlxCompilerTest {
                     Person p1 : /persons1[ age > 30 ],
                     Person p2 : /persons2[ age < p1.age ],
                     Person p3 : /persons3[ age > p1.age - p2.age ],
-                    do { System.out.println(p3.getName() + " age > " + p1.getName() + ".age - " + p2.getName() + ".age"); }
+                    fn { System.out.println(p3.getName() + " age > " + p1.getName() + ".age - " + p2.getName() + ".age"); }
                 }
                 """;
 
@@ -229,19 +229,19 @@ class DrlxCompilerTest {
                 rule Rule_0 {
                     Person p1 : /persons1[ age > 0 ],
                     Person p2 : /persons2[ age < p1.age ],
-                    do { System.out.println(p2); }
+                    fn { System.out.println(p2); }
                 }
 
                 rule Rule_1 {
                     Person p1 : /persons1[ age > 1 ],
                     Person p2 : /persons2[ age < p1.age ],
-                    do { System.out.println(p2); }
+                    fn { System.out.println(p2); }
                 }
 
                 rule Rule_2 {
                     Person p1 : /persons1[ age > 2 ],
                     Person p2 : /persons2[ age < p1.age ],
-                    do { System.out.println(p2); }
+                    fn { System.out.println(p2); }
                 }
                 """;
 
@@ -290,7 +290,7 @@ class DrlxCompilerTest {
 
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 

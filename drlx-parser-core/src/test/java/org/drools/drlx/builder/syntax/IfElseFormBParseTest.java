@@ -34,10 +34,10 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     }
                 }
                 """;
@@ -61,10 +61,10 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c + " " + p); }
+                        fn { System.out.println(c + " " + p); }
                     }
                 }
                 """;
@@ -102,13 +102,13 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("low"); }
+                        fn { System.out.println("low"); }
                     } else if (c.creditRating == Rating.MEDIUM) {
                         var p : /products[ rate == Rates.MEDIUM ],
-                        do { System.out.println("medium"); }
+                        fn { System.out.println("medium"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("other"); }
+                        fn { System.out.println("other"); }
                     }
                 }
                 """;
@@ -147,7 +147,7 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     }
                 }
                 """;
@@ -197,11 +197,11 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println("first"); },
-                        do { System.out.println("second"); }
+                        fn { System.out.println("first"); },
+                        fn { System.out.println("second"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("else"); }
+                        fn { System.out.println("else"); }
                     }
                 }
                 """;
@@ -224,10 +224,10 @@ class IfElseFormBParseTest {
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
                         System.out.println("bare"),
-                        do { System.out.println("explicit"); }
+                        fn { System.out.println("explicit"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("else"); }
+                        fn { System.out.println("else"); }
                     }
                 }
                 """;
@@ -252,7 +252,7 @@ class IfElseFormBParseTest {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         List<RuleIR> rules = parseRules(rule);
@@ -274,7 +274,7 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     }
@@ -299,12 +299,12 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     },
-                    do { System.out.println("trailing"); }
+                    fn { System.out.println("trailing"); }
                 }
                 """;
         assertThatThrownBy(() -> parseRules(rule))
@@ -325,11 +325,11 @@ class IfElseFormBParseTest {
                 rule R {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
-                        do { System.out.println("before pattern"); },
+                        fn { System.out.println("before pattern"); },
                         var p : /products[ rate == Rates.HIGH ]
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     }
                 }
                 """;
@@ -352,10 +352,10 @@ class IfElseFormBParseTest {
                     var c : /customers,
                     if (c.creditRating == Rating.LOW) {
                         var p : /products[ rate == Rates.HIGH ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println(c); }
+                        fn { System.out.println(c); }
                     },
                     var extra : /products[ rate == Rates.MEDIUM ],
                 }
@@ -380,15 +380,15 @@ class IfElseFormBParseTest {
                     if (c.creditRating == Rating.LOW) {
                         if (c.name == "Alice") {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("nested"); }
+                            fn { System.out.println("nested"); }
                         } else {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("nested else"); }
+                            fn { System.out.println("nested else"); }
                         },
-                        do { System.out.println("outer"); }
+                        fn { System.out.println("outer"); }
                     } else {
                         var p : /products[ rate == Rates.LOW ],
-                        do { System.out.println("else"); }
+                        fn { System.out.println("else"); }
                     }
                 }
                 """;

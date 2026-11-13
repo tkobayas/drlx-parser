@@ -33,7 +33,7 @@ class IfElseParseTest {
                     } else {
                         var j : /juniors[ age == p.age ]
                     },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(rule));
@@ -57,7 +57,7 @@ class IfElseParseTest {
                     if (p.age > 60) { var s : /seniors[ age == p.age ] }
                     else if (p.age > 30) { var a : /adults[ age == p.age ] }
                     else { var j : /juniors[ age == p.age ] },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(rule));
@@ -76,7 +76,7 @@ class IfElseParseTest {
                 rule R {
                     var p : /persons,
                     if (p.age > 60) { var s : /seniors[ age == p.age ] },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(rule));
@@ -96,7 +96,7 @@ class IfElseParseTest {
                     var p : /persons,
                     if (p.age > 30) { var s : /seniors[ age == p.age ] }
                     else { var j : /juniors[ age == p.age ] },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         RuleIR ruleIr = parseSingleRule(rule);
@@ -134,7 +134,7 @@ class IfElseParseTest {
                     if (p.age > 60) { var s : /seniors[ age == p.age ] }
                     else if (p.age > 30) { var a : /adults[ age == p.age ] }
                     else { var j : /juniors[ age == p.age ] },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         RuleIR ruleIr = parseSingleRule(rule);
@@ -168,7 +168,7 @@ class IfElseParseTest {
                 rule R {
                     var p : /persons,
                     if (p.age > 30) { } else { var j : /juniors[ age == p.age ] },
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         org.assertj.core.api.Assertions.assertThatThrownBy(

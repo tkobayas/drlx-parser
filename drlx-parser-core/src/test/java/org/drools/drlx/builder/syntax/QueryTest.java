@@ -68,7 +68,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge(25, var p),
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -104,7 +104,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAgeRange(25, 35, var p),
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -173,7 +173,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge(25),
-                    do { System.out.println("wrong"); }
+                    fn { System.out.println("wrong"); }
                 }
                 """;
 
@@ -200,7 +200,7 @@ class QueryTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     var l : /locations[city == "paris"],
                     ?/personsByAge(25, var p),
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 
@@ -236,7 +236,7 @@ class QueryTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     var l : /locations[city == "paris"],
                     ?/personsByAge(25, var p),
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 
@@ -271,7 +271,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /trusts("A", var t),
-                    do { results.add(t); }
+                    fn { results.add(t); }
                 }
                 """;
 
@@ -305,7 +305,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t.result); }
+                    fn { results.add(t.result); }
                 }
                 """;
 
@@ -341,7 +341,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t[1]); }
+                    fn { results.add(t[1]); }
                 }
                 """;
 
@@ -377,7 +377,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t.result == t[1]); }
+                    fn { results.add(t.result == t[1]); }
                 }
                 """;
 
@@ -412,7 +412,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t.objects().length); }
+                    fn { results.add(t.objects().length); }
                 }
                 """;
 
@@ -444,7 +444,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t.handles()[1].getObject()); }
+                    fn { results.add(t.handles()[1].getObject()); }
                 }
                 """;
 
@@ -477,7 +477,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(t.handles().result.getObject()); }
+                    fn { results.add(t.handles().result.getObject()); }
                 }
                 """;
 
@@ -510,7 +510,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do {
+                    fn {
                         results.add(t.handles()[1].getObject() == t.result);
                         results.add(t.handles().result.getObject() == t.result);
                     }
@@ -543,7 +543,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge[minAge == 25, var p : result],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -580,7 +580,7 @@ class QueryTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     /personsByAge(20, var p),
                     test p.age > 35,
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -613,7 +613,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAgeRange[minAge == 25, maxAge == 35, var p : result],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -647,7 +647,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge[var p : result, minAge == 25],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -680,7 +680,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge[minAge == 25],
-                    do { results.add("wrong"); }
+                    fn { results.add("wrong"); }
                 }
                 """;
 
@@ -704,7 +704,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge[badName == 25, var p : result],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -728,7 +728,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge(25)[var p : result],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -754,7 +754,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /trusts("A", var t),
-                    do { results.add(t); }
+                    fn { results.add(t); }
                 }
                 """;
 
@@ -778,7 +778,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /personsByAge[minAge >= 25, var p : result],
-                    do { results.add(p); }
+                    fn { results.add(p); }
                 }
                 """;
 
@@ -801,7 +801,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge[minAge == 25, var p : result],
-                    do { results.add(t.result); }
+                    fn { results.add(t.result); }
                 }
                 """;
 
@@ -837,7 +837,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var t : /personsByAge(25, var p),
-                    do { results.add(p.name + ":" + ((org.drools.drlx.domain.Person)t.result).name); }
+                    fn { results.add(p.name + ":" + ((org.drools.drlx.domain.Person)t.result).name); }
                 }
                 """;
 
@@ -905,7 +905,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /trustworthy("Alice", var b),
-                    do { results.add(b); }
+                    fn { results.add(b); }
                 }
                 """;
 
@@ -939,7 +939,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /trustworthy("Alice", var b),
-                    do { results.add(b); }
+                    fn { results.add(b); }
                 }
                 """;
 
@@ -974,7 +974,7 @@ class QueryTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     /trustworthy("Alice", var b),
-                    do { results.add(b); }
+                    fn { results.add(b); }
                 }
                 """;
 

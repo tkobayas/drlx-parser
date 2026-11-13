@@ -28,7 +28,7 @@ class WindowTest {
             unit WithdrawalUnit;
             rule R1 {
                 var w : /withdrawals | %s,
-                do {}
+                fn {}
             }
             """;
 
@@ -116,7 +116,7 @@ class WindowTest {
                 unit WithdrawalUnit;
                 rule R1 {
                     var w : /withdrawals[customer == "GOLD"] | length[3],
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);
@@ -144,7 +144,7 @@ class WindowTest {
                 rule R1 {
                     var w : /withdrawals | length[3],
                     test w.customer == "GOLD",
-                    do {}
+                    fn {}
                 }
                 """;
         KieBase kieBase = buildWithStreamMode(drlx);

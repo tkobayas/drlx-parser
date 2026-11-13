@@ -23,7 +23,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
 
                 rule HasAdult {
                     exists /persons[ age >= 18 ],
-                    do { System.out.println("adult exists"); }
+                    fn { System.out.println("adult exists"); }
                 }
                 """;
 
@@ -65,7 +65,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
                 rule ConfirmedPerson {
                     Person p : /persons[ age > 0 ],
                     exists /orders[ customerId == p.age ],
-                    do { System.out.println("confirmed: " + p); }
+                    fn { System.out.println("confirmed: " + p); }
                 }
                 """;
 
@@ -99,7 +99,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
 
                 rule HasAdultWithHighValueOrder {
                     exists(/persons[ age >= 18 ], /orders[ amount > 1000 ]),
-                    do { System.out.println("adult with high-value order exists"); }
+                    fn { System.out.println("adult with high-value order exists"); }
                 }
                 """;
 
@@ -134,7 +134,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
 
                 rule IllegalInnerExistsBinding {
                     exists var p : /persons[ age >= 18 ],
-                    do { System.out.println("should not compile"); }
+                    fn { System.out.println("should not compile"); }
                 }
                 """;
 
@@ -157,7 +157,7 @@ class ExistsTest extends DrlxBuilderTestSupport {
 
                 rule EmptyExists {
                     exists(),
-                    do { System.out.println("unreachable"); }
+                    fn { System.out.println("unreachable"); }
                 }
                 """;
 

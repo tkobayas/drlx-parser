@@ -1466,7 +1466,7 @@ public class DrlxRuleAstRuntimeBuilder {
         if (patternIr.passive() && targetQuery.getConsequence() != null) {
             throw new RuntimeException(
                     "Cannot passively invoke query '" + targetQuery.getName()
-                    + "': the query has an agenda-based 'do' block which is incompatible with passive invocation");
+                    + "': the query has an agenda-based 'fn' block which is incompatible with passive invocation");
         }
 
         return new QueryElement(

@@ -20,7 +20,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals | length[5],
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -38,7 +38,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals | time[5s],
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -54,7 +54,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals | time[4d6h5m6s],
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -70,7 +70,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals,
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -86,7 +86,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals[amount > 100] | length[5],
-                    do {}
+                    fn {}
                 }
                 """;
         var rule = parseRule(drlx);
@@ -103,7 +103,7 @@ class WindowVisitorTest {
                 unit MyUnit;
                 rule R1 {
                     var w : /withdrawals | count[5],
-                    do {}
+                    fn {}
                 }
                 """;
         assertThatThrownBy(() -> parseRule(drlx))
@@ -119,7 +119,7 @@ class WindowVisitorTest {
                 unit WithdrawalUnit;
                 rule R1 {
                     var w : /withdrawals | length[5],
-                    do {}
+                    fn {}
                 }
                 """;
         org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
@@ -145,7 +145,7 @@ class WindowVisitorTest {
                 unit WithdrawalUnit;
                 rule R1 {
                     var w : /withdrawals | time[5s],
-                    do {}
+                    fn {}
                 }
                 """;
         org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
@@ -170,7 +170,7 @@ class WindowVisitorTest {
                 unit WithdrawalUnit;
                 rule R1 {
                     var w : /withdrawals | time[4d6h5m6s],
-                    do {}
+                    fn {}
                 }
                 """;
         org.kie.api.KieBase kieBase = new DrlxRuleBuilder().build(drlx);
@@ -194,7 +194,7 @@ class WindowVisitorTest {
                 }
                 rule R1 {
                     var w : /withdrawals,
-                    do {}
+                    fn {}
                 }
                 """;
         var unit = parseUnit(drlx);
@@ -216,7 +216,7 @@ class WindowVisitorTest {
                 }
                 rule R1 {
                     var w : /withdrawals,
-                    do {}
+                    fn {}
                 }
                 """;
         var unit = parseUnit(drlx);
@@ -237,7 +237,7 @@ class WindowVisitorTest {
                 }
                 rule R1 {
                     var w : /withdrawals,
-                    do {}
+                    fn {}
                 }
                 """;
         var unit = parseUnit(drlx);

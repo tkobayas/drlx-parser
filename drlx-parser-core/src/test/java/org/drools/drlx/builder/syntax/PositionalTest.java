@@ -28,7 +28,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule MatchParisLocations {
                     Location l : /locations("paris"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -54,7 +54,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule MatchParisBelleville {
                     Location l : /locations("paris")[ district == "Belleville" ],
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -80,7 +80,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule MatchParisBelleville {
                     Location l : /locations("paris", "Belleville"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -107,7 +107,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule TryPositionalOnNonRoot {
                     Location l : /locations/sub("x"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -133,7 +133,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 rule MatchByPersonName {
                     Person p : /persons[ name == "paris" ],
                     Location l : /locations(p.name),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -161,7 +161,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule TryInheritedCollision {
                     ChildPositioned l : /childPositionedThings("x"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -187,7 +187,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule TryDuplicate {
                     DuplicatePositionLocation l : /duplicateLocations("paris"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -214,7 +214,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule TryPositional {
                     PlainLocation l : /plainLocations("paris"),
-                    do { System.out.println(l); }
+                    fn { System.out.println(l); }
                 }
                 """;
 
@@ -238,7 +238,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule BindDistrict {
                     /locations("paris", var postCode),
-                    do { results.add(postCode); }
+                    fn { results.add(postCode); }
                 }
                 """;
 
@@ -267,7 +267,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
 
                 rule BindBoth {
                     /locations(var c, var d),
-                    do { results.add(c + ":" + d); }
+                    fn { results.add(c + ":" + d); }
                 }
                 """;
 
@@ -297,7 +297,7 @@ class PositionalTest extends DrlxBuilderTestSupport {
                 rule BindAndUse {
                     /locations("paris", var district),
                     Person p : /persons[name == district],
-                    do { results.add(p.getName()); }
+                    fn { results.add(p.getName()); }
                 }
                 """;
 

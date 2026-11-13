@@ -51,7 +51,7 @@ unit MyUnit;
 
 rule "age check" {
     Person $p : /persons[ age > 18 ],
-    do {
+    fn {
         System.out.println($p.getName());
     }
 }
@@ -65,7 +65,7 @@ Key syntax elements:
 - **Rule annotations:** `@Salience(int)` controls firing priority; `@Description(String)` attaches metadata. Both require `import org.drools.drlx.annotations.Salience;` (or `.Description`) — or use the fully-qualified form. Unknowns, duplicates, missing imports, and non-literal arguments fail loud at parse time. See `specs/2026-04-20-rule-annotations-design.md`.
 - **Alpha conditions:** single-fact constraints (`age > 18`)
 - **Beta conditions:** cross-fact joins (`age < $other.age`)
-- **Consequences:** Java statement blocks in `do { ... }`
+- **Consequences:** Java statement blocks in `fn { ... }`
 
 ## Architecture
 

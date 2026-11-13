@@ -22,7 +22,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][basePay, bonusPay],
-                    do { System.out.println("fired"); }
+                    fn { System.out.println("fired"); }
                 }
                 """;
 
@@ -62,7 +62,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][*],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -92,7 +92,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][!*],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -122,7 +122,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][*, !bonusPay],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -159,7 +159,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][basePya],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -180,7 +180,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][basePay, basePay],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -201,7 +201,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[salary > 0][basePay],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -233,7 +233,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[salary > 0][basePay],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -265,7 +265,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[salary > 0][basePay],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -297,7 +297,7 @@ class PropertyReactiveWatchListTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[][*, *],
-                    do { }
+                    fn { }
                 }
                 """;
 

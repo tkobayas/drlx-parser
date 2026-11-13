@@ -46,7 +46,7 @@ class QueryParseTest {
 
                 rule R1 {
                     Person p : /persons[age > 10],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -67,7 +67,7 @@ class QueryParseTest {
 
                 rule R1 {
                     /personsByAge(25, var p),
-                    do { System.out.println("ok"); }
+                    fn { System.out.println("ok"); }
                 }
                 """;
 

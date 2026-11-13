@@ -41,13 +41,13 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience(5)
                 rule LowSalience {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("low"); }
+                    fn { System.out.println("low"); }
                 }
 
                 @Salience(10)
                 rule HighSalience {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("high"); }
+                    fn { System.out.println("high"); }
                 }
                 """;
 
@@ -76,7 +76,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Description("Checks adult age")
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -104,7 +104,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Description("The answer")
                 rule Combined {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -129,7 +129,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @org.drools.drlx.annotations.Description("FQN form")
                 rule FullyQualified {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -154,7 +154,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience(10)
                 rule MissingImport {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -180,7 +180,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @org.example.NoLoop
                 rule Unsupported {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -208,7 +208,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience(10)
                 rule Duplicate {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -234,7 +234,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience("ten")
                 rule BadType {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -261,7 +261,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience(1 + 2)
                 rule BadShape {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -310,7 +310,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DataSource("people")
                 rule NotAQuery {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -383,7 +383,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @NoLoop(true)
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -406,7 +406,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @LockOnActive(true)
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -429,7 +429,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Disabled(false)
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -452,7 +452,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @ActivationGroup("")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -475,7 +475,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @NoLoop
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { p.age += 1; persons.update(p); }
+                    fn { p.age += 1; persons.update(p); }
                 }
                 """;
 
@@ -514,13 +514,13 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Salience(10)
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { p.age += 1; persons.update(p); }
+                    fn { p.age += 1; persons.update(p); }
                 }
 
                 @LockOnActive
                 rule R2 {
                     Person p : /persons[ age > 18 ],
-                    do { p.age += 10; persons.update(p); }
+                    fn { p.age += 10; persons.update(p); }
                 }
                 """;
 
@@ -556,7 +556,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Disabled
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -583,13 +583,13 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @ActivationGroup("only-one")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("R1"); }
+                    fn { System.out.println("R1"); }
                 }
 
                 @ActivationGroup("only-one")
                 rule R2 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("R2"); }
+                    fn { System.out.println("R2"); }
                 }
                 """;
 
@@ -616,7 +616,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -639,7 +639,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Duration
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -662,7 +662,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -685,7 +685,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Duration("")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -710,7 +710,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Duration("5s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -733,7 +733,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("xyz: 1s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -755,7 +755,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("int 1s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -777,7 +777,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Duration("abc")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -806,7 +806,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("int: 1s 1s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("timer fired for " + p.getName()); }
+                    fn { System.out.println("timer fired for " + p.getName()); }
                 }
                 """;
 
@@ -855,7 +855,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Duration("5s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("duration fired for " + p.getName()); }
+                    fn { System.out.println("duration fired for " + p.getName()); }
                 }
                 """;
 
@@ -904,7 +904,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("cron: 0/5 * * * * ?")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("cron fired for " + p.getName()); }
+                    fn { System.out.println("cron fired for " + p.getName()); }
                 }
                 """;
 
@@ -945,7 +945,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @Timer("1s")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println("default protocol fired"); }
+                    fn { System.out.println("default protocol fired"); }
                 }
                 """;
 
@@ -986,7 +986,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("2020-01-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1014,7 +1014,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2099-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1044,7 +1044,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2099-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1069,7 +1069,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @org.drools.drlx.annotations.DateEffective("2020-06-15")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1095,7 +1095,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1117,7 +1117,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1139,7 +1139,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("not-a-date")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1161,7 +1161,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("01-Jan-2025")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -1183,7 +1183,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1211,7 +1211,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1239,7 +1239,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1267,7 +1267,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1297,7 +1297,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1327,7 +1327,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2025-12-31")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1357,7 +1357,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateExpires("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p.getName()); }
+                    fn { System.out.println(p.getName()); }
                 }
                 """;
 
@@ -1394,7 +1394,7 @@ class RuleAnnotationsTest extends DrlxBuilderTestSupport {
                 @DateEffective("2025-06-01")
                 rule R1 {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 

@@ -24,7 +24,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
                 rule OrOfAnds {
                     or(and(/persons1[ age > 18 ], /persons2[ age < 30 ]),
                        and(/persons1[ age > 60 ], /persons3[ age < 18 ])),
-                    do { System.out.println("match"); }
+                    fn { System.out.println("match"); }
                 }
                 """;
 
@@ -55,7 +55,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
 
                 rule AdultWithoutBob {
                     and(/persons[ age > 18 ], not(/persons[ name == "Bob" ])),
-                    do { System.out.println("adult and no bob"); }
+                    fn { System.out.println("adult and no bob"); }
                 }
                 """;
 
@@ -88,7 +88,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
 
                 rule NoAliceNoBob {
                     not(or(/persons[ name == "Alice" ], /persons[ name == "Bob" ])),
-                    do { System.out.println("no alice, no bob"); }
+                    fn { System.out.println("no alice, no bob"); }
                 }
                 """;
 
@@ -126,7 +126,7 @@ class NestedGroupTest extends DrlxBuilderTestSupport {
 
                 rule NoSameNameInOther {
                     and(var p : /persons1, not(/persons2[ name == p.name ])),
-                    do { System.out.println("unique to persons1"); }
+                    fn { System.out.println("unique to persons1"); }
                 }
                 """;
 

@@ -115,7 +115,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { System.
+                       fn { System.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
@@ -221,7 +221,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { System.out.
+                       fn { System.out.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
@@ -289,7 +289,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { list#ArrayList#.
+                       fn { list#ArrayList#.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
@@ -354,7 +354,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { 10.5B.
+                       fn { 10.5B.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
@@ -424,7 +424,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 @Salience(5)
                 rule R1 {
                    var a : /as,
-                   do { System.
+                   fn { System.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult = parseDrlxCompilationUnitAsJavaParserASTWithTolerance(compilationUnitString);
@@ -459,7 +459,7 @@ class TolerantDrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                         var a : /as,
-                        do {
+                        fn {
                             Person p = new Person("John", new Address("Tokyo"));
                             p.address.
                 """;
@@ -531,7 +531,7 @@ class TolerantDrlxToJavaParserVisitorTest {
 
                 rule R1 {
                    not /persons[ age > 18 ],
-                   do { System.
+                   fn { System.
                 """;
 
         DrlxHelper.TolerantParseResult<CompilationUnit> parseResult =

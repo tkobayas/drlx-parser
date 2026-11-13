@@ -31,7 +31,7 @@ class DataStoreCrudTest {
 
                 rule CopyAdults {
                     Person p : /persons[ age > 30 ],
-                    do { persons1.add(p); }
+                    fn { persons1.add(p); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -62,7 +62,7 @@ class DataStoreCrudTest {
 
                 rule RemoveAdults {
                     Person p : /persons[ age > 30 ],
-                    do { persons.remove(p); }
+                    fn { persons.remove(p); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -91,7 +91,7 @@ class DataStoreCrudTest {
 
                 rule FanOut {
                     Person p : /persons[ age > 30 ],
-                    do { persons1.add(p); persons2.add(p); }
+                    fn { persons1.add(p); persons2.add(p); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -125,7 +125,7 @@ class DataStoreCrudTest {
 
                 rule ResetAdults {
                     Person p : /persons[ age > 30 ],
-                    do { p.setAge(0); persons.update(p); }
+                    fn { p.setAge(0); persons.update(p); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -155,7 +155,7 @@ class DataStoreCrudTest {
 
                 rule ResetWithCompactWith {
                     Person p : /persons[ age > 30 ],
-                    do p{age = 0};
+                    fn p{age = 0};
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -182,7 +182,7 @@ class DataStoreCrudTest {
 
                 rule RenameAndReset {
                     Person p : /persons[ age > 30 ],
-                    do p{name = "Reset", age = 0};
+                    fn p{name = "Reset", age = 0};
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -210,7 +210,7 @@ class DataStoreCrudTest {
 
                 rule ResetWithCompactWithAndUpdate {
                     Person p : /persons[ age > 30 ],
-                    do { p{age = 0}; persons.update(p); }
+                    fn { p{age = 0}; persons.update(p); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -240,7 +240,7 @@ class DataStoreCrudTest {
 
                 rule ResetViaCompactWithArg {
                     Person p : /persons[ age > 30 ],
-                    do { persons.update(p{age = 0}); }
+                    fn { persons.update(p{age = 0}); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);
@@ -270,7 +270,7 @@ class DataStoreCrudTest {
 
                 rule UpdateMissing {
                     Person p : /persons[ age > 30 ],
-                    do { Person stranger = new Person("Stranger", 99); persons.update(stranger); }
+                    fn { Person stranger = new Person("Stranger", 99); persons.update(stranger); }
                 }
                 """;
         KieBase kieBase = new DrlxRuleBuilder().build(rule);

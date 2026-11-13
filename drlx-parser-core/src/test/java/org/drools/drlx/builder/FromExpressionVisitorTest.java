@@ -18,7 +18,7 @@ class FromExpressionVisitorTest {
         RuleIR rule = parseRule("""
                 rule R1 {
                     var i : /new int[] {1, 2, 3},
-                    do { System.out.println(i); }
+                    fn { System.out.println(i); }
                 }
                 """);
         assertThat(rule.lhs()).hasSize(1);
@@ -34,7 +34,7 @@ class FromExpressionVisitorTest {
         RuleIR rule = parseRule("""
                 rule R1 {
                     var list : /java.util.Collections.emptyList(),
-                    do { System.out.println(list); }
+                    fn { System.out.println(list); }
                 }
                 """);
         assertThat(rule.lhs().get(0)).isInstanceOf(FromExpressionIR.class);
@@ -48,7 +48,7 @@ class FromExpressionVisitorTest {
                 rule R1 {
                     var p : /persons,
                     var addrs : /p.getAddresses(),
-                    do { System.out.println(addrs); }
+                    fn { System.out.println(addrs); }
                 }
                 """);
         assertThat(rule.lhs()).hasSize(2);
@@ -64,7 +64,7 @@ class FromExpressionVisitorTest {
         RuleIR rule = parseRule("""
                 rule R1 {
                     Integer i : /new int[] {1, 2, 3},
-                    do { System.out.println(i); }
+                    fn { System.out.println(i); }
                 }
                 """);
         FromExpressionIR fe = (FromExpressionIR) rule.lhs().get(0);
@@ -77,7 +77,7 @@ class FromExpressionVisitorTest {
         RuleIR rule = parseRule("""
                 rule R1 {
                     var p : /persons[age > 18],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """);
         assertThat(rule.lhs().get(0)).isInstanceOf(PatternIR.class);

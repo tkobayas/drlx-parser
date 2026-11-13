@@ -108,13 +108,13 @@ unit MyUnit;
 
 rule CheckAge {
     Person p : /persons[ age > 18 ],
-    do { System.out.println(p); }
+    fn { System.out.println(p); }
 }
 
 rule CheckCity {
     Address a : /addresses[ city == "Tokyo" ],
         Person p : /persons[ age > 18 ],
-    do { System.out.println(p + " lives in " + a); }
+    fn { System.out.println(p + " lives in " + a); }
 }
 ```
 

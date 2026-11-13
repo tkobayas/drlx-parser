@@ -127,7 +127,7 @@ class DrlxToJavaParserVisitorTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { System.out.println(a == 3.2B);}
+                       fn { System.out.println(a == 3.2B);}
                     }
                 }
                 """;
@@ -241,7 +241,7 @@ class DrlxToJavaParserVisitorTest {
                 
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -298,7 +298,7 @@ class DrlxToJavaParserVisitorTest {
 
                 rule R1 {
                     var addr : /persons/addresses[ city == "London" ],
-                    do { System.out.println(addr); }
+                    fn { System.out.println(addr); }
                 }
                 """;
 
@@ -333,7 +333,7 @@ class DrlxToJavaParserVisitorTest {
 
                 rule R1 {
                     not /persons[ age < 18 ],
-                    do {}
+                    fn {}
                 }
                 """;
 

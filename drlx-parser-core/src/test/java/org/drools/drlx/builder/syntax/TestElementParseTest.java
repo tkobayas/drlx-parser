@@ -25,7 +25,7 @@ class TestElementParseTest {
                 rule R {
                     var p : /persons,
                     test p.age > 30,
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(rule));
@@ -47,7 +47,7 @@ class TestElementParseTest {
                 rule R {
                     var p : /persons,
                     test p.age > 30,
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         DrlxLexer lexer = new DrlxLexer(CharStreams.fromString(rule));

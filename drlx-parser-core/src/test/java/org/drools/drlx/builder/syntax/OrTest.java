@@ -22,7 +22,7 @@ class OrTest extends DrlxBuilderTestSupport {
 
                 rule SeniorOrJunior {
                     or(/seniors[ age > 60 ], /juniors[ age < 18 ]),
-                    do { System.out.println("senior or junior"); }
+                    fn { System.out.println("senior or junior"); }
                 }
                 """;
 
@@ -50,7 +50,7 @@ class OrTest extends DrlxBuilderTestSupport {
 
                 rule SeniorOrJunior {
                     or(/seniors[ age > 60 ], /juniors[ age < 18 ]),
-                    do { System.out.println("senior or junior"); }
+                    fn { System.out.println("senior or junior"); }
                 }
                 """;
 
@@ -79,7 +79,7 @@ class OrTest extends DrlxBuilderTestSupport {
 
                 rule SeniorOrJunior {
                     or(/seniors[ age > 60 ], /juniors[ age < 18 ]),
-                    do { System.out.println("senior or junior"); }
+                    fn { System.out.println("senior or junior"); }
                 }
                 """;
 
@@ -106,7 +106,7 @@ class OrTest extends DrlxBuilderTestSupport {
 
                 rule EmptyOr {
                     or(),
-                    do { System.out.println("unreachable"); }
+                    fn { System.out.println("unreachable"); }
                 }
                 """;
 

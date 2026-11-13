@@ -21,7 +21,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule OnlyAdults {
                     var p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -44,7 +44,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule ExplicitMatches {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -67,7 +67,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule FastCars {
                     var v : /objects#Car[ speed > 80 ],
-                    do { System.out.println(v); }
+                    fn { System.out.println(v); }
                 }
                 """;
 
@@ -87,7 +87,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule NoUnit {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -106,7 +106,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule NoImport {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -127,7 +127,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule BadUnit {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -147,7 +147,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule RawField {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -168,7 +168,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule UnknownEntry {
                     Person p : /strangers[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -190,7 +190,7 @@ class TypeInferenceTest extends DrlxBuilderTestSupport {
 
                 rule Mismatch {
                     Location p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 

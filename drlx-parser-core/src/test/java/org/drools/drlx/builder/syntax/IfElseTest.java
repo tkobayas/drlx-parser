@@ -28,7 +28,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -78,7 +78,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
     }
@@ -102,7 +102,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                         var p1 : /products[ rate == Rates.LOW ],
                         var p2 : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p1 + " " + p2); }
+                    fn { System.out.println(c + " " + p1 + " " + p2); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -131,7 +131,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -162,7 +162,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -196,7 +196,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -231,7 +231,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else if (c.creditRating == Rating.MEDIUM) {
                         var p : /products[ rate == Rates.MEDIUM ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -262,7 +262,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {
@@ -292,7 +292,7 @@ class IfElseTest extends DrlxBuilderTestSupport {
                     } else {
                         var p : /products[ rate == Rates.LOW ]
                     },
-                    do { System.out.println(c + " " + p); }
+                    fn { System.out.println(c + " " + p); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {

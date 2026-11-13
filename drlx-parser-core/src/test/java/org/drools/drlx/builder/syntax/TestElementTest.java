@@ -18,7 +18,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     test p.age > 30,
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {
@@ -40,7 +40,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                     var p : /persons,
                     var q : /persons,
                     test p.age > q.age,
-                    do { System.out.println(p + " > " + q); }
+                    fn { System.out.println(p + " > " + q); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {
@@ -70,7 +70,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     test p.age > 30,
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {
@@ -94,7 +94,7 @@ class TestElementTest extends DrlxBuilderTestSupport {
                 rule R {
                     var p : /persons,
                     test p.age > 999,
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {

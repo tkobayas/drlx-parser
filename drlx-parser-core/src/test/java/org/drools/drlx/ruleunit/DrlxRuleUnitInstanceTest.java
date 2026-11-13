@@ -21,7 +21,7 @@ class DrlxRuleUnitInstanceTest {
 
             rule AdultMatch {
                 Person p : /persons[ age > 30 ],
-                do { System.out.println(p); }
+                fn { System.out.println(p); }
             }
             """;
 

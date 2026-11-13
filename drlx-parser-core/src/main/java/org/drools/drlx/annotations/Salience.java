@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
  *     &#64;Salience(10)
  *     rule CheckAge1 {
  *         Person p : /persons[ age &gt; 18 ],
- *         do { System.out.println(p); }
+ *         fn { System.out.println(p); }
  *     }
  * </pre>
  */

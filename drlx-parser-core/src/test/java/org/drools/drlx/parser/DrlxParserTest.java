@@ -59,7 +59,7 @@ class DrlxParserTest {
                 class Foo {
                     rule R1 {
                        var a : /as,
-                       do { System.out.println(a == 3.2B);}
+                       fn { System.out.println(a == 3.2B);}
                     }
                 }
                 """;
@@ -105,7 +105,7 @@ class DrlxParserTest {
                 
                 rule CheckAge {
                     Person p : /persons[ age > 18 ],
-                    do { System.out.println(p); }
+                    fn { System.out.println(p); }
                 }
                 """;
 
@@ -142,7 +142,7 @@ class DrlxParserTest {
                 unit MyUnit;
                 rule R1 {
                     var p : ?/persons[age > 18],
-                    do {}
+                    fn {}
                 }
                 """;
         DrlxParser.DrlxCompilationUnitContext cu = parseDrlxCompilationUnitAsAntlrAST(source);
@@ -161,7 +161,7 @@ class DrlxParserTest {
                 unit MyUnit;
                 rule R1 {
                     and(/locations[ city == "paris" ], ?/persons[ age > 18 ]),
-                    do {}
+                    fn {}
                 }
                 """;
         DrlxParser.DrlxCompilationUnitContext cu = parseDrlxCompilationUnitAsAntlrAST(source);
@@ -180,7 +180,7 @@ class DrlxParserTest {
                 class Foo {
                     rule R1 {
                        var e : /reactiveEmployees[salary > 0][basePay, !bonusPay],
-                       do { }
+                       fn { }
                     }
                 }
                 """;
@@ -196,7 +196,7 @@ class DrlxParserTest {
                 class Foo {
                     rule R1 {
                        var e : /reactiveEmployees[][basePay],
-                       do { }
+                       fn { }
                     }
                 }
                 """;
@@ -212,7 +212,7 @@ class DrlxParserTest {
                 class Foo {
                     rule R1 {
                        var e : /reactiveEmployees[][*],
-                       do { }
+                       fn { }
                     }
                 }
                 """;
@@ -230,7 +230,7 @@ class DrlxParserTest {
                 rule R1 {
                     var p : /persons,
                     var avgAge = avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -244,7 +244,7 @@ class DrlxParserTest {
                 rule R1 {
                     var p : /persons,
                     int total = sum(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -258,7 +258,7 @@ class DrlxParserTest {
                 rule R1 {
                     var p : /persons,
                     BigDecimal total = sum(p.amount),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -272,7 +272,7 @@ class DrlxParserTest {
                 rule R1 {
                     var p : /persons,
                     long n = count(),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -286,7 +286,7 @@ class DrlxParserTest {
                 rule R1 {
                     var p : /persons,
                     var avgAge = Func.avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -302,7 +302,7 @@ class DrlxParserTest {
                     var minAge = min(p.age),
                     var maxAge = max(p.age),
                     var avgAge = avg(p.age),
-                    do {}
+                    fn {}
                 }
                 """;
         assertThat(parseDrlxCompilationUnitAsAntlrAST(drlx)).isNotNull();
@@ -319,7 +319,7 @@ class DrlxParserTest {
                 rule R {
                     acc(and(var p : /persons, var o : /orders[customerId == p.age]),
                         var total = sum(o.amount)),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(rule);
@@ -342,7 +342,7 @@ class DrlxParserTest {
                     groupBy(var p : /persons,
                             p.name,
                             var avgAge = avg(p.age)),
-                    do {}
+                    fn {}
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
@@ -365,7 +365,7 @@ class DrlxParserTest {
                     groupBy(var p : /persons,
                             var g = p.name,
                             var avgAge = avg(p.age)),
-                    do {}
+                    fn {}
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
@@ -386,7 +386,7 @@ class DrlxParserTest {
                             var g = p.name,
                             (var minAge = min(p.age),
                              var maxAge = max(p.age))),
-                    do {}
+                    fn {}
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
@@ -406,7 +406,7 @@ class DrlxParserTest {
                     groupBy(and(var p : /persons, var o : /orders[customerId == p.age]),
                             p.name,
                             var total = sum(o.amount)),
-                    do {}
+                    fn {}
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);
@@ -428,7 +428,7 @@ class DrlxParserTest {
                             int s = 0;,
                             s = s + p.age,
                             int total = s),
-                    do {}
+                    fn {}
                 }
                 """;
         var tree = parseDrlxCompilationUnitAsAntlrAST(drlx);

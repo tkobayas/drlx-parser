@@ -44,14 +44,14 @@ class MatchParseTest {
                     match (c.creditRating)
                         case Rating.LOW {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -70,14 +70,14 @@ class MatchParseTest {
                     match (c.creditRating)
                         case Rating.LOW {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -110,10 +110,10 @@ class MatchParseTest {
                     var o : /objects,
                     match (o)
                         case #Car {
-                            do { System.out.println("car"); }
+                            fn { System.out.println("car"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -130,10 +130,10 @@ class MatchParseTest {
                     var o : /objects,
                     match (o)
                         case #Car[speed > 80] {
-                            do { System.out.println("fast car"); }
+                            fn { System.out.println("fast car"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -150,10 +150,10 @@ class MatchParseTest {
                     var o : /objects,
                     match (o)
                         case #Car[speed > 80, vin == "ABC"] {
-                            do { System.out.println("fast ABC car"); }
+                            fn { System.out.println("fast ABC car"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -170,10 +170,10 @@ class MatchParseTest {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                 }
                 """;
@@ -187,8 +187,8 @@ class MatchParseTest {
                 rule R {
                     var c : /customers,
                     match (c.creditRating)
-                        case Rating.LOW do { System.out.println("low"); }
-                        default do { System.out.println("other"); }
+                        case Rating.LOW fn { System.out.println("low"); }
+                        default fn { System.out.println("other"); }
                 }
                 """;
         List<RuleIR> rules = parseRules(rule);
@@ -218,10 +218,10 @@ class MatchParseTest {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         },
                 }
                 """;
@@ -237,7 +237,7 @@ class MatchParseTest {
                     match (c.creditRating)
                         case Rating.LOW {}
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -253,12 +253,12 @@ class MatchParseTest {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         },
-                    do { System.out.println("trailing"); }
+                    fn { System.out.println("trailing"); }
                 }
                 """;
         assertThatThrownBy(() -> parseRules(rule))
@@ -273,10 +273,10 @@ class MatchParseTest {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         },
                     var p : /products,
                 }

@@ -26,7 +26,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 rule BranchLocalJoin {
                     or(and(var p : /persons1, /persons2[ name == p.name ]),
                        and(var p : /persons2, /persons3[ name == p.name ])),
-                    do { System.out.println("branch fired"); }
+                    fn { System.out.println("branch fired"); }
                 }
                 """;
 
@@ -59,7 +59,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
 
                 rule DirectBranchLocal {
                     or(var p : /persons1, var p : /persons2),
-                    do { System.out.println("branch fired"); }
+                    fn { System.out.println("branch fired"); }
                 }
                 """;
 
@@ -93,7 +93,7 @@ class OrBindingScopeTest extends DrlxBuilderTestSupport {
                 rule UnresolvedAfterOr {
                     or(var p : /persons1),
                     /persons2[ name == p.name ],
-                    do { System.out.println("should not build"); }
+                    fn { System.out.println("should not build"); }
                 }
                 """;
 

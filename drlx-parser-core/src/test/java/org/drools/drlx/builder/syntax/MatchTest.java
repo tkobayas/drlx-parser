@@ -27,14 +27,14 @@ class MatchTest extends DrlxBuilderTestSupport {
                     match (c.creditRating)
                         case Rating.LOW {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("low: " + c.name + " " + p.name); }
+                            fn { System.out.println("low: " + c.name + " " + p.name); }
                         }
                         case Rating.MEDIUM {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("medium: " + c.name); }
+                            fn { System.out.println("medium: " + c.name); }
                         }
                         default {
-                            do { System.out.println("other: " + c.name); }
+                            fn { System.out.println("other: " + c.name); }
                         }
                 }
                 """;
@@ -63,14 +63,14 @@ class MatchTest extends DrlxBuilderTestSupport {
                     match (c.creditRating)
                         case Rating.LOW {
                             var p : /products[ rate == Rates.HIGH ],
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
                             var p : /products[ rate == Rates.MEDIUM ],
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -96,13 +96,13 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -125,10 +125,10 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var c : /customers,
                     match (c.creditRating)
                         case Rating.LOW {
-                            do { System.out.println("low"); }
+                            fn { System.out.println("low"); }
                         }
                         case Rating.MEDIUM {
-                            do { System.out.println("medium"); }
+                            fn { System.out.println("medium"); }
                         }
                 }
                 """;
@@ -151,10 +151,10 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var o : /objects,
                     match (o)
                         case #Car {
-                            do { System.out.println("car: " + o.vin); }
+                            fn { System.out.println("car: " + o.vin); }
                         }
                         default {
-                            do { System.out.println("vehicle: " + o.vin); }
+                            fn { System.out.println("vehicle: " + o.vin); }
                         }
                 }
                 """;
@@ -177,10 +177,10 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var o : /objects,
                     match (o)
                         case #Car {
-                            do { System.out.println("car"); }
+                            fn { System.out.println("car"); }
                         }
                         default {
-                            do { System.out.println("vehicle: " + o.vin); }
+                            fn { System.out.println("vehicle: " + o.vin); }
                         }
                 }
                 """;
@@ -203,10 +203,10 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var o : /objects,
                     match (o)
                         case #Car[speed > 80] {
-                            do { System.out.println("fast car"); }
+                            fn { System.out.println("fast car"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -229,10 +229,10 @@ class MatchTest extends DrlxBuilderTestSupport {
                     var o : /objects,
                     match (o)
                         case #Car[speed > 80] {
-                            do { System.out.println("fast car"); }
+                            fn { System.out.println("fast car"); }
                         }
                         default {
-                            do { System.out.println("other"); }
+                            fn { System.out.println("other"); }
                         }
                 }
                 """;
@@ -254,8 +254,8 @@ class MatchTest extends DrlxBuilderTestSupport {
                 rule R1 {
                     var c : /customers,
                     match (c.creditRating)
-                        case Rating.LOW do { System.out.println("low"); }
-                        default do { System.out.println("other"); }
+                        case Rating.LOW fn { System.out.println("low"); }
+                        default fn { System.out.println("other"); }
                 }
                 """;
         withCreditUnitInstance(rule, (instance, unit, listener) -> {

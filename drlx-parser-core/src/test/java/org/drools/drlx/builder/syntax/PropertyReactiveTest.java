@@ -19,7 +19,7 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
 
             rule R1 {
                 var e : /reactiveEmployees[salary > 5000],
-                do { }
+                fn { }
             }
             """;
 
@@ -72,12 +72,12 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[basePay > 3000],
-                    do { reactiveEmployees.update(e{salary = 9999}); }
+                    fn { reactiveEmployees.update(e{salary = 9999}); }
                 }
 
                 rule R2 {
                     var e : /reactiveEmployees[salary > 9000],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -107,12 +107,12 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[basePay > 3000],
-                    do { reactiveEmployees.update(e{bonusPay = 9999}); }
+                    fn { reactiveEmployees.update(e{bonusPay = 9999}); }
                 }
 
                 rule R2 {
                     var e : /reactiveEmployees[salary > 9000],
-                    do { }
+                    fn { }
                 }
                 """;
 
@@ -145,12 +145,12 @@ class PropertyReactiveTest extends DrlxBuilderTestSupport {
 
                 rule R1 {
                     var e : /reactiveEmployees[basePay > 3000 && bonusPay < 9000],
-                    do { e.setBonusPay(9999); reactiveEmployees.update(e); }
+                    fn { e.setBonusPay(9999); reactiveEmployees.update(e); }
                 }
 
                 rule R2 {
                     var e : /reactiveEmployees[salary > 4000],
-                    do { }
+                    fn { }
                 }
                 """;
 

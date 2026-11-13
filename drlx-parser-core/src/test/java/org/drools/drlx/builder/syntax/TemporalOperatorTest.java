@@ -31,7 +31,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this after a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();
@@ -55,7 +55,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this after a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();
@@ -77,7 +77,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this after[2s, 5s] a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();
@@ -101,7 +101,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this after[2s, 5s] a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();
@@ -125,7 +125,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this before a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();
@@ -149,7 +149,7 @@ class TemporalOperatorTest {
                 rule R1 {
                     var a : /withdrawals[customer == "A"],
                     var b : /withdrawals[this not after a, customer == "B"],
-                    do {}
+                    fn {}
                 }
                 """;
         WithdrawalUnit unit = new WithdrawalUnit();

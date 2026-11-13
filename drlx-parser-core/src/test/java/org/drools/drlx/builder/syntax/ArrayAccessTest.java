@@ -22,7 +22,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
 
                 rule ListLiteralIndex {
                     Container c : /containers[ items[0] == "apple" ],
-                    do { System.out.println(c.getName()); }
+                    fn { System.out.println(c.getName()); }
                 }
                 """;
 
@@ -45,7 +45,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
 
                 rule MapStringKey {
                     Container c : /containers[ attributes["color"] == "red" ],
-                    do { System.out.println(c.getName()); }
+                    fn { System.out.println(c.getName()); }
                 }
                 """;
 
@@ -68,7 +68,7 @@ class ArrayAccessTest extends DrlxBuilderTestSupport {
 
                 rule ListExpressionIndex {
                     Container c : /containers[ items[2 - 1] == "banana" ],
-                    do { System.out.println(c.getName()); }
+                    fn { System.out.println(c.getName()); }
                 }
                 """;
 

@@ -34,7 +34,7 @@ class DrlxLambdaBoundaryTest {
 
             rule CheckAge {
                 Person p : /persons[ age > 18 ],
-                do { System.out.println(p); }
+                fn { System.out.println(p); }
             }
             """;
 

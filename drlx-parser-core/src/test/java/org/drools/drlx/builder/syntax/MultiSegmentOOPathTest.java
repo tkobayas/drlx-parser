@@ -18,7 +18,7 @@ class MultiSegmentOOPathTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
                 rule R1 {
                     var addr : /persons/addresses[ city == "London" ],
-                    do { results.add(addr.city); }
+                    fn { results.add(addr.city); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {
@@ -47,7 +47,7 @@ class MultiSegmentOOPathTest extends DrlxBuilderTestSupport {
                 unit MyUnit;
                 rule R1 {
                     var addr : /persons[ age > 25 ]/addresses[ city == "London" ],
-                    do { results.add(addr.city); }
+                    fn { results.add(addr.city); }
                 }
                 """;
         withMyUnitInstance(rule, (instance, unit, listener) -> {

@@ -43,7 +43,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                     groupBy(var p : /persons,
                             var g = p.name,
                             var avgAge = avg(p.age)),
-                    do { results.add(g); results.add(avgAge); }
+                    fn { results.add(g); results.add(avgAge); }
                 }
                 """;
 
@@ -71,7 +71,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                     groupBy(var p : /persons,
                             p.name,
                             var avgAge = avg(p.age)),
-                    do { results.add(avgAge); }
+                    fn { results.add(avgAge); }
                 }
                 """;
 
@@ -100,7 +100,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                             var g = p.name,
                             (var minAge = min(p.age),
                              var maxAge = max(p.age))),
-                    do { results.add(g); results.add(minAge); results.add(maxAge); }
+                    fn { results.add(g); results.add(minAge); results.add(maxAge); }
                 }
                 """;
 
@@ -129,7 +129,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                     groupBy(and(var p : /persons, var o : /orders[customerId == p.age]),
                             p.name,
                             var total = sum(o.amount)),
-                    do { results.add(total); }
+                    fn { results.add(total); }
                 }
                 """;
 
@@ -161,7 +161,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                             int s = 0;,
                             s = s + p.age,
                             int total = s),
-                    do { results.add(g); results.add(total); }
+                    fn { results.add(g); results.add(total); }
                 }
                 """;
 
@@ -191,7 +191,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                             int s = 0;,
                             (s = s + p.age, s = s - p.age),
                             int total = s),
-                    do { results.add(g); results.add(total); }
+                    fn { results.add(g); results.add(total); }
                 }
                 """;
 
@@ -224,7 +224,7 @@ class GroupByTest extends DrlxBuilderTestSupport {
                     groupBy(var p : /persons,
                             var g = p.name,
                             var avgAge = avg(p.age)),
-                    do {}
+                    fn {}
                 }
                 """;
         final KieBase kieBase = new DrlxRuleBuilder().build(rule);

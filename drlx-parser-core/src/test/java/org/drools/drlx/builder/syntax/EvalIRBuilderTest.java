@@ -38,7 +38,7 @@ class EvalIRBuilderTest {
     @Test
     void evalIrFiltersPattern() {
         // IR equivalent of (without grammar):
-        //   rule R { var p : /persons, test p.age > 30, do { ... } }
+        //   rule R { var p : /persons, test p.age > 30, fn { ... } }
         PatternIR pattern = new PatternIR(
                 "Person", "p", "persons",
                 List.of(), List.of(),

@@ -231,12 +231,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                         flushPending(lhs, pendingPattern, pendingAccs);
                         if (rhs != null) {
                             throw new RuntimeException(
-                                    "Rule with per-branch consequences cannot also have a trailing `do` consequence");
+                                    "Rule with per-branch consequences cannot also have a trailing `fn` consequence");
                         }
                         if (idx < ruleItems.size() - 1) {
                             if (ruleItems.get(idx + 1).ruleConsequence() != null) {
                                 throw new RuntimeException(
-                                        "Rule with per-branch consequences cannot also have a trailing `do` consequence");
+                                        "Rule with per-branch consequences cannot also have a trailing `fn` consequence");
                             }
                             throw new RuntimeException(
                                     "Items after a per-branch if/else are not supported");
@@ -250,12 +250,12 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                     flushPending(lhs, pendingPattern, pendingAccs);
                     if (rhs != null) {
                         throw new RuntimeException(
-                                "Rule with per-case consequences cannot also have a trailing `do` consequence");
+                                "Rule with per-case consequences cannot also have a trailing `fn` consequence");
                     }
                     if (idx < ruleItems.size() - 1) {
                         if (ruleItems.get(idx + 1).ruleConsequence() != null) {
                             throw new RuntimeException(
-                                    "Rule with per-case consequences cannot also have a trailing `do` consequence");
+                                    "Rule with per-case consequences cannot also have a trailing `fn` consequence");
                         }
                         throw new RuntimeException(
                                 "Items after a match element are not supported");
@@ -974,7 +974,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
             if (consequenceTexts.isEmpty()) {
                 throw new RuntimeException(
                         "Form B branch must contain at least one action statement; "
-                        + "use Form A with a trailing `do` for pattern-only branches");
+                        + "use Form A with a trailing `fn` for pattern-only branches");
             }
 
             List<LhsItemIR> fullLhs = new ArrayList<>(commonPrefix);
@@ -1116,7 +1116,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
                 throw new RuntimeException(
                         "Match case must contain at least one action statement");
             }
-        } else if (body.DO() != null) {
+        } else if (body.FN() != null) {
             consequenceTexts.add(trimBraces(getText(body.statement())));
         } else if (body.expression() != null) {
             consequenceTexts.add(getText(body.expression()));
@@ -1290,7 +1290,7 @@ public class DrlxToRuleAstVisitor extends DrlxParserBaseVisitor<Object> {
     }
 
     private String extractBranchConsequence(DrlxParser.BranchConsequenceContext ctx) {
-        if (ctx.DO() != null) {
+        if (ctx.FN() != null) {
             return trimBraces(getText(ctx.statement()));
         }
         return getText(ctx.expression());

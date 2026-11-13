@@ -22,7 +22,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
                 rule JoinByName {
                     and(var p : /persons1, /persons2[ name == p.name ]),
-                    do { System.out.println("joined"); }
+                    fn { System.out.println("joined"); }
                 }
                 """;
 
@@ -53,7 +53,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
                 rule JoinByNameExplicitType {
                     and(Person p = /persons1, /persons2[ name == p.name ]),
-                    do { System.out.println("joined"); }
+                    fn { System.out.println("joined"); }
                 }
                 """;
 
@@ -81,7 +81,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
                 rule BothBound {
                     and(var p1 : /persons1, var p2 : /persons2[ name == p1.name ]),
-                    do { System.out.println("bound pair"); }
+                    fn { System.out.println("bound pair"); }
                 }
                 """;
 
@@ -110,7 +110,7 @@ class BindingInGroupTest extends DrlxBuilderTestSupport {
 
                 rule BareOopathsInAnd {
                     and(/persons1[ age > 18 ], /persons2[ age > 18 ]),
-                    do { System.out.println("both adult"); }
+                    fn { System.out.println("both adult"); }
                 }
                 """;
 
